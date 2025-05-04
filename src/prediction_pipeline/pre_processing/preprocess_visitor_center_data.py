@@ -3,13 +3,12 @@
 ##################################################
 import pandas as pd  # Provides data structures and data analysis tools.
 import numpy as np  # Supports large, multi-dimensional arrays and matrices.
-import awswrangler as wr
 import logging
-from src.config import aws_s3_bucket
+import os
 
 
-saved_path_visitor_center_query = f"s3://{aws_s3_bucket}/preprocessed_data/bf_preprocessed_files/visitor_centers/visitor_centers_2017_to_2024.parquet"
-saved_path_visitor_center_modeling = f"s3://{aws_s3_bucket}/preprocessed_data/visitor_centers_hourly.parquet"
+saved_path_visitor_center_query = os.path.join("data","processed","visitor_center","visitor_centers_2017_to_2024.parquet")
+saved_path_visitor_center_modeling = os.path.join("data","processed","visitor_center","visitor_centers_hourly.parquet")
 
 ##########################################################################
 ##########################################################################
@@ -423,7 +422,7 @@ def rename_and_set_time_as_index(df):
     
     return df
 
-def write_parquet_file_to_aws_s3(df: pd.DataFrame, path: str, **kwargs) -> pd.DataFrame:
+def write_parquet_file(df: pd.DataFrame, path: str, **kwargs) -> pd.DataFrame:
     """Writes an individual Parquet file to AWS S3.
 
     Args:
@@ -432,10 +431,10 @@ def write_parquet_file_to_aws_s3(df: pd.DataFrame, path: str, **kwargs) -> pd.Da
         **kwargs: Additional arguments to pass to the to_parquet function.
     """
     try:
-        wr.s3.to_parquet(df, path=path, **kwargs)
+        pd.to_parquet(df, path=path, **kwargs)
         print(f"DataFrame successfully written to {path}")
     except Exception as e:
-        logging.error(f"Failed to write DataFrame to S3. Error: {e}")
+        logging.error(f"Failed to write DataFrame to parquet {e}")
     return
 
 
@@ -453,11 +452,11 @@ def process_visitor_center_data(sourced_df):
     # Before saving and returning hourly_df, we need to add the hour column
     hourly_df['Hour'] = hourly_df['Time'].dt.hour
 
-    # Save to AWS
-    # Save daily data to AWS for querying
-    write_parquet_file_to_aws_s3(daily_df, saved_path_visitor_center_query)
-    # Save houly data to AWS for joining/modeling
-    write_parquet_file_to_aws_s3(hourly_df, saved_path_visitor_center_modeling)
+    # Save locally to parquet files
+    # Save daily data for querying
+    write_parquet_file(daily_df, saved_path_visitor_center_query)
+    # Save houly data for joining/modeling
+    write_parquet_file(hourly_df, saved_path_visitor_center_modeling)
 
 
 

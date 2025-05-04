@@ -17,7 +17,7 @@ Output:
 import pandas as pd
 import re
 import numpy as np
-import awswrangler as wr
+import os
 
 pd.options.mode.chained_assignment = None  
 
@@ -26,7 +26,7 @@ pd.options.mode.chained_assignment = None
 #GLOBAL VARIABLES
 ###########################################################################################
 
-output_data_folder = "preprocessed_data"
+output_data_folder = os.path.join("data","processed","visitor_sensor")
 output_file_name = "preprocessed_visitor_sensor_data.csv"
 
 
@@ -428,17 +428,6 @@ def calculate_traffic_metrics_abs(df):
     
     return df
 
-def write_csv_file_to_aws_s3(df: pd.DataFrame, path: str, **kwargs) -> pd.DataFrame:
-    """Writes an individual CSV file to AWS S3.
-
-    Args:
-        df (pd.DataFrame): The DataFrame to write.
-        path (str): The path to the CSV files on AWS S3.
-        **kwargs: Additional arguments to pass to the to_csv function.
-    """
-
-    wr.s3.to_csv(df, path=path, **kwargs)
-    return
 
 def preprocess_visitor_count_data(visitor_counts: pd.DataFrame) -> pd.DataFrame:
 
@@ -463,5 +452,9 @@ def preprocess_visitor_count_data(visitor_counts: pd.DataFrame) -> pd.DataFrame:
     df_traffic_metrics.reset_index(inplace=True)
 
     print("\nVisitor sensors data is preprocessed and overall traffic metrics were created! \n")
+    
+    # Save the preprocessed data to a CSV file locally
+    df_traffic_metrics.to_csv(os.path.join(output_data_folder, output_file_name), index=False)
+
 
     return df_traffic_metrics

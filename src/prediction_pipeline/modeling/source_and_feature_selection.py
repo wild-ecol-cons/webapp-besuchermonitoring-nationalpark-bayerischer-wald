@@ -1,4 +1,3 @@
-import awswrangler as wr
 import pandas as pd
 import numpy as np
 import warnings
@@ -217,20 +216,6 @@ def get_regionwise_IN_and_OUT_columns(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-
-
-def load_csv_files_from_aws_s3(path: str, **kwargs) -> pd.DataFrame:
-    """ 
-    Loads individual or multiple CSV files from an AWS S3 bucket.
-    Args:
-        path (str): The path to the CSV files on AWS S3.
-        **kwargs: Additional arguments to pass to the read_csv function.
-    Returns:
-        pd.DataFrame: The DataFrame containing the data from the CSV files.
-    """
-    df = wr.s3.read_csv(path=path, **kwargs)
-    # set time to datetime
-    return df
 
 # Helper function to convert columns to datetime
 def convert_to_datetime(df: pd.DataFrame, columns: list) -> pd.DataFrame:

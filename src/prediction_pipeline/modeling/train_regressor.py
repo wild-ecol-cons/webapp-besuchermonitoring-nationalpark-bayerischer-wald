@@ -4,14 +4,7 @@ from pycaret import *
 from pycaret.time_series import *
 from pycaret.regression import *
 import os
-import awswrangler as wr
 import uuid
-from src.config import aws_s3_bucket
-
-
-save_path_models = 'models/models_trained'
-save_path_predictions = 'models/test_data_predictions'
-local_path = os.path.join('outputs','models_trained')
 
 # Define target columns
 target_vars_et  = ['traffic_abs', 'sum_IN_abs', 'sum_OUT_abs', 'Lusen-Mauth-Finsterau IN', 'Lusen-Mauth-Finsterau OUT', 
@@ -41,51 +34,7 @@ def create_uuid() -> str:
 
     return unique_id
 
-def save_predictions_to_aws_s3(df: pd.DataFrame, save_path_predictions: str, filename: str, uuid: str) -> None:
-    """Writes an individual CSV file to AWS S3.
 
-    Args:
-        df (pd.DataFrame): The DataFrame to write.
-        save_path_predictions (str): The path to the CSV files on AWS S3.
-        filename (str): The name of the CSV file.
-        uuid (str): The unique identifier string.
-
-    Returns:
-        None
-    """
-
-    aws_s3_path = f"s3://{aws_s3_bucket}/{save_path_predictions}/{uuid}/{filename}"
-
-    wr.s3.to_parquet(df, path=aws_s3_path,index= True)
-    print(f"Predictions for test data saved in AWS S3 under {aws_s3_path}")
-    return
-
-def save_models_to_aws_s3(model, save_path_models: str, model_name: str, local_path: str, uuid: str) -> None:
-    """Save the model to AWS S3.
-
-    Args:
-        model: The model to save.
-        save_path_models (str): The path to the CSV files on AWS S3.
-        model_name (str): The name of the model.
-        local_path (str): The local path to the model.
-        uuid (str): The unique identifier string.
-
-    Returns:
-        None
-    """
-
-    # make the save path if it does not exist
-    if not os.path.exists(local_path):
-        os.makedirs(local_path)
-
-    save_model_path = os.path.join(local_path, model_name)
-    save_model(model, save_model_path, model_only=True)
-
-    save_path_aws = f"s3://{aws_s3_bucket}/{save_path_models}/{uuid}/{model_name}.pkl"
-
-    wr.s3.upload(f"{save_model_path}.pkl",save_path_aws)
-    print(f"Model saved in AWS S3 under {save_path_aws}")
-    return
 
 def train_regressor(feature_dataframe: pd.DataFrame) -> None:
 
@@ -127,15 +76,22 @@ def train_regressor(feature_dataframe: pd.DataFrame) -> None:
             # Finalize the model
             final_model = finalize_model(extra_trees_model)
             
-            # save the model in aws s3
-            save_models_to_aws_s3(final_model, save_path_models, 
-                                  f"extra_trees_{target}",local_path, uuid)
-            print(f"Model with {target} saved to AWS S3")
 
+            save_model_path = os.path.join("models",uuid, f"extra_trees_{target}")
+            # save the model locally and create the uuid folder if doesn't exist
+            if not os.path.exists(save_model_path):
+                os.makedirs(save_model_path)
+            # save the model locally
+            save_model(final_model, save_model_path, model_only=True)
+            print(f"Model with {target} saved locally")
             
-            # save predictions to aws s3
-            file_name = f"y_test_predicted_{target}.parquet"
-            save_predictions_to_aws_s3(predictions, save_path_predictions,file_name, uuid)
-            print(f"Predictions with {target} saved to AWS S3")
+            save_path_predictions = os.path.join("models", uuid, "test_data_predictions")
+            # create the uuid folder if doesn't exist
+            if not os.path.exists(save_path_predictions):
+                os.makedirs(save_path_predictions)
+
+            # Save prediction locallly as parquet file
+            predictions.to_parquet(os.path.join(save_path_predictions, f"y_test_predicted_{target}.parquet"))
+            print(f"Predictions with {target} saved locally")
 
     return

@@ -7,11 +7,11 @@ import io
 from pycaret.regression import load_model
 from sklearn.preprocessing import MinMaxScaler
 from src.config import regions, aws_s3_bucket
+import os
+import random
 
-
-# Your AWS bucket and folder details where models are stored
-folder_prefix = 'models/models_trained/1483317c-343a-4424-88a6-bd57459901d1/'  # If you have a specific folder
-
+# change this to change the model to be used for inference
+chosen_uuid = "1483317c-343a-4424-88a6-bd57459901d1"
 
 target_vars_et  = ['traffic_abs', 'sum_IN_abs', 'sum_OUT_abs', 
                     'Lusen-Mauth-Finsterau IN', 'Lusen-Mauth-Finsterau OUT', 
@@ -25,42 +25,58 @@ target_vars_et  = ['traffic_abs', 'sum_IN_abs', 'sum_OUT_abs',
 # model names 
 model_names = [f'extra_trees_{var}' for var in target_vars_et]
 
+def get_model_folder_path():
+    models_base_folder = "models"
+    # Change the folder uuid according to which we want to train or pick any folder uuid
+    models_folder = os.path.join("models",chosen_uuid)
+
+    # Check if the specified folder exists
+    if not os.path.isdir(models_folder):
+        print(f"Specified model folder '{models_folder}' not found. Selecting the last modified folder.")
+
+        # Get all subdirectories in models_base_folder
+        subdirs = [
+            os.path.join(models_base_folder, d)
+            for d in os.listdir(models_base_folder)
+            if os.path.isdir(os.path.join(models_base_folder, d))
+        ]
+
+        if not subdirs:
+            raise FileNotFoundError("No model folders found in the 'models' directory.")
+
+        # Find the most recently modified subdirectory
+        models_folder = max(subdirs, key=os.path.getmtime)
+        print(f"Using last modified model folder: {models_folder}")
+    else:
+        print(f"Using specified model folder: {models_folder}")
+
+    return models_folder
+
 @st.cache_resource(max_entries=1)
-def load_latest_models(bucket_name, folder_prefix, models_names):
+def load_latest_models_local(model_folder, models_names):
     """
-    Load the latest files from an S3 folder based on the model names, 
-    and dynamically create variables with 'loaded_' as prefix.
+    Load the model pickle files from a local folder.
 
     Parameters:
-    - bucket_name (str): The name of the S3 bucket.
-    - folder_prefix (str): The folder path within the bucket.
-    - models (list): List of model names without the 'extra_trees_' prefix.
+    - local_folder_path (str): The path to the local folder containing the model files.
+    - models_names (list): List of model file names without the '.pkl' extension.
 
     Returns:
-    - dict: A dictionary containing the loaded models with keys prefixed by 'loaded_'.
+    - dict: A dictionary containing the loaded models with model names as keys.
     """
 
-    # Dictionary to store loaded models
     loaded_models = {}
 
-    # Loop through each model to get the latest pickle (.pkl) file
     for model in models_names:
-        
-        # Create an S3 client
-        s3 = boto3.client('s3')
+        file_path = os.path.join(model_folder, model + '.pkl')
+        print(f"Loading model '{model}' from: {file_path}")
 
-        s3_key = folder_prefix + model + '.pkl'
-        print(f"Retrieving the trained model {model} saved under AWS S3 in bucket {bucket_name} with key {s3_key}")
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"Model file not found: {file_path}")
 
-        # Get the object from S3
-        response = s3.get_object(Bucket=bucket_name, Key=s3_key)
+        loaded_model = joblib.load(file_path)
+        loaded_models[model] = loaded_model
 
-        # Load the pickled model from the response object using joblib
-        loaded_regressor_model = joblib.load(io.BytesIO(response['Body'].read()))
-        
-        # Store the loaded model in the dictionary
-        loaded_models[f'{model}'] = loaded_regressor_model
-    
     return loaded_models
 
 
@@ -139,8 +155,8 @@ def preprocess_overall_inference_predictions(overall_predictions: pd.DataFrame) 
 
 @st.cache_data(max_entries=1)
 def visitor_predictions(inference_data):
-
-    loaded_models = load_latest_models(aws_s3_bucket, folder_prefix, model_names)
+    model_folder = get_model_folder_path()
+    loaded_models = load_latest_models_local(model_folder, model_names)
 
     print("Models loaded successfully")
     

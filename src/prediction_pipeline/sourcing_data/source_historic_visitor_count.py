@@ -1,8 +1,10 @@
-import awswrangler as wr
-from src.config import aws_s3_bucket
+import os
+import pandas as pd
+import glob
 
 raw_data_folder = "raw-data"
 visitor_counts_folder = "hourly-historic-visitor-counts-all-sensors"
+visior_count_path = os.path.join("data","raw","visitor_sensor")
 
 # needed columns across all dfs 
 common_columns = ['Time',
@@ -103,14 +105,19 @@ common_columns = ['Time',
  'Wistlberg Fußgänger OUT']
 
 
-def source_historic_visitor_count():
-    """Source historic visitor count data from AWS S3."""
 
-    # Load visitor count data from AWS S3
-    visitor_counts = wr.s3.read_csv(
-        path=f"s3://{aws_s3_bucket}/{raw_data_folder}/{visitor_counts_folder}/*.csv",
-        skiprows=2,
-        usecols=common_columns
-    )
+def source_historic_visitor_count_local(local_folder_path, common_columns):
+    """Source historic visitor count data from a local folder."""
+
+    # Match all CSV files in the local folder
+    path_pattern = os.path.join(visior_count_path, "*.csv")
+    csv_files = glob.glob(path_pattern)
+
+    # Read and concatenate all CSV files
+    df_list = [
+        pd.read_csv(file, skiprows=2, usecols=common_columns)
+        for file in csv_files
+    ]
+    visitor_counts = pd.concat(df_list, ignore_index=True)
 
     return visitor_counts

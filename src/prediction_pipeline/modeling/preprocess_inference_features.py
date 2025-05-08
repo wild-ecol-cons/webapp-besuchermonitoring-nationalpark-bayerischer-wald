@@ -75,5 +75,7 @@ def source_preprocess_inference_data(weather_data_inference, hourly_visitor_cent
     #drop column named Date
     inference_data_with_coco_encoding = inference_data_with_coco_encoding.drop(columns=['Date'])
 
-    
+    # print the head of inference data
+    print("Inference data with coco encoding:")
+    print(inference_data_with_coco_encoding.head())
     return inference_data_with_coco_encoding

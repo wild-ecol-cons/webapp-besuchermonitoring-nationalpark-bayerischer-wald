@@ -45,9 +45,18 @@ def run_inference(preprocessed_hourly_visitor_center_data):
 
     weather_data_inference = source_weather_data(start_time=start_inference_time, end_time=end_inference_time)
 
+    # print head of weathrer data
+    print("Weather data for inference:")
+    print(weather_data_inference.head())
+
+    #print head of visitor center data
+    print("Visitor center data for inference:")
+    print(preprocessed_hourly_visitor_center_data.head())
     # preprocess the inference data
     inference_df = source_preprocess_inference_data(weather_data_inference, preprocessed_hourly_visitor_center_data, start_time=today, end_time=end_inference_time)
 
+    # Shape of the inference data in run_inference.py script
+    print(f"Shape of the inference data: {inference_df.shape}")
     # make predictions
     overall_visitor_predictions = visitor_predictions(inference_df) 
 

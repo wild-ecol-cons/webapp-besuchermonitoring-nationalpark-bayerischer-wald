@@ -26,13 +26,14 @@ import src.streamlit_app.pages_in_dashboard.visitors.visitor_count as visitor_co
 import src.streamlit_app.pages_in_dashboard.visitors.recreational_activities as recreation
 import src.streamlit_app.pages_in_dashboard.visitors.other_information as other_info
 
+
 # Initialize language in session state if it doesn't exist
 if 'selected_language' not in st.session_state:
     st.session_state.selected_language = 'German'  # Default language
 
 # Set the page layout - it is a two column layout
 col1, col2 = page_layout_config.get_page_layout()
-
+run_training_flag = st.sidebar.checkbox("Run Training Pipeline")
 def create_dashboard_main_page(inference_predictions):
 
     """
@@ -103,16 +104,19 @@ def run_training():
 
 
 
+
 if __name__ == "__main__":
     
-    # python main.py --train - to run training pipeline
-    parser = argparse.ArgumentParser(description="Run the training pipeline.")
-    parser.add_argument('--train', action='store_true', help="Run the training pipeline.")
-    args = parser.parse_args()
-    if args.train:
+    # # python main.py --train - to run training pipeline
+    # parser = argparse.ArgumentParser(description="Run the training pipeline.")
+    # parser.add_argument('--train', action='store_true', help="Run the training pipeline.")
+    # args = parser.parse_args()
+
+    # check if train box is checked                 
+    if run_training_flag:
         run_training()
     else:                     
-        print("Training pipeline not executed. Use --train to run the training pipeline.")
+        print("Training pipeline not executed.")
 
     print("Taking the prediction from the previous train run")
 

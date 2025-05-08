@@ -106,7 +106,7 @@ common_columns = ['Time',
 
 
 
-def source_historic_visitor_count_local(local_folder_path, common_columns):
+def source_historic_visitor_count():
     """Source historic visitor count data from a local folder."""
 
     # Match all CSV files in the local folder

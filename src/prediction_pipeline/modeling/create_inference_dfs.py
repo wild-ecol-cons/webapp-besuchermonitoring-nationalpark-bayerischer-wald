@@ -1,14 +1,11 @@
-import awswrangler as wr
 import pandas as pd
 import streamlit as st
-import boto3
 import joblib
 import io
 from pycaret.regression import load_model
 from sklearn.preprocessing import MinMaxScaler
 from src.config import regions, aws_s3_bucket
 import os
-import random
 
 # change this to change the model to be used for inference
 chosen_uuid = "1483317c-343a-4424-88a6-bd57459901d1"
@@ -68,13 +65,14 @@ def load_latest_models_local(model_folder, models_names):
     loaded_models = {}
 
     for model in models_names:
-        file_path = os.path.join(model_folder, model + '.pkl')
+        file_path = os.path.join(model_folder, model)
         print(f"Loading model '{model}' from: {file_path}")
 
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"Model file not found: {file_path}")
 
-        loaded_model = joblib.load(file_path)
+        #loaded_model = joblib.load(file_path)
+        loaded_model = load_model(file_path)
         loaded_models[model] = loaded_model
 
     return loaded_models
@@ -111,11 +109,13 @@ def predict_with_models(loaded_models, df_features):
 
             # Make sure predictions are integers and not floats
             df_predictions['predictions'] = df_predictions['predictions'].astype(int)
-    
-            # save the prediction dataframe as a parquet file in aws
-            wr.s3.to_parquet(df_predictions,path = f"s3://{aws_s3_bucket}/models/inference_data_outputs/{model_name}.parquet")
 
-            print(f"Predictions for {model_name} stored successfully")
+            # make the folder if it doesn't exist
+            if not os.path.exists("models/inference_data_outputs"):
+                os.makedirs("models/inference_data_outputs")    
+            #save the prediction dataframe as a parquet file locally
+            df_predictions.to_parquet(f"models/inference_data_outputs/{model_name}.parquet", index=False)
+            print(f"Predictions for {model_name} stored locally")
             df_predictions["region"] = model_name.split('extra_trees_')[1].split('.parquet')[0]
 
             # Append the predictions to the overall_predictions DataFrame
@@ -159,7 +159,9 @@ def visitor_predictions(inference_data):
     loaded_models = load_latest_models_local(model_folder, model_names)
 
     print("Models loaded successfully")
-    
+    print("Starting predictions...")
+    print("Inference data shape:", inference_data.shape)
+    print(inference_data.head())
     overall_inference_predictions = predict_with_models(loaded_models, inference_data)
 
     preprocessed_overall_inference_predictions = preprocess_overall_inference_predictions(overall_inference_predictions)

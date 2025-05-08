@@ -431,7 +431,7 @@ def write_parquet_file(df: pd.DataFrame, path: str, **kwargs) -> pd.DataFrame:
         **kwargs: Additional arguments to pass to the to_parquet function.
     """
     try:
-        pd.to_parquet(df, path=path, **kwargs)
+        df.to_parquet(path=path, engine = 'pyarrow', **kwargs)
         print(f"DataFrame successfully written to {path}")
     except Exception as e:
         logging.error(f"Failed to write DataFrame to parquet {e}")
@@ -457,7 +457,5 @@ def process_visitor_center_data(sourced_df):
     write_parquet_file(daily_df, saved_path_visitor_center_query)
     # Save houly data for joining/modeling
     write_parquet_file(hourly_df, saved_path_visitor_center_modeling)
-
-
 
     return hourly_df, daily_df

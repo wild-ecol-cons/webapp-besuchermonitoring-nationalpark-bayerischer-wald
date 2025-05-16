@@ -453,6 +453,11 @@ def preprocess_visitor_count_data(visitor_counts: pd.DataFrame) -> pd.DataFrame:
 
     print("\nVisitor sensors data is preprocessed and overall traffic metrics were created! \n")
     
+    # create the output folder if it does not exist
+    if not os.path.exists(output_data_folder):
+        os.makedirs(output_data_folder)
+        print(f"Output folder {output_data_folder} created.")
+    
     # Save the preprocessed data to a CSV file locally
     df_traffic_metrics.to_csv(os.path.join(output_data_folder, output_file_name), index=False)
 

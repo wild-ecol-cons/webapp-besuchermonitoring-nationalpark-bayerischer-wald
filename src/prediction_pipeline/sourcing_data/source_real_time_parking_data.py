@@ -11,6 +11,7 @@ import os
 # Load Bayern Cloud API key from environment variables
 BAYERN_CLOUD_API_KEY = os.getenv('BAYERN_CLOUD_API_KEY')
 
+parking_data_dir = os.path.join('data','raw','real_time_parking_data')
 # We are not using 'parkplatz-fredenbruecke-1' and 'skiwanderzentrum-zwieslerwaldhaus-2' because of inconsistency in sending data to the cloud
 parking_sensors = {
     "parkplatz-graupsaege-1":"e42069a6-702f-4ef4-b3b5-04e310d97ca0",
@@ -26,8 +27,6 @@ parking_sensors = {
     "parkplatz-waldhaeuser-ausblick-1" : "a14d8ebd-9261-49f7-875b-6a924fe34990",
     "parkplatz-skisportzentrum-finsterau-1": "ea474092-1064-4ae7-955e-8db099955c16"} 
 
-
-OUTPUT_DIR = './outputs/parking_data_final/real_time/'
 ########################################################################################
 # Functions
 ########################################################################################
@@ -58,10 +57,10 @@ def load_and_save_occupancy_data_for_location(
 def main():
     # Fetch and save real-time parking data for each location
     # check if the directory exists
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    os.makedirs(parking_data_dir, exist_ok=True)
     for location_slug in parking_sensors.keys():
         print(f"Fetching and saving real-time occupancy data for location '{location_slug}'...")
-        load_and_save_occupancy_data_for_location(location_slug, OUTPUT_DIR)
+        load_and_save_occupancy_data_for_location(location_slug, parking_data_dir)
 
     return
 

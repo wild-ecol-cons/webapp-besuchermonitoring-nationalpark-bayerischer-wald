@@ -452,6 +452,11 @@ def process_visitor_center_data(sourced_df):
     # Before saving and returning hourly_df, we need to add the hour column
     hourly_df['Hour'] = hourly_df['Time'].dt.hour
 
+    # check if the path exists, if not create it
+    if not os.path.exists(os.path.dirname(saved_path_visitor_center_query)):
+        os.makedirs(os.path.dirname(saved_path_visitor_center_query))
+    if not os.path.exists(os.path.dirname(saved_path_visitor_center_modeling)):
+        os.makedirs(os.path.dirname(saved_path_visitor_center_modeling))
     # Save locally to parquet files
     # Save daily data for querying
     write_parquet_file(daily_df, saved_path_visitor_center_query)

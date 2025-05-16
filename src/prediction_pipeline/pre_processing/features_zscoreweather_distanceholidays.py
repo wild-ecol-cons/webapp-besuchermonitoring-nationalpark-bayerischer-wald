@@ -195,6 +195,8 @@ def get_zscores_and_nearest_holidays(df,columns_for_zscores):
 
     # Save the DataFrame to a CSV file in the output folder
     output_file_path = os.path.join(output_data_folder, output_file_name)
+    # Create the output directory if it doesn't exist
+    os.makedirs(output_data_folder, exist_ok=True)
     df_zscores_and_nearest_holidays.to_csv(output_file_path, index=False)
     
     print(f"Dataset with new features (distance to holidays, weather z-scores) saved to {output_file_path}")

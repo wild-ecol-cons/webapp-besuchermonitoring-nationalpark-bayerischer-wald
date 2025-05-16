@@ -87,7 +87,7 @@ def save_higher_occupancy_rate(data,sensor):
     Save the rows where the occupancy rate is greater than 100
 
     """
-    save_path = os.path.join('./outputs','parking_data_final','data_quality_issues',f'{sensor}_higher_occupancy_rate.csv')
+    save_path = os.path.join('processed','parking_data_quality',f'{sensor}_higher_occupancy_rate.csv')
 
     # make the output directory if it doesn't exist
     os.makedirs(os.path.dirname(save_path), exist_ok=True)

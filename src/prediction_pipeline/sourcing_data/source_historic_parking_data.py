@@ -28,7 +28,7 @@ parking_sensors = {
     "parkplatz-waldhaeuser-ausblick-1" : "a14d8ebd-9261-49f7-875b-6a924fe34990",
     "parkplatz-skisportzentrum-finsterau-1": "ea474092-1064-4ae7-955e-8db099955c16"} 
 
-OUTPUT_DIR = './outputs/parking_data_final/'
+historic_parking_data_path = os.path.join('data', 'raw', 'historic_parking_data')
 
 ########################################################################################
 # Functions
@@ -109,8 +109,8 @@ def process_all_locations(parking_sensors):
         filename = f"{key}_historical_parking_data.csv"
 
         # make the output directory if it doesn't exist
-        os.makedirs(OUTPUT_DIR, exist_ok=True)
-        output_path = os.path.join(OUTPUT_DIR, filename)
+        os.makedirs(historic_parking_data_path, exist_ok=True)
+        output_path = os.path.join(historic_parking_data_path, filename)
 
         merged_df.to_csv(output_path, index=False)
 

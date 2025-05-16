@@ -1,6 +1,6 @@
 # Import necessary libraries
 import warnings
-
+import os
 # Ignore warnings
 warnings.filterwarnings('ignore')
 
@@ -84,10 +84,12 @@ def process_weather_data(sourced_df):
     # Fill missing values in the weather data
     imputed_data = fill_missing_values(sourced_df, parameters)
     
-    # # Uncomment the following line to save the processed data to a CSV file
-    # # Save the processed data to a CSV file
-    # save_data_to_csv(imputed_data, 'outputs/weather_data_final/processed_weather_data_2016-24_forecasted_imputed.csv')
-
+    process_weather_data_path = os.path.join('data','processed', 'weather')
+    # Create the output directory if it doesn't exist
+    os.makedirs(process_weather_data_path, exist_ok=True)
+    # Uncomment the following line to save the processed data to a CSV file
+    # Save the processed data to a CSV file
+    imputed_data.to_csv(os.path.join(process_weather_data_path, 'processed_weather_data.csv'), index=False)
 
     return imputed_data
 

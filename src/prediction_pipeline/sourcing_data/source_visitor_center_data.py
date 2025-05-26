@@ -5,9 +5,9 @@ visitor_center_data_path = os.path.join("data","raw","visitor_center","national-
 saved_path_visitor_center_modelling = os.path.join("data","processed","visitor_center","visitor_centers_hourly.parquet")
 
 def source_visitor_center_data():
-    # Source data - this is the preprocessed data
-    sourced_visitor_count_data = pd.read_excel(visitor_center_data_path)
-
+    sourced_visitor_count_data = pd.read_excel(visitor_center_data_path,header=0, sheet_name="Daten")
+    sourced_visitor_count_data['Datum'] = pd.to_datetime(sourced_visitor_count_data['Datum'], errors='coerce').dt.normalize()
+    
     return sourced_visitor_count_data
 
 def source_preprocessed_hourly_visitor_center_data():

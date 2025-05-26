@@ -354,6 +354,34 @@ def handle_outliers(df, num_sd=7):
     'Parkpl_HZW_PKW',
     'Parkpl_HZW_BUS']
     
+    def clean_numeric_columns(df, columns):
+        for col in columns:
+            if col in df.columns:
+                # Replace all non-numeric (string) values with 0
+                df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
+        return df
+
+    # def clean_numeric_columns(df, columns):
+    #     known_replacements = {
+    #         'kein Betrieb': 0,
+    #         'kein Schranken': 0,
+    #         'nix': 0,
+    #         '': 0
+    #     }
+
+    #     for col in columns:
+    #         if col in df.columns:
+    #             # Replace known strings
+    #             df[col] = df[col].replace(known_replacements)
+
+    #             # Convert only non-integers (i.e., strings or mixed) to numeric
+    #             df[col] = pd.to_numeric(df[col], errors='coerce')
+
+    #             # Fill NaNs (from unknown strings or blanks) with 0, keep existing numbers
+    #             df[col] = df[col].fillna(0).astype(int)
+
+    #     return df
+    df = clean_numeric_columns(df, columns)
     #outliers = {}
     
     # Detect outliers and store in dictionary

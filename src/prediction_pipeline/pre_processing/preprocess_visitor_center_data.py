@@ -69,13 +69,40 @@ def change_holidays_to_bool(df_visitcenters):
     df_visitcenters['Schulferien_CZ'] = df_visitcenters['Schulferien_CZ'].astype(bool)
     return df_visitcenters
 
-def change_duplicate_date(df_visitcenters):
-    # This changes the second instance of date 9-29-2021 to 9-29-2023
-    indices = df_visitcenters[df_visitcenters['Datum'] == '9/29/2021'].index
-    if len(indices) > 1:
-    # Replace the second instance with '9/29/2023'
-        df_visitcenters.at[indices[1], 'Datum'] = '9/29/2023'
-    return df_visitcenters
+# def change_duplicate_date(df_visitcenters):
+# This was hardcoded to change a specific date in the dataset and hence commented out
+#     # This changes the second instance of date 9-29-2021 to 9-29-2023
+#     indices = df_visitcenters[df_visitcenters['Datum'] == '9/29/2021'].index
+#     if len(indices) > 1:
+#     # Replace the second instance with '9/29/2023'
+#         df_visitcenters.at[indices[1], 'Datum'] = '9/29/2023'
+#     return df_visitcenters
+
+def change_duplicate_dates(df, col='Datum'):
+    df = df.copy()
+    df[col] = pd.to_datetime(df[col], errors='coerce')
+    
+    # Sort by date to keep things predictable
+    df = df.sort_values(col).reset_index(drop=True)
+    
+    seen_dates = set()
+    
+    for i in range(len(df)):
+        current_date = df.at[i, col]
+        
+        # Skip missing dates
+        if pd.isna(current_date):
+            continue
+        
+        # If current date already exists, adjust until unique
+        while current_date in seen_dates:
+            previous_date = df.at[i - 1, col]
+            current_date = previous_date + pd.Timedelta(days=1)
+        
+        df.at[i, col] = current_date
+        seen_dates.add(current_date)
+    
+    return df
 
 def correct_besuchszahlen_heh(df):
     """
@@ -146,7 +173,7 @@ def clean_visitor_center_data(df_visitcenters):
     # Change holidays to bool type
     df_visitcenters=change_holidays_to_bool(df_visitcenters)
     # Change duplicated date
-    df_visitcenters=change_duplicate_date(df_visitcenters)
+    df_visitcenters=change_duplicate_dates(df_visitcenters)
     # Correct Besuchszahlen counts to non-decimal (round up)
     df_visitcenters=correct_besuchszahlen_heh(df_visitcenters)
     # Correct WGM_geoffnet - instance of 11 (should be 1)

@@ -33,7 +33,6 @@ if 'selected_language' not in st.session_state:
 
 # Set the page layout - it is a two column layout
 col1, col2 = page_layout_config.get_page_layout()
-run_training_flag = st.sidebar.checkbox("Run Training Pipeline")
 def create_dashboard_main_page(inference_predictions):
 
     """
@@ -102,31 +101,36 @@ def run_training():
     # train the model
     train_regressor(feature_df)
 
+def run_training_pipeline():
+    st.write("🚀 Starting training pipeline...")
+    run_training()
+    st.success("✅ Training completed.")
 
+def run_inference_pipeline():
+    st.write("📊 Running inference from the last trained model...")
+    preprocessed_data = source_preprocessed_hourly_visitor_center_data()
+    predictions = run_inference(preprocessed_data)
+    create_dashboard_main_page(predictions)
+    st.success("✅ Inference and dashboard ready.")
 
+def main():
+    st.title("📈 Visitor Center Dashboard")
+    st.sidebar.header("Choose Action")
+
+    # User selects one of the two actions
+    action = st.sidebar.radio("Select what to do:", ["-- Select --", "Run Training", "Run Inference"])
+
+    # Run button
+    run_button = st.sidebar.button("🚀 Run")
+
+    if run_button:
+        if action == "Run Training":
+            run_training_pipeline()
+        elif action == "Run Inference":
+            run_inference_pipeline()
+        else:
+            st.warning("⚠️ Please select an action from the sidebar.")
 
 if __name__ == "__main__":
-    
-    # # python main.py --train - to run training pipeline
-    # parser = argparse.ArgumentParser(description="Run the training pipeline.")
-    # parser.add_argument('--train', action='store_true', help="Run the training pipeline.")
-    # args = parser.parse_args()
+    main()
 
-    # check if train box is checked                 
-    if run_training_flag:
-        run_training()
-    else:                     
-        print("Training pipeline not executed.")
-
-    print("Taking the prediction from the previous train run")
-
-    
-    # For dashboard
-
-    preprocessed_hourly_visitor_center_data = source_preprocessed_hourly_visitor_center_data()
-
-    # call the sourcing and processing pipeline
-    inference_predictions = run_inference(preprocessed_hourly_visitor_center_data)
-
-    # create the dashboard
-    create_dashboard_main_page(inference_predictions)

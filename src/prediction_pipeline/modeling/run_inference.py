@@ -7,6 +7,7 @@ from datetime import datetime
 from src.prediction_pipeline.modeling.preprocess_inference_features import source_preprocess_inference_data
 from src.prediction_pipeline.modeling.create_inference_dfs import visitor_predictions
 from src.prediction_pipeline.sourcing_data.source_weather import source_weather_data
+from src.prediction_pipeline.pre_processing.preprocess_weather_data import process_weather_data
 
 
 @st.fragment(run_every="3h")
@@ -44,7 +45,8 @@ def run_inference(preprocessed_hourly_visitor_center_data):
     print(f"Running inference part from {start_inference_time} to {end_inference_time}...")
 
     weather_data_inference = source_weather_data(start_time=start_inference_time, end_time=end_inference_time)
-
+    #process the weather data
+    weather_data_inference = process_weather_data(weather_data_inference)
     # print head of weathrer data
     print("Weather data for inference:")
     print(weather_data_inference.head())

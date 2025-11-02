@@ -17,7 +17,7 @@ target_vars_et  = ['traffic_abs', 'sum_IN_abs', 'sum_OUT_abs',
                     'Lusen-Mauth-Finsterau IN', 'Lusen-Mauth-Finsterau OUT', 
                     'Nationalparkzentrum Lusen IN', 'Nationalparkzentrum Lusen OUT',
                     'Rachel-Spiegelau IN', 'Rachel-Spiegelau OUT', 
-                    'Falkenstein-Schwellhäusl IN', 'Falkenstein-Schwellhäusl OUT',
+                    'Falkenstein-Schwellhausl IN', 'Falkenstein-Schwellhausl OUT',
                     'Scheuereck-Schachten-Trinkwassertalsperre IN', 'Scheuereck-Schachten-Trinkwassertalsperre OUT', 
                     'Nationalparkzentrum Falkenstein IN', 'Nationalparkzentrum Falkenstein OUT']
 

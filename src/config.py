@@ -1,4 +1,4 @@
-aws_s3_bucket = 'dssgx-munich-2024-bavarian-forest'
+aws_s3_bucket = 'npbw-visitor-monitoring-dssgx'
 
 regions = {
     'Bayerischer Wald Total': ['sum_IN_abs', 'sum_OUT_abs'],

@@ -26,9 +26,13 @@ def source_preprocessed_hourly_visitor_center_data():
     Load the preprocessed hourly visitor center data from AWS S3.
     """
 
+    print("Sourcing the historic preprocessed_hourly_visitor_center_data")
+
     # Load visitor count data from AWS S3
     preprocessed_hourly_visitor_center_data = wr.s3.read_parquet(
-        path=f"s3://{aws_s3_bucket}/preprocessed_data/visitor_centers_hourly.parquet"
+        path=f"s3://{aws_s3_bucket}/preprocessed_data/visitor_centers_hourly_2017_to_2025.parquet"
     )
+
+    print(f"The historic preprocessed_hourly_visitor_center_data is: {preprocessed_hourly_visitor_center_data}")
 
     return preprocessed_hourly_visitor_center_data

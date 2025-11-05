@@ -45,8 +45,12 @@ def run_inference(preprocessed_hourly_visitor_center_data):
 
     weather_data_inference = source_weather_data(start_time=start_inference_time, end_time=end_inference_time)
 
+    print(f"The overall weather_data_inference is: {weather_data_inference}")
+
     # preprocess the inference data
     inference_df = source_preprocess_inference_data(weather_data_inference, preprocessed_hourly_visitor_center_data, start_time=today, end_time=end_inference_time)
+
+    print(f"The overall inference_df is: {inference_df}")
 
     # make predictions
     overall_visitor_predictions = visitor_predictions(inference_df) 

@@ -23,7 +23,11 @@ def get_visitor_counts_section(inference_predictions):
     
     # do a dropdown for the all_preds
     regions_to_select = list(regions.keys())
-    selected_region = st.selectbox(TRANSLATIONS[st.session_state.selected_language]['select_region'], regions_to_select)
+    selected_region = st.selectbox(
+        TRANSLATIONS[st.session_state.selected_language]['select_region'],
+        regions_to_select,
+        width=400
+    )
 
     if selected_region:
 

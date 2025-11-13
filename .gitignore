@@ -5,3 +5,4 @@ __pycache__
 *.log
 /catboost_info
 config/
+.streamlit/secrets.toml

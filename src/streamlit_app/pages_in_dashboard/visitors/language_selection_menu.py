@@ -155,26 +155,11 @@ def update_language():
         st.session_state.selected_language = 'German'
 
 def get_language_selection_menu():
-    # Custom CSS to position the dropdown menu in the top right corner
-    st.markdown(
-    """
-    <style>
-    /* Style the selectbox for top right corner positioning */
-    .stSelectbox {
-        position: relative;
-        top: 10px; /* Adjust top positioning */
-        right: 10px; /* Adjust right positioning */
-        width: 50px; /* Set dropdown width */
-        z-index: 100; /* Ensure it's on top */
-    }
-    </style>
-    """,
-        unsafe_allow_html=True,
-    )
 
     selected_language = st.selectbox(TRANSLATIONS[st.session_state.selected_language]['select_language'], 
                             options=list(LANGUAGE_OPTIONS.values()),
                             index=0 if st.session_state.selected_language == 'German' else 1,
                             # Update the session_state when changing the input
                             on_change=update_language,
+                            width=200
                             )

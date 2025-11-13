@@ -17,7 +17,7 @@ target_vars_et  = ['traffic_abs', 'sum_IN_abs', 'sum_OUT_abs',
                     'Lusen-Mauth-Finsterau IN', 'Lusen-Mauth-Finsterau OUT', 
                     'Nationalparkzentrum Lusen IN', 'Nationalparkzentrum Lusen OUT',
                     'Rachel-Spiegelau IN', 'Rachel-Spiegelau OUT', 
-                    'Falkenstein-Schwellhäusl IN', 'Falkenstein-Schwellhäusl OUT',
+                    'Falkenstein-Schwellhausl IN', 'Falkenstein-Schwellhausl OUT',
                     'Scheuereck-Schachten-Trinkwassertalsperre IN', 'Scheuereck-Schachten-Trinkwassertalsperre OUT', 
                     'Nationalparkzentrum Falkenstein IN', 'Nationalparkzentrum Falkenstein OUT']
 
@@ -121,7 +121,7 @@ def preprocess_overall_inference_predictions(overall_predictions: pd.DataFrame) 
     # Create a new column to combine both date and day for radio buttons
     overall_predictions_wide['day_date'] = overall_predictions_wide['Time'].dt.strftime('%d-%m-%Y')
 
-        # Calculate the traffic rate per region
+    # Calculate the traffic rate per region
     for key, value in regions.items():
         overall_predictions_wide[key] = overall_predictions_wide[value[0]] + overall_predictions_wide[value[1]]
 

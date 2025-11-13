@@ -91,7 +91,8 @@ def get_parking_section(
     selected_location = st.selectbox(
         TRANSLATIONS[st.session_state.selected_language]['select_parking_section'], 
         processed_parking_data['location'].unique(),
-        key="selectbox_parking_section"
+        key="selectbox_parking_section",
+        width=400
     )
 
     # Display selected location details

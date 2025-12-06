@@ -83,7 +83,7 @@ AZURE_FILE_URL = f"az://{CONTAINER_NAME}/{FILE_PATH}"
 try:
     print(f"\nAttempting to write Parquet File to: {AZURE_FILE_URL}")
     
-    df.to_csv(
+    df.to_parquet(
         AZURE_FILE_URL,
         index=False,
         storage_options=storage_options
@@ -92,3 +92,26 @@ try:
     print("\nSuccessfully saved DataFrame to Azure Blob Storage.")
 except Exception as e:
     print(f"\nAn error occurred while writing to Azure Blob Storage: {e}")
+
+
+# --- CATEGORY EXCEL ---
+
+# Method 1: Read Excel from Azure Blob Storage
+FILE_PATH = "raw-data/03112025-visitor-centers-no-visitors-opening-times-2017-2025.xlsx"
+AZURE_FILE_URL = f"az://{CONTAINER_NAME}/{FILE_PATH}"
+
+try:
+    print(f"Attempting to read Excel File from: {AZURE_FILE_URL}")
+    
+    df = pd.read_excel(
+        AZURE_FILE_URL,
+        storage_options=storage_options
+    )
+    
+    # --- 4. Verify Data ---
+    print("\nSuccessfully loaded DataFrame:")
+    print(df.head())
+    print(f"\nDataFrame shape: {df.shape}")
+
+except Exception as e:
+    print(f"\nAn error occurred while reading from Azure Blob Storage: {e}")

@@ -75,3 +75,20 @@ try:
 
 except Exception as e:
     print(f"\nAn error occurred while reading from Azure Blob Storage: {e}")
+
+# Method 2: Write Parquet File to Azure Blob Storage
+FILE_PATH = "test-folder/visitor_centers_hourly_2017_to_2025.parquet"
+AZURE_FILE_URL = f"az://{CONTAINER_NAME}/{FILE_PATH}"
+
+try:
+    print(f"\nAttempting to write Parquet File to: {AZURE_FILE_URL}")
+    
+    df.to_csv(
+        AZURE_FILE_URL,
+        index=False,
+        storage_options=storage_options
+    )
+    
+    print("\nSuccessfully saved DataFrame to Azure Blob Storage.")
+except Exception as e:
+    print(f"\nAn error occurred while writing to Azure Blob Storage: {e}")

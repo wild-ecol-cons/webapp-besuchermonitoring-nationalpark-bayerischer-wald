@@ -36,3 +36,19 @@ try:
 except Exception as e:
     print(f"\nAn error occurred while reading from Azure Blob Storage: {e}")
 
+# Method 2: Write CSV to Azure Blob Storage
+FILE_PATH = "test-folder/observations_humans_via_camera_sensors_on_trails.csv"
+AZURE_FILE_URL = f"az://{CONTAINER_NAME}/{FILE_PATH}"
+
+try:
+    print(f"\nAttempting to write CSV to: {AZURE_FILE_URL}")
+    
+    df.to_csv(
+        AZURE_FILE_URL,
+        index=False,
+        storage_options=storage_options
+    )
+    
+    print("\nSuccessfully saved DataFrame to Azure Blob Storage.")
+except Exception as e:
+    print(f"\nAn error occurred while writing to Azure Blob Storage: {e}")

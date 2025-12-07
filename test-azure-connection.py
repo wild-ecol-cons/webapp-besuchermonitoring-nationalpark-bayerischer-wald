@@ -1,6 +1,6 @@
 import pandas as pd
 import os
-from src.utils import upload_dataframe_to_azure
+from src.utils import upload_dataframe_to_azure, read_dataframe_from_azure
 
 # Get Azure account name and key from environment variables
 AZURE_ACCOUNT_NAME = os.environ.get("AZURE_STORAGE_ACCOUNT_NAME")
@@ -21,6 +21,26 @@ CONNECTION_STRING = (
     f"AccountName={AZURE_ACCOUNT_NAME};"
     f"AccountKey={AZURE_ACCOUNT_KEY};"
     f"EndpointSuffix=core.windows.net"
+)
+
+# --- TRYING OUT UTILS FUNCTION READ_DATAFRAME_FROM_AZURE ---
+
+df_from_csv = read_dataframe_from_azure(
+    file_name="observations_humans_via_camera_sensors_on_trails",
+    file_format="csv",
+    source_folder="raw-data",
+)
+
+df_from_parquet = read_dataframe_from_azure(
+    file_name="test-upload-with-utils-function",
+    file_format="parquet",
+    source_folder="test-folder",
+)
+
+df_from_excel = read_dataframe_from_azure(
+    file_name="03112025-visitor-centers-no-visitors-opening-times-2017-2025.xlsx",
+    file_format="xlsx",
+    source_folder="raw-data/",
 )
 
 # --- CATEGORY CSV ---

@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+from src.utils import upload_dataframe_to_azure
 
 # Get Azure account name and key from environment variables
 AZURE_ACCOUNT_NAME = os.environ.get("AZURE_STORAGE_ACCOUNT_NAME")
@@ -43,6 +44,21 @@ try:
 
 except Exception as e:
     print(f"\nAn error occurred while reading from Azure Blob Storage: {e}")
+
+# FOR BOTH CSV + PARQUET - load function from utils + upload DF to Azure
+upload_dataframe_to_azure(
+    df=df,
+    file_name="test-upload-with-utils-function.csv",
+    target_folder="test-folder",
+    file_format="csv",
+)
+
+upload_dataframe_to_azure(
+    df=df,
+    file_name="test-upload-with-utils-function",
+    target_folder="test-folder/",
+    file_format="parquet",
+)
 
 # Method 2: Write CSV to Azure Blob Storage
 FILE_PATH = "test-folder/observations_humans_via_camera_sensors_on_trails.csv"

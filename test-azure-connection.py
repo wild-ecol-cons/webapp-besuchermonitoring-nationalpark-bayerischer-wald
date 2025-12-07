@@ -14,6 +14,14 @@ storage_options = {
 # Define Azure Blob Storage container name
 CONTAINER_NAME = "webapp-besuchermonitoring-data-dev"
 
+# Construct the connection string
+CONNECTION_STRING = (
+    f"DefaultEndpointsProtocol=https;"
+    f"AccountName={AZURE_ACCOUNT_NAME};"
+    f"AccountKey={AZURE_ACCOUNT_KEY};"
+    f"EndpointSuffix=core.windows.net"
+)
+
 # --- CATEGORY CSV ---
 
 # Method 1: Read CSV from Azure Blob Storage
@@ -123,14 +131,6 @@ except Exception as e:
 import pickle
 from azure.storage.blob import BlobClient
 import io
-
-# Construct the connection string
-CONNECTION_STRING = (
-    f"DefaultEndpointsProtocol=https;"
-    f"AccountName={AZURE_ACCOUNT_NAME};"
-    f"AccountKey={AZURE_ACCOUNT_KEY};"
-    f"EndpointSuffix=core.windows.net"
-)
 
 def load_latest_models_azure(connection_string, container_name, folder_prefix, models_names):
     """
@@ -253,3 +253,31 @@ save_model_to_azure_blob(
     model_name="extra_trees_Rachel-Spiegelau IN",
     connection_string=CONNECTION_STRING
 )
+
+
+# --- CATEGORY UTILS ---
+
+# Method 1: List file names in Azure Blob Storage
+
+from azure.storage.blob import BlobServiceClient
+
+def list_files_in_azure_blob(container_name: str, connection_string: str, folder_prefix: str) -> list:
+    """Lists all files in an Azure Blob Storage container.
+
+    Args:
+        container_name (str): The name of the Azure Blob Storage container.
+        connection_string (str): The connection string for the Azure Storage Account.
+
+    Returns:
+        list: A list of file names in the container.
+    """
+
+    blob_service_client = BlobServiceClient.from_connection_string(CONNECTION_STRING)
+    container_client = blob_service_client.get_container_client(CONTAINER_NAME)
+    blob_list = container_client.list_blob_names(name_starts_with=folder_prefix)
+
+    return [name for name in blob_list]
+
+list_of_test_files = list_files_in_azure_blob(container_name=CONTAINER_NAME, connection_string=CONNECTION_STRING, folder_prefix="test-folder")
+
+print(list_of_test_files)

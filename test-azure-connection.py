@@ -192,3 +192,64 @@ loaded_models = load_latest_models_azure(
     models_names=["extra_trees_Rachel-Spiegelau IN"])
 
 print(loaded_models)
+
+
+# Method 2: Write pickled ML models to Azure Blob Storage
+import os
+import pickle
+import io
+from azure.storage.blob import BlobClient
+
+def save_model_to_azure_blob(model, container_name: str, folder_prefix: str, uuid: str, model_name: str, connection_string: str) -> None:
+    """Pickles a model and uploads it to an Azure Blob Storage container.
+
+    Args:
+        model: The ML model object to save.
+        container_name (str): The name of the Azure Blob Storage container.
+        folder_prefix (str): The virtual folder path within the container (e.g., 'models/prod/').
+        model_name (str): The name for the model file (e.g., 'extra_trees_classifier').
+        connection_string (str): The connection string for the Azure Storage Account.
+
+    Returns:
+        None
+    """
+
+    # 1. Construct the full blob name (path in Azure)    
+    blob_name = folder_prefix + uuid + "/" + model_name + '.pkl'
+
+    print(f"Preparing to save model {model_name} to Azure container {container_name} with blob name {blob_name}")
+    
+    # 2. Serialize the model object into an in-memory byte stream (pickle)
+    # This avoids saving a temporary file to the local disk.
+    buffer = io.BytesIO()
+    # Using the standard pickle module for serialization
+    pickle.dump(model, buffer)
+    buffer.seek(0) # Rewind the buffer to the beginning
+
+    try:
+        # 3. Create a BlobClient using the connection string
+        blob_client = BlobClient.from_connection_string(
+            conn_str=CONNECTION_STRING, 
+            container_name=CONTAINER_NAME, 
+            blob_name=blob_name
+        )
+
+        # 4. Upload the byte stream to Azure
+        # upload_blob() takes the byte stream directly. overwrite=True allows updates.
+        blob_client.upload_blob(buffer, overwrite=True)
+        
+        print(f"Successfully saved model {model_name} to Azure Blob Storage at: {container_name}/{blob_name}")
+        
+    except Exception as e:
+        print(f"Error saving model to Azure Blob Storage: {e}")
+        
+    return
+
+save_model_to_azure_blob(
+    model=loaded_models["extra_trees_Rachel-Spiegelau IN"],
+    container_name=CONTAINER_NAME,
+    folder_prefix="test-folder/models/models_trained/",
+    uuid="1483317c-343a-4424-88a6-bd57459901d1",
+    model_name="extra_trees_Rachel-Spiegelau IN",
+    connection_string=CONNECTION_STRING
+)

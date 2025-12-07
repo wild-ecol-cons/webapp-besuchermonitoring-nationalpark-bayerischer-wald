@@ -281,3 +281,21 @@ def list_files_in_azure_blob(container_name: str, connection_string: str, folder
 list_of_test_files = list_files_in_azure_blob(container_name=CONTAINER_NAME, connection_string=CONNECTION_STRING, folder_prefix="test-folder")
 
 print(list_of_test_files)
+
+
+# Method 2: Check whether an explicit file path exists in Azure Blob Storage
+
+from azure.storage.blob import BlobClient    
+
+test_blob_name = "test-folder/models/models_trained/1483317c-343a-4424-88a6-bd57459901d1/extra_trees_Rachel-Spiegelau IN.pkl"
+
+blob_client = BlobClient.from_connection_string(
+    conn_str=CONNECTION_STRING, 
+    container_name=CONTAINER_NAME, 
+    blob_name=test_blob_name
+)
+
+if blob_client.exists():
+    print(f"The file {test_blob_name} exists in the container {CONTAINER_NAME} in Azure Blob Storage.")
+else:
+    print(f"The file {test_blob_name} does not exist in the container {CONTAINER_NAME} in Azure Blob Storage.")

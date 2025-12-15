@@ -90,6 +90,7 @@ def upload_dataframe_to_azure(
     file_name: str,
     target_folder: str = "",
     file_format: str = "parquet",
+    write_options: Optional[Dict[str, Any]] = None,
     container_name: str = CONTAINER_NAME,
     storage_options: dict = storage_options,
 ) -> None:
@@ -101,6 +102,7 @@ def upload_dataframe_to_azure(
         file_name (str): The name of the file to upload.
         target_folder (str, optional): The folder path within the container. Defaults to an empty string.
         file_format (FileFormat, optional): The format of the file to upload. Must be 'csv' or 'parquet'. Defaults to 'parquet'.
+        write_options (dict, optional): Additional options for the write operation. Defaults to None.
         container_name (str, optional): The name of the container in Azure Blob Storage. Defaults to CONTAINER_NAME.
         storage_options (dict, optional): Options for connecting to Azure Blob Storage. Defaults to storage_options.
 
@@ -137,13 +139,15 @@ def upload_dataframe_to_azure(
             df.to_csv(
                 full_azure_path,
                 index=False,
-                storage_options=storage_options
+                storage_options=storage_options,
+                **write_options
             )
         elif file_format == "parquet":
             df.to_parquet(
                 full_azure_path,
                 index=False,
                 storage_options=storage_options,
+                **write_options
             )
             
         print(f"✅ Successfully saved DataFrame as **{file_format.upper()}** to Azure Blob Storage.")

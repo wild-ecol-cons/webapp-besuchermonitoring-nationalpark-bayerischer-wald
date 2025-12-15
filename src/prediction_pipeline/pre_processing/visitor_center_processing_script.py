@@ -5,7 +5,6 @@ import pandas as pd  # Provides data structures and data analysis tools.
 import numpy as np  # Supports large, multi-dimensional arrays and matrices.
 import pyarrow as pa  # Provides functionalities for handling Apache Arrow data.
 import pyarrow.parquet as pq  # Enables reading and writing Parquet files using PyArrow.
-import boto3
 import logging
 import os
 from src.utils import upload_dataframe_to_azure, read_dataframe_from_azure
@@ -17,9 +16,6 @@ from src.utils import upload_dataframe_to_azure, read_dataframe_from_azure
 # Import raw data and Functions to Clean Data
 ##########################################################################
 ##########################################################################
-
-boto3.setup_default_session(profile_name='anthony_garove_fellow_dssgx_24')
-
 
 def change_binary_variables(df_visitcenters):
     # Documentation:

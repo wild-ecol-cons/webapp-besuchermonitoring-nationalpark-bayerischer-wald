@@ -41,11 +41,7 @@ _A glimpse of the final dashboard ✨_
 
     a. **Make sure to have `make` installed.** If not, install it (e.g., with Homebrew for macOS - `brew install make`).
 
-    b. **Authenticate with AWS:** As the project is loading and writing data to a configured AWS S3 object storage, either add AWS permanent credentials (`AWS_ACCESS_KEY_ID`and `AWS_ACCESS_KEY_ID`) to the [Makefile](Makefile), or specify to load them as environmental variables (as currently set up and the preferred option due to security reasons). Alternatively, configure the AWS CLI with Single-Sign-On (SSO), follow the instructions [here](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html). For example, when using AWS SSO, run the following command to login:
-
-    ```bash
-    aws sso login --profile my-dev-aws-profile
-    ```
+    b. **Authenticate with Azure:** As the project is loading and writing data to a configured Azure Blob Storage Container, add Azure credentials (`AZURE_STORAGE_ACCOUNT_NAME` and `AZURE_STORAGE_ACCOUNT_KEY`) to the [Makefile](Makefile), or specify to load them as environmental variables (as currently set up and the preferred option due to security reasons).
 
     c. **Run the Dashboard:** Run the following command to build and run the Streamlit dashboard:
     ```bash
@@ -65,11 +61,7 @@ _A glimpse of the final dashboard ✨_
     
 4. **Run the container without `make`:**
 
-    a. **Authenticate with AWS:** As the project is loading and writing data to a configured AWS S3 object storage, either add AWS permanent credentials (`AWS_ACCESS_KEY_ID`and `AWS_ACCESS_KEY_ID`) to the [Makefile](Makefile), or specify to load them as environmental variables (as currently set up and the preferred option due to security reasons). Alternatively, configure the AWS CLI with Single-Sign-On (SSO), follow the instructions [here](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html). For example, when using AWS SSO, run the following command to login:
-
-    ```bash
-    aws sso login --profile my-dev-aws-profile
-    ```
+    a. **Authenticate with Azure:** As the project is loading and writing data to a configured Azure Blob Storage Container, add Azure credentials (`AZURE_STORAGE_ACCOUNT_NAME` and `AZURE_STORAGE_ACCOUNT_KEY`) to the [Makefile](Makefile), or specify to load them as environmental variables (as currently set up and the preferred option due to security reasons).
 
     b. **Run the `docker build` command** to first build the Docker image needed to run the code. For further details, check the `Makefile`.
 

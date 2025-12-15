@@ -6,10 +6,8 @@ import numpy as np  # Supports large, multi-dimensional arrays and matrices.
 import awswrangler as wr
 import logging
 from src.config import aws_s3_bucket
+from src.utils import upload_dataframe_to_azure
 
-
-saved_path_visitor_center_query = f"s3://{aws_s3_bucket}/preprocessed_data/bf_preprocessed_files/visitor_centers/visitor_centers_2017_to_2024.parquet"
-saved_path_visitor_center_modeling = f"s3://{aws_s3_bucket}/preprocessed_data/visitor_centers_hourly.parquet"
 
 ##########################################################################
 ##########################################################################
@@ -423,23 +421,6 @@ def rename_and_set_time_as_index(df):
     
     return df
 
-def write_parquet_file_to_aws_s3(df: pd.DataFrame, path: str, **kwargs) -> pd.DataFrame:
-    """Writes an individual Parquet file to AWS S3.
-
-    Args:
-        df (pd.DataFrame): The DataFrame to write.
-        path (str): The path to the Parquet files on AWS S3.
-        **kwargs: Additional arguments to pass to the to_parquet function.
-    """
-    try:
-        wr.s3.to_parquet(df, path=path, **kwargs)
-        print(f"DataFrame successfully written to {path}")
-    except Exception as e:
-        logging.error(f"Failed to write DataFrame to S3. Error: {e}")
-    return
-
-
-
 def process_visitor_center_data(sourced_df):
     cleaned_df = clean_visitor_center_data(sourced_df)
     transformed_df = add_additional_columns(cleaned_df)
@@ -455,10 +436,19 @@ def process_visitor_center_data(sourced_df):
 
     # Save to AWS
     # Save daily data to AWS for querying
-    write_parquet_file_to_aws_s3(daily_df, saved_path_visitor_center_query)
+    upload_dataframe_to_azure(
+        df=daily_df,
+        file_name="visitor_centers_2017_to_2024.parquet",
+        target_folder="preprocessed_data/bf_preprocessed_files/visitor_centers",
+        file_format="parquet",
+    )
+    
     # Save houly data to AWS for joining/modeling
-    write_parquet_file_to_aws_s3(hourly_df, saved_path_visitor_center_modeling)
-
-
+    upload_dataframe_to_azure(
+        df=hourly_df,
+        file_name="visitor_centers_hourly.parquet",
+        target_folder="preprocessed_data",
+        file_format="parquet",
+    )
 
     return hourly_df, daily_df

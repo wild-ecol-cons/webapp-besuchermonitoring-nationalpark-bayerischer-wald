@@ -5,7 +5,10 @@ import re
 import awswrangler as wr
 import streamlit as st
 import os
-from src.config import aws_s3_bucket
+from src.config import aws_s3_bucket, CONNECTION_STRING, CONTAINER_NAME
+from src.utils import upload_dataframe_to_azure, read_dataframe_from_azure
+from azure.storage.blob import BlobClient    
+
 
 raw_folder = "raw-data/bf_raw_files"
 preprocessed_folder = "preprocessed_data/bf_preprocessed_files"
@@ -251,11 +254,6 @@ def parse_german_dates(
 
     return df
 
-def write_csv_file_to_aws_s3(df, path):
-
-    save_path = f"s3://{aws_s3_bucket}/{path}"
-    wr.s3.to_csv(df, path=save_path, index=False)
-
 def start_and_end_dates(df,time_column):
     start_date = df[time_column].min()
     end_date = df[time_column].max()
@@ -265,15 +263,29 @@ def start_and_end_dates(df,time_column):
     end_date = end_date.strftime('%Y-%m-%d')
     return start_date, end_date
 
-def process_and_upload_data(new_processed_df, preprocessed_file_path, time_column):
+def process_and_upload_data(
+        new_processed_df,
+        target_folder,
+        file_name,
+        time_column):
     
     try:
-        # Check if the file already exists in the S3 bucket
-        if wr.s3.does_object_exist(preprocessed_file_path):
+        blob_to_verify = BlobClient.from_connection_string(
+            conn_str=CONNECTION_STRING, 
+            container_name=CONTAINER_NAME, 
+            blob_name=f"{target_folder}/{file_name}.csv"
+        )
+        
+        # Check if the file already exists in Azure
+        if blob_to_verify.exists():
             st.info("Existing preprocessed file found. Reading and concatenating with new data...")
             
             # Read the last edited file from the preprocessed folder
-            old_processed_df = wr.s3.read_csv(preprocessed_file_path)
+            old_processed_df = read_dataframe_from_azure(
+                file_name=file_name,
+                file_format="csv",
+                source_folder=target_folder
+            )
             
             # Concatenate the old and the new dataframes
             new_df = pd.concat([old_processed_df, new_processed_df], ignore_index=True)
@@ -290,7 +302,13 @@ def process_and_upload_data(new_processed_df, preprocessed_file_path, time_colum
         new_df["Upload_time"] = pd.to_datetime("today").strftime('%Y-%m-%d %H:%M:%S')
 
         # Write the new dataframe back to S3
-        wr.s3.to_csv(new_df, preprocessed_file_path, index=False)
+        upload_dataframe_to_azure(
+            df=new_df,
+            file_name=file_name,
+            target_folder=target_folder,
+            file_format="csv",
+            write_options={"index": False}
+        )
         st.success("Data successfully processed and uploaded to the preprocessed folder.")
 
     except Exception as e:
@@ -326,14 +344,26 @@ def data_quality_check(data,category):
         # Add upload times the last column of the dataframe
         new_processed_df["Upload_time"] = pd.to_datetime("today").strftime('%Y-%m-%d %H:%M:%S')
 
-        # Define the S3 path for the preprocessed file
-        preprocessed_file_path = f"s3://{aws_s3_bucket}/{preprocessed_folder}/{category}/{category}_preprocessed.csv"
-        process_and_upload_data(new_processed_df, preprocessed_file_path, time_column)
+        process_and_upload_data(
+            new_processed_df=new_processed_df,
+            target_folder=f"{preprocessed_folder}/{category}",
+            file_name=f"{category}_preprocessed",
+            time_column=time_column
+        )
 
     else:
         print("Data quality check failed. Please check the columns in the uploaded file.")
         upload_time = pd.to_datetime("today").strftime('%Y-%m-%d %H:%M:%S')
-        write_csv_file_to_aws_s3(data, f"{invalid_upload_folder}/{category}/{category}_{upload_time}.csv")
+
+        upload_dataframe_to_azure(
+            df=data,
+            file_name=f"{category}_{upload_time}.csv",
+            target_folder=f"{invalid_upload_folder}/{category}",
+            file_format="csv",
+            write_options={
+                "index": False
+            }
+        )
 
         st.error("If you have changed any column names, please update and try again. Your file is now uploaded to the invalid folder in the AWS S3 bucket.")
     

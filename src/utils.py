@@ -111,6 +111,8 @@ def upload_dataframe_to_azure(
         Exception: If the upload fails.
     """
     
+    write_options = write_options or {} # Ensure write_options is always a dictionary
+
     # Standardize and validate folder path
     if target_folder and not target_folder.endswith("/"):
         target_folder += "/"

@@ -1,6 +1,5 @@
 pandas
 streamlit
-awswrangler
 meteostat
 plotly
 pydeck

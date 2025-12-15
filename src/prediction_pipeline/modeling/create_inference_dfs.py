@@ -1,4 +1,3 @@
-import awswrangler as wr
 import pandas as pd
 import streamlit as st
 import boto3
@@ -8,12 +7,12 @@ import io
 import io
 from pycaret.regression import load_model
 from sklearn.preprocessing import MinMaxScaler
-from src.config import regions, aws_s3_bucket, CONTAINER_NAME, CONNECTION_STRING
+from src.config import regions, CONTAINER_NAME, CONNECTION_STRING
 from src.utils import upload_dataframe_to_azure
 from azure.storage.blob import BlobClient
 
 
-# Your AWS bucket and folder details where models are stored
+# Folder where models are stored
 folder_prefix = 'models/models_trained/1483317c-343a-4424-88a6-bd57459901d1/'  # If you have a specific folder
 
 
@@ -84,7 +83,7 @@ def load_latest_models_azure(connection_string, container_name, folder_prefix, m
 def predict_with_models(loaded_models, df_features):
     """
     Given a dictionary of models and a DataFrame of features, this function predicts the target
-    values using each model and saves the inference predictions to AWS S3 (to be further loaded from Streamlit).
+    values using each model and saves the inference predictions to the cloud (to be further loaded from Streamlit).
     
     Parameters:
     - loaded_models (dict): A dictionary of models where keys are model names and values are the trained models.
@@ -112,7 +111,7 @@ def predict_with_models(loaded_models, df_features):
             # Make sure predictions are integers and not floats
             df_predictions['predictions'] = df_predictions['predictions'].astype(int)
     
-            # save the prediction dataframe as a parquet file in aws
+            # save the prediction dataframe as a parquet file
             upload_dataframe_to_azure(
                 df=df_predictions,
                 file_name=model_name,

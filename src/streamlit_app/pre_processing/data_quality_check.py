@@ -2,10 +2,9 @@ import pandas as pd
 from src.streamlit_app.pre_processing.gen_config_for_visitor_sensors_and_centers import visitor_centers, visitor_sensors
 import numpy as np
 import re
-import awswrangler as wr
 import streamlit as st
 import os
-from src.config import aws_s3_bucket, CONNECTION_STRING, CONTAINER_NAME
+from src.config import CONNECTION_STRING, CONTAINER_NAME
 from src.utils import upload_dataframe_to_azure, read_dataframe_from_azure
 from azure.storage.blob import BlobClient    
 
@@ -301,7 +300,7 @@ def process_and_upload_data(
         # Add upload timestamp to the new data
         new_df["Upload_time"] = pd.to_datetime("today").strftime('%Y-%m-%d %H:%M:%S')
 
-        # Write the new dataframe back to S3
+        # Write the new dataframe back to the cloud
         upload_dataframe_to_azure(
             df=new_df,
             file_name=file_name,
@@ -365,7 +364,7 @@ def data_quality_check(data,category):
             }
         )
 
-        st.error("If you have changed any column names, please update and try again. Your file is now uploaded to the invalid folder in the AWS S3 bucket.")
+        st.error("If you have changed any column names, please update and try again. Your file is now uploaded to the invalid folder on the cloud storage.")
     
     return status
     

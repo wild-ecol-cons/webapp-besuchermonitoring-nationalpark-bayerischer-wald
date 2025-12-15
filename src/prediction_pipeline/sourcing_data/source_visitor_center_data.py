@@ -1,9 +1,6 @@
-import awswrangler as wr
 import pandas as pd
-from src.config import aws_s3_bucket
 from src.utils import read_dataframe_from_azure
 
-visitor_center_data_path = f"s3://{aws_s3_bucket}/raw-data/national-park-vacation-times-houses-opening-times-visitors.xlsx"
 
 def source_visitor_center_data():
     # Source data - this is the preprocessed data
@@ -18,12 +15,12 @@ def source_visitor_center_data():
 def source_preprocessed_hourly_visitor_center_data():
 
     """
-    Load the preprocessed hourly visitor center data from AWS S3.
+    Load the preprocessed hourly visitor center data from the cloud.
     """
 
     print("Sourcing the historic preprocessed_hourly_visitor_center_data")
 
-    # Load visitor count data from AWS S3
+    # Load visitor count data from the cloud
     preprocessed_hourly_visitor_center_data = read_dataframe_from_azure(
         file_name="visitor_centers_hourly_2017_to_2025.parquet",
         file_format="parquet",

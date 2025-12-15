@@ -2,9 +2,8 @@
 # import the required libraries
 import streamlit as st
 import pandas as pd
-import awswrangler as wr
 import re
-from src.config import aws_s3_bucket, storage_options, CONTAINER_NAME, CONNECTION_STRING
+from src.config import storage_options, CONTAINER_NAME, CONNECTION_STRING
 from src.utils import read_dataframe_from_azure
 from azure.storage.blob import BlobClient    
 
@@ -394,15 +393,9 @@ def get_weather_data():
 
 def get_parking_data_for_selected_sensor(selected_sensor):
 
-    """Fetches parking data for a specified sensor from S3.
-
-    This function searches through a list of S3 object paths to find
-    the most relevant object that contains the specified sensor name.
-    It then retrieves the parking data from the corresponding Parquet file.
+    """Fetches parking data for a specified sensor from the cloud.
 
     Args:
-        objects (list): A list of S3 object paths to search for the
-            selected sensor.
         selected_sensor (str): The name of the sensor to filter the
             objects.
 
@@ -478,8 +471,7 @@ def get_data_from_query(selected_category,selected_query,selected_query_type, st
 
     """Retrieve data based on the selected category and query.
 
-    This function extracts values from the provided query, retrieves data from
-    AWS based on the selected category, processes the data, and returns a DataFrame
+    This function extracts values from the provided query, retrieves data from the cloud based on the selected category, processes the data, and returns a DataFrame
     containing the queried information.
 
     Args:

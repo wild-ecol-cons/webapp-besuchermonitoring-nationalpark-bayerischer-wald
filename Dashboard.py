@@ -1,7 +1,6 @@
 import streamlit as st
 from PIL import Image
 import pandas as pd
-import awswrangler as wr
 from datetime import datetime
 import pytz
 

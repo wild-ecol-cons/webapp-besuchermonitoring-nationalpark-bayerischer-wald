@@ -1,6 +1,5 @@
 # Import libraries
 import streamlit as st
-import awswrangler as wr
 import datetime
 from src.streamlit_app.pages_in_dashboard.data_accessibility.data_retrieval import get_data_from_query
 from src.streamlit_app.pages_in_dashboard.data_accessibility.query_viz_and_download import get_visualization_section

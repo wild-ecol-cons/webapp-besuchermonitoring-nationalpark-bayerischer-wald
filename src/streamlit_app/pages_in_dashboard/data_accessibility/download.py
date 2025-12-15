@@ -1,16 +1,15 @@
 import streamlit as st
-import awswrangler as wr
 import pandas as pd
-from src.config import aws_s3_bucket, CONNECTION_STRING, CONTAINER_NAME
+from src.config import CONNECTION_STRING, CONTAINER_NAME
 from src.utils import read_dataframe_from_azure
 from azure.storage.blob import BlobServiceClient
 
 
-# AWS Setup
+# Setup
 base_folder = "raw-data/bf_raw_files"
 
 def list_files_in_azure_folder(category: str) -> list:
-    """Lists files in S3 for a given category and returns only file names."""
+    """Lists files in Azure for a given category and returns only file names."""
 
     folder_prefix = f"{base_folder}/{category.replace(' ', '_')}/"
 

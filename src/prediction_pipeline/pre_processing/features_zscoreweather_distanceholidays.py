@@ -1,9 +1,7 @@
 
 # Import libraries
 import pandas as pd
-import awswrangler as wr
 import numpy as np
-from src.config import aws_s3_bucket
 from src.utils import upload_dataframe_to_azure
 
 ##############################################################################################
@@ -203,7 +201,7 @@ def get_zscores_and_nearest_holidays(df,columns_for_zscores):
         file_format="csv"
     )
 
-    print("Dataset with new features (distance to holidays, weather z-scores) uploaded to AWS succesfully!")
+    print("Dataset with new features (distance to holidays, weather z-scores) uploaded to the cloud succesfully!")
     
     return df_zscores_and_nearest_holidays
 

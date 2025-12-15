@@ -4,9 +4,8 @@ from pycaret import *
 from pycaret.time_series import *
 from pycaret.regression import *
 import os
-import awswrangler as wr
 import uuid
-from src.config import aws_s3_bucket, CONNECTION_STRING, CONTAINER_NAME
+from src.config import CONNECTION_STRING, CONTAINER_NAME
 from src.utils import upload_dataframe_to_azure
 from azure.storage.blob import BlobClient
 
@@ -125,7 +124,7 @@ def train_regressor(feature_dataframe: pd.DataFrame) -> None:
             # Finalize the model
             final_model = finalize_model(extra_trees_model)
             
-            # save the model in aws s3
+            # save the model to the cloud
             save_models_to_azure(
                 model=final_model,
                 save_path_models=save_path_models,
@@ -134,9 +133,9 @@ def train_regressor(feature_dataframe: pd.DataFrame) -> None:
                 uuid=uuid
             )
                 
-            print(f"Model with {target} saved to AWS S3")
+            print(f"Model with {target} saved to the cloud.")
             
-            # save predictions to aws s3
+            # save predictions to the cloud
             file_name = f"y_test_predicted_{target}.parquet"
             upload_dataframe_to_azure(
                 df=predictions,
@@ -145,6 +144,6 @@ def train_regressor(feature_dataframe: pd.DataFrame) -> None:
                 file_format="parquet",
                 write_options={"index": True}
             )
-            print(f"Predictions with {target} saved to AWS S3")
+            print(f"Predictions with {target} saved to the cloud.")
 
     return

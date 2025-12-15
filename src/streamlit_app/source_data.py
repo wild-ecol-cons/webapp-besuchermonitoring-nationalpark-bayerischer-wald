@@ -1,6 +1,5 @@
 # import the necessary libraries
 import pandas as pd
-import awswrangler as wr
 import requests
 from datetime import datetime, timedelta
 import os

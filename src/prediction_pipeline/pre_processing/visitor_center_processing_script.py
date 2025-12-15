@@ -5,15 +5,12 @@ import pandas as pd  # Provides data structures and data analysis tools.
 import numpy as np  # Supports large, multi-dimensional arrays and matrices.
 import pyarrow as pa  # Provides functionalities for handling Apache Arrow data.
 import pyarrow.parquet as pq  # Enables reading and writing Parquet files using PyArrow.
-import awswrangler as wr
 import boto3
 import logging
 import os
-from src.config import aws_s3_bucket
 from src.utils import upload_dataframe_to_azure, read_dataframe_from_azure
 
 
-visitor_center_data_path = f"s3://{aws_s3_bucket}/raw-data/national-park-vacation-times-houses-opening-times-visitors.xlsx"
 
 ##########################################################################
 ##########################################################################
@@ -442,15 +439,15 @@ def get_visitor_center_data():
     daily_df = handle_outliers(transformed_df)
     hourly_df = create_hourly_dataframe(daily_df)
     hourly_df = rename_and_set_time_as_index(hourly_df)
-    # Save to AWS
-    # Save daily data to AWS for querying
+    
+    # Save daily data to the cloud for querying
     upload_dataframe_to_azure(
         df=daily_df,
         file_name="visitor_centers_2017_to_2024.parquet",
         target_folder="preprocessed_data/bf_preprocessed_files/visitor_centers",
         file_format="parquet",
     )
-    # Save houly data to AWS for joining/modeling
+    # Save houly data to the cloud for joining/modeling
     upload_dataframe_to_azure(
         df=hourly_df,
         file_name="visitor_centers_hourly.parquet",

@@ -3,8 +3,6 @@ Clean historic sensor data from 2016 to 2024. In the docstring of every function
 
 Usage:
 - Change the global variables section if needed
-    - Fill your AWS credentiales
-
 
 Output:
 - Returns the preprocessed data
@@ -17,7 +15,6 @@ Output:
 import pandas as pd
 import re
 import numpy as np
-import awswrangler as wr
 
 pd.options.mode.chained_assignment = None  
 
@@ -31,10 +28,6 @@ output_file_name = "preprocessed_visitor_sensor_data.csv"
 
 
 ##############################################################################################
-
-# Setting up AWS
-
-# boto3.setup_default_session(profile_name=aws_profile) 
     
 # Functions
 

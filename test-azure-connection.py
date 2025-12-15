@@ -335,3 +335,25 @@ if blob_client.exists():
     print(f"The file {test_blob_name} exists in the container {CONTAINER_NAME} in Azure Blob Storage.")
 else:
     print(f"The file {test_blob_name} does not exist in the container {CONTAINER_NAME} in Azure Blob Storage.")
+
+# Method 3: Get the latest file in a folder
+
+def get_latest_file_in_folder(folder_prefix: str):
+    """Returns the path of the most recently modified file in the folder."""
+    blob_service_client = BlobServiceClient.from_connection_string(CONNECTION_STRING)
+    container_client = blob_service_client.get_container_client(CONTAINER_NAME)
+    
+    # Get blobs with metadata (including last_modified)
+    blobs = list(container_client.list_blobs(name_starts_with=folder_prefix))
+    
+    if not blobs:
+        return None
+    
+    # Sort by last_modified (newest first) and return the latest
+    latest_blob = min(blobs, key=lambda x: x.last_modified)
+    return latest_blob.name
+
+latest_file = get_latest_file_in_folder(
+    folder_prefix="test-folder"
+)
+print(f"Latest file: {latest_file}")

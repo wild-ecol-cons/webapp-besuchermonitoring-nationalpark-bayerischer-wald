@@ -67,13 +67,18 @@ def load_latest_models_azure(connection_string, container_name, folder_prefix, m
         # Read all data into a byte stream
         bytes_data = download_stream.readall()
 
-        # 3. Load the pickled model from the byte stream
-        # Using the standard 'pickle' module (or joblib if installed/preferred)
-        # We wrap the bytes in io.BytesIO to simulate a file object for pickle.load()
-        loaded_model = pickle.load(io.BytesIO(bytes_data))
+        # 3. Load the model from the byte stream using JOBLIB.LOAD
+        # Joblib is generally recommended for models with large NumPy arrays (like scikit-learn models).
+        # It's highly likely this is how the models were saved.
         
-        # Store the loaded model in the dictionary
+        # We wrap the bytes in io.BytesIO to simulate a file object for joblib.load()
+        loaded_model = joblib.load(io.BytesIO(bytes_data))
+        
+        # Store the loaded model
         loaded_models[f'{model}'] = loaded_model
+        
+        # Optional: Print the type to confirm the fix
+        print(f"Successfully loaded model '{model}'. Type: {type(loaded_model)}")
     
     return loaded_models
 

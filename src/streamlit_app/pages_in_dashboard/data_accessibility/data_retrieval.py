@@ -5,7 +5,7 @@ import pandas as pd
 import re
 from src.config import storage_options, CONTAINER_NAME, CONNECTION_STRING
 from src.utils import read_dataframe_from_azure
-from azure.storage.blob import BlobClient    
+from azure.storage.blob import BlobServiceClient  
 
 
 # Types of queries that the functions will use to know what data to retrieve

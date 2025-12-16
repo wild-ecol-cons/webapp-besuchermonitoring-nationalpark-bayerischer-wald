@@ -392,8 +392,11 @@ def get_weather_data():
     # Sort by last_modified (newest first) and return the latest
     latest_blob = max(blobs, key=lambda x: x.last_modified).name
 
+    AZURE_FILE_URL = f"az://{CONTAINER_NAME}/{latest_blob}"
+    print(f"Fetching weather data from: {AZURE_FILE_URL}")
+
     df = pd.read_parquet(
-        latest_blob,
+        AZURE_FILE_URL,
         storage_options=storage_options,
     )
     return df

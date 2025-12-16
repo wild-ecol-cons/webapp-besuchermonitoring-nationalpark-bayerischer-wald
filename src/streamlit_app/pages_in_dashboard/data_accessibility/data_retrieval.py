@@ -349,7 +349,11 @@ def get_visitor_centers_data():
     if not blobs:
         return None
     
-    excel_objects = [obj for obj in blobs if obj.endswith(('.xlsx', '.xls'))]
+    excel_objects = [
+        obj
+        for obj in blobs
+        if obj.name.lower().endswith(('.xlsx', '.xls'))
+    ]
 
     if not excel_objects:
         raise ValueError("No visitor center data found!")
@@ -357,8 +361,11 @@ def get_visitor_centers_data():
     # Sort by last_modified (newest first) and return the latest
     latest_blob = max(excel_objects, key=lambda x: x.last_modified).name
 
+    AZURE_FILE_URL = f"az://{CONTAINER_NAME}/{latest_blob}"
+    print(f"Fetching visitor centers data from: {AZURE_FILE_URL}")
+
     df = pd.read_excel(
-        latest_blob,
+        AZURE_FILE_URL,
         storage_options=storage_options,
         skipfooter=1
     )

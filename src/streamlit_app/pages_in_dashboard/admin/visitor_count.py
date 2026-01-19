@@ -1,5 +1,4 @@
 import streamlit as st
-import awswrangler as wr
 import pandas as pd
 import plotly.express as px
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS

@@ -5,35 +5,17 @@ import pandas as pd  # Provides data structures and data analysis tools.
 import numpy as np  # Supports large, multi-dimensional arrays and matrices.
 import pyarrow as pa  # Provides functionalities for handling Apache Arrow data.
 import pyarrow.parquet as pq  # Enables reading and writing Parquet files using PyArrow.
-import awswrangler as wr
-import boto3
 import logging
 import os
-from src.config import aws_s3_bucket
+from src.utils import upload_dataframe_to_azure, read_dataframe_from_azure
 
 
-visitor_center_data_path = f"s3://{aws_s3_bucket}/raw-data/national-park-vacation-times-houses-opening-times-visitors.xlsx"
-saved_path_visitor_center_query = f"s3://{aws_s3_bucket}/preprocessed_data/bf_preprocessed_files/visitor_centers/visitor_centers_2017_to_2024.parquet"
-saved_path_visitor_center_modeling = f"s3://{aws_s3_bucket}/preprocessed_data/visitor_centers_hourly.parquet"
 
 ##########################################################################
 ##########################################################################
 # Import raw data and Functions to Clean Data
 ##########################################################################
 ##########################################################################
-
-boto3.setup_default_session(profile_name='anthony_garove_fellow_dssgx_24')
-
-def source_data_from_aws_s3(path: str, **kwargs) -> pd.DataFrame:
-    """Loads individual or multiple CSV files from an AWS S3 bucket.
-    Args:
-        path (str): The path to the CSV files on AWS S3.
-        **kwargs: Additional arguments to pass to the read_csv function.
-    Returns:
-        pd.DataFrame: The DataFrame containing the data from the CSV files.
-    """
-    df = wr.s3.read_excel(path=path, **kwargs)
-    return df
 
 def change_binary_variables(df_visitcenters):
     # Documentation:
@@ -441,37 +423,33 @@ def rename_and_set_time_as_index(df):
     
     return df
 
-def write_parquet_file_to_aws_s3(df: pd.DataFrame, path: str, **kwargs) -> pd.DataFrame:
-    """Writes an individual Parquet file to AWS S3.
-
-    Args:
-        df (pd.DataFrame): The DataFrame to write.
-        path (str): The path to the Parquet files on AWS S3.
-        **kwargs: Additional arguments to pass to the to_parquet function.
-    """
-    try:
-        wr.s3.to_parquet(df, path=path, **kwargs)
-        print(f"DataFrame successfully written to {path}")
-    except Exception as e:
-        logging.error(f"Failed to write DataFrame to S3. Error: {e}")
-    return
-
-
-
 def get_visitor_center_data():
-    sourced_df = source_data_from_aws_s3(visitor_center_data_path)
+    sourced_df = read_dataframe_from_azure(
+        file_name="national-park-vacation-times-houses-opening-times-visitors.xlsx",
+        file_format="xlsx",
+        source_folder="raw-data",
+    )
+
     cleaned_df = clean_visitor_center_data(sourced_df)
     transformed_df = add_additional_columns(cleaned_df)
     daily_df = handle_outliers(transformed_df)
     hourly_df = create_hourly_dataframe(daily_df)
     hourly_df = rename_and_set_time_as_index(hourly_df)
-    # Save to AWS
-    # Save daily data to AWS for querying
-    write_parquet_file_to_aws_s3(daily_df, saved_path_visitor_center_query)
-    # Save houly data to AWS for joining/modeling
-    write_parquet_file_to_aws_s3(hourly_df, saved_path_visitor_center_modeling)
-
-
+    
+    # Save daily data to the cloud for querying
+    upload_dataframe_to_azure(
+        df=daily_df,
+        file_name="visitor_centers_2017_to_2024.parquet",
+        target_folder="preprocessed_data/bf_preprocessed_files/visitor_centers",
+        file_format="parquet",
+    )
+    # Save houly data to the cloud for joining/modeling
+    upload_dataframe_to_azure(
+        df=hourly_df,
+        file_name="visitor_centers_hourly.parquet",
+        target_folder="preprocessed_data",
+        file_format="parquet",
+    )
 
 
 if __name__ == '__main__':

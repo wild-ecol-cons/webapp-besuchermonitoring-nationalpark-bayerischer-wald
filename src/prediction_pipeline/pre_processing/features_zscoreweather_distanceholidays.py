@@ -1,9 +1,8 @@
 
 # Import libraries
 import pandas as pd
-import awswrangler as wr
 import numpy as np
-from src.config import aws_s3_bucket
+from src.utils import upload_dataframe_to_azure
 
 ##############################################################################################
 
@@ -16,17 +15,6 @@ window_size = 5 # Define the window size in days that you wish to use to calcula
 
 
 # Functions
-def load_csv_files_from_aws_s3(path: str, **kwargs) -> pd.DataFrame:
-    """Loads individual or multiple CSV files from an AWS S3 bucket.
-    Args:
-        path (str): The path to the CSV files on AWS S3.
-        **kwargs: Additional arguments to pass to the read_csv function.
-    Returns:
-        pd.DataFrame: The DataFrame containing the data from the CSV files.
-    """
-    df = wr.s3.read_csv(path=path, low_memory=False, **kwargs) #the low_memory parameter is set to False to avoid an error with dtypes in some of the files
-    return df
-
 def slice_at_first_non_null(df):
     """
     Slices the DataFrame starting at the first non-null value in the 'Feiertag_Bayern' column.
@@ -184,17 +172,6 @@ def add_moving_z_scores(df, columns, window_size):
 
     return df
 
-def write_csv_file_to_aws_s3(df: pd.DataFrame, path: str, **kwargs) -> pd.DataFrame:
-    """Writes an individual CSV file to AWS S3.
-
-    Args:
-        df (pd.DataFrame): The DataFrame to write.
-        path (str): The path to the CSV files on AWS S3.
-        **kwargs: Additional arguments to pass to the to_csv function.
-    """
-
-    wr.s3.to_csv(df, path=path, **kwargs)
-    return
 
 ##############################################################################################
 
@@ -217,13 +194,14 @@ def get_zscores_and_nearest_holidays(df,columns_for_zscores):
     # Remove NaN values (as there will be NaNs in the first rows of the dataframe due to zscore being NaN)
     df_zscores_and_nearest_holidays = df_zscores_and_nearest_holidays.dropna()
 
-    write_csv_file_to_aws_s3(
-                        df=df_zscores_and_nearest_holidays,
-                        path=f"s3://{aws_s3_bucket}/{output_data_folder}/{output_file_name}",
-                        index=False
+    upload_dataframe_to_azure(
+        df=df_zscores_and_nearest_holidays,
+        file_name=output_file_name,
+        target_folder=output_data_folder,
+        file_format="csv"
     )
 
-    print("Dataset with new features (distance to holidays, weather z-scores) uploaded to AWS succesfully!")
+    print("Dataset with new features (distance to holidays, weather z-scores) uploaded to the cloud succesfully!")
     
     return df_zscores_and_nearest_holidays
 

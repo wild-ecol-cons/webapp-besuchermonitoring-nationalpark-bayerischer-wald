@@ -3,8 +3,6 @@ Clean historic sensor data from 2016 to 2024. In the docstring of every function
 
 Usage:
 - Change the global variables section if needed
-    - Fill your AWS credentiales
-
 
 Output:
 - Returns the preprocessed data
@@ -17,7 +15,6 @@ Output:
 import pandas as pd
 import re
 import numpy as np
-import awswrangler as wr
 
 pd.options.mode.chained_assignment = None  
 
@@ -31,10 +28,6 @@ output_file_name = "preprocessed_visitor_sensor_data.csv"
 
 
 ##############################################################################################
-
-# Setting up AWS
-
-# boto3.setup_default_session(profile_name=aws_profile) 
     
 # Functions
 
@@ -428,17 +421,6 @@ def calculate_traffic_metrics_abs(df):
     
     return df
 
-def write_csv_file_to_aws_s3(df: pd.DataFrame, path: str, **kwargs) -> pd.DataFrame:
-    """Writes an individual CSV file to AWS S3.
-
-    Args:
-        df (pd.DataFrame): The DataFrame to write.
-        path (str): The path to the CSV files on AWS S3.
-        **kwargs: Additional arguments to pass to the to_csv function.
-    """
-
-    wr.s3.to_csv(df, path=path, **kwargs)
-    return
 
 def preprocess_visitor_count_data(visitor_counts: pd.DataFrame) -> pd.DataFrame:
 

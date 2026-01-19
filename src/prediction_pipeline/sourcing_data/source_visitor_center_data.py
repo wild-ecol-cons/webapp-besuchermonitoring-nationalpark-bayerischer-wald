@@ -1,36 +1,30 @@
-import awswrangler as wr
 import pandas as pd
-from src.config import aws_s3_bucket
+from src.utils import read_dataframe_from_azure
 
-visitor_center_data_path = f"s3://{aws_s3_bucket}/raw-data/national-park-vacation-times-houses-opening-times-visitors.xlsx"
 
-def source_data_from_aws_s3(path: str, **kwargs) -> pd.DataFrame:
-    """Loads individual or multiple CSV files from an AWS S3 bucket.
-    Args:
-        path (str): The path to the CSV files on AWS S3.
-        **kwargs: Additional arguments to pass to the read_csv function.
-    Returns:
-        pd.DataFrame: The DataFrame containing the data from the CSV files.
-    """
-    df = wr.s3.read_excel(path=path, **kwargs)
-    return df
 def source_visitor_center_data():
     # Source data - this is the preprocessed data
-    sourced_visitor_count_data = source_data_from_aws_s3(visitor_center_data_path)
+    sourced_visitor_count_data = read_dataframe_from_azure(
+        file_name="national-park-vacation-times-houses-opening-times-visitors.xlsx",
+        file_format="xlsx",
+        source_folder="raw-data",
+    )
 
     return sourced_visitor_count_data
 
 def source_preprocessed_hourly_visitor_center_data():
 
     """
-    Load the preprocessed hourly visitor center data from AWS S3.
+    Load the preprocessed hourly visitor center data from the cloud.
     """
 
     print("Sourcing the historic preprocessed_hourly_visitor_center_data")
 
-    # Load visitor count data from AWS S3
-    preprocessed_hourly_visitor_center_data = wr.s3.read_parquet(
-        path=f"s3://{aws_s3_bucket}/preprocessed_data/visitor_centers_hourly_2017_to_2025.parquet"
+    # Load visitor count data from the cloud
+    preprocessed_hourly_visitor_center_data = read_dataframe_from_azure(
+        file_name="visitor_centers_hourly_2017_to_2025.parquet",
+        file_format="parquet",
+        source_folder="preprocessed_data",
     )
 
     print(f"The historic preprocessed_hourly_visitor_center_data is: {preprocessed_hourly_visitor_center_data}")

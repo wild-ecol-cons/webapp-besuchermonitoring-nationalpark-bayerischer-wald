@@ -1,5 +1,4 @@
-import awswrangler as wr
-from src.config import aws_s3_bucket
+from src.utils import read_dataframe_from_azure
 
 raw_data_folder = "raw-data"
 visitor_counts_folder = "hourly-historic-visitor-counts-all-sensors"
@@ -104,13 +103,17 @@ common_columns = ['Time',
 
 
 def source_historic_visitor_count():
-    """Source historic visitor count data from AWS S3."""
+    """Source historic visitor count data from the cloud."""
 
-    # Load visitor count data from AWS S3
-    visitor_counts = wr.s3.read_csv(
-        path=f"s3://{aws_s3_bucket}/{raw_data_folder}/{visitor_counts_folder}/*.csv",
-        skiprows=2,
-        usecols=common_columns
+    # Load visitor count data from the cloud
+    visitor_counts = read_dataframe_from_azure(
+        file_name="*.csv",
+        file_format="csv",
+        source_folder=raw_data_folder + "/" + visitor_counts_folder,
+        read_options={
+            "skiprows": 2,
+            "usecols": common_columns
+        }
     )
 
     return visitor_counts

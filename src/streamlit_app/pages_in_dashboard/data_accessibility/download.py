@@ -1,22 +1,23 @@
 import streamlit as st
-import awswrangler as wr
 import pandas as pd
-from src.config import aws_s3_bucket
+from src.config import CONNECTION_STRING, CONTAINER_NAME
+from src.utils import read_dataframe_from_azure
+from azure.storage.blob import BlobServiceClient
 
 
-# AWS Setup
+# Setup
 base_folder = "raw-data/bf_raw_files"
 
-def list_files_in_s3(category: str) -> list:
-    """Lists files in S3 for a given category and returns only file names."""
-    s3_prefix = f"{base_folder}/{category.replace(' ', '_')}"
-    full_paths = wr.s3.list_objects(f"s3://{aws_s3_bucket}/{s3_prefix}/")
-    return [path.split('/')[-1] for path in full_paths]  # Extract only the file names
+def list_files_in_azure_folder(category: str) -> list:
+    """Lists files in Azure for a given category and returns only file names."""
 
-def load_csv_files_from_aws_s3(path: str, **kwargs) -> pd.DataFrame:
-    """Loads individual or multiple CSV files from an AWS S3 bucket."""
-    df = wr.s3.read_csv(path=path, **kwargs)
-    return df
+    folder_prefix = f"{base_folder}/{category.replace(' ', '_')}/"
+
+    blob_service_client = BlobServiceClient.from_connection_string(CONNECTION_STRING)
+    container_client = blob_service_client.get_container_client(CONTAINER_NAME)
+    blob_list = container_client.list_blob_names(name_starts_with=folder_prefix)
+
+    return [name.split('/')[-1] for name in blob_list]
 
 
 def download_section():
@@ -31,7 +32,7 @@ def download_section():
     
     # List files based on category
     if category:
-        files = list_files_in_s3(category)
+        files = list_files_in_azure_folder(category)
         selected_file = st.selectbox("Select a file to preview", files) if files else None
 
         if selected_file:
@@ -43,12 +44,13 @@ def download_section():
             )
 
             if preview_confirm:
-                # Correctly construct the full path to the selected file
-                file_path = f"s3://{aws_s3_bucket}/{base_folder}/{category.replace(' ', '_')}/{selected_file}"
-
                 # Load and preview selected file
                 st.write(f"Preview of {selected_file}")
-                data = load_csv_files_from_aws_s3(file_path)
+                data = read_dataframe_from_azure(
+                    file_name=selected_file,
+                    file_format="csv",
+                    source_folder=f"{base_folder}/{category.replace(' ', '_')}"
+                )
                 st.dataframe(data)
 
                 # Download button

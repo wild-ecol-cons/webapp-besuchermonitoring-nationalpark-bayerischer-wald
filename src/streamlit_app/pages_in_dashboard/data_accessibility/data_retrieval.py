@@ -2,9 +2,11 @@
 # import the required libraries
 import streamlit as st
 import pandas as pd
-import awswrangler as wr
 import re
-from src.config import aws_s3_bucket
+from src.config import storage_options, CONTAINER_NAME, CONNECTION_STRING
+from src.utils import read_dataframe_from_azure
+from azure.storage.blob import BlobServiceClient  
+
 
 # Types of queries that the functions will use to know what data to retrieve
 
@@ -33,15 +35,6 @@ query_types = {
         ['property', 'season', 'year']
     ]
 }
-
-
-def get_files_from_aws(selected_category):
-
-    # Specify the S3 bucket and folder path
-    prefix = f"/preprocessed_data/bf_preprocessed_files/{selected_category}/"  # Make sure to include trailing slash
-    # List all objects in the specified S3 folder
-    objects = wr.s3.list_objects(f"s3://{aws_s3_bucket}{prefix}")
-    return objects
 
 def convert_number_to_month_name(month):
 
@@ -334,90 +327,85 @@ def create_temporal_columns(df):
 
     return df
 
-def get_sensors_data():
-    """Fetches sensor data from the most recently modified object.
-
-    This function retrieves the sensor data from a specified object
-    in S3 by reading a CSV file. It selects the last object from
-    the provided list of objects, assuming this is the most recently
-    modified.
-
-    Args:
-        objects (list): A list of S3 object paths, where the last
-            object is the most recently modified.
-
-    Returns:
-        pandas.DataFrame: A DataFrame containing the sensor data read
-        from the CSV file.
-    """
-
-    df = wr.s3.read_parquet(f"s3://{aws_s3_bucket}/preprocessed_data/preprocessed_visitor_count_sensors_data.parquet")
-    return df
-def get_visitor_centers_data(objects):
+def get_visitor_centers_data():
     """Fetches visitor centers data from the most recently modified Excel file.
 
     This function retrieves visitor centers data from a specified Excel file
-    in S3. It selects the last object from the provided list of objects
+    in Azure. It selects the last object from the provided list of objects
     that is an Excel file (with extensions '.xlsx' or '.xls'), assuming this
     is the most recently modified Excel file.
-
-    Args:
-        objects (list): A list of S3 object paths, where the last
-            object ending in '.xlsx' or '.xls' is the most recently modified Excel file.
 
     Returns:
         pandas.DataFrame: A DataFrame containing the visitor centers
         data read from the Excel file.
     """
-    # Filter the list to include only objects that are Excel files
-    excel_objects = [obj for obj in objects if obj.endswith(('.xlsx', '.xls'))]
+
+    blob_service_client = BlobServiceClient.from_connection_string(CONNECTION_STRING)
+    container_client = blob_service_client.get_container_client(CONTAINER_NAME)
     
+    # Get blobs with metadata (including last_modified)
+    blobs = list(container_client.list_blobs(name_starts_with="preprocessed_data/bf_preprocessed_files/visitor_centers"))
+    
+    if not blobs:
+        return None
+    
+    excel_objects = [
+        obj
+        for obj in blobs
+        if obj.name.lower().endswith(('.xlsx', '.xls'))
+    ]
+
     if not excel_objects:
         raise ValueError("No visitor center data found!")
     
-    # Select the most recently modified Excel file (i.e., the last one in the list)
-    object_to_be_queried = excel_objects[-1]
-    
-    # Read the Excel file from S3, skipping the last row which is a NaN row
-    df = wr.s3.read_excel(f"{object_to_be_queried}", skipfooter=1, engine="openpyxl")
+    # Sort by last_modified (newest first) and return the latest
+    latest_blob = max(excel_objects, key=lambda x: x.last_modified).name
 
+    AZURE_FILE_URL = f"az://{CONTAINER_NAME}/{latest_blob}"
+    print(f"Fetching visitor centers data from: {AZURE_FILE_URL}")
+
+    df = pd.read_excel(
+        AZURE_FILE_URL,
+        storage_options=storage_options,
+        skipfooter=1
+    )
     return df
 
-def get_weather_data(objects):
+
+def get_weather_data():
 
     """Fetches weather data from the most recently modified object.
 
-    This function retrieves weather data from a specified object
-    in S3 by reading an Parquet file. It selects the last object from
-    the provided list of objects, assuming this is the most recently
-    modified.
-
-    Args:
-        objects (list): A list of S3 object paths, where the last
-            object is the most recently modified.
-
     Returns:
-        pandas.DataFrame: A DataFrame containing the weather
-        data read from the Parquet file.
+        pandas.DataFrame: A DataFrame containing the weather data read from the Parquet file.
     """
 
-    # if there are multiple objects get the last mostfied one
-    object_to_be_queried = objects[-1]
-    # Read the parquet file from S3
-    df = wr.s3.read_parquet(f"{object_to_be_queried}")
+    blob_service_client = BlobServiceClient.from_connection_string(CONNECTION_STRING)
+    container_client = blob_service_client.get_container_client(CONTAINER_NAME)
+    
+    # Get blobs with metadata (including last_modified)
+    blobs = list(container_client.list_blobs(name_starts_with="preprocessed_data/bf_preprocessed_files/weather"))
+    
+    if not blobs:
+        return None
+    
+    # Sort by last_modified (newest first) and return the latest
+    latest_blob = max(blobs, key=lambda x: x.last_modified).name
+
+    AZURE_FILE_URL = f"az://{CONTAINER_NAME}/{latest_blob}"
+    print(f"Fetching weather data from: {AZURE_FILE_URL}")
+
+    df = pd.read_parquet(
+        AZURE_FILE_URL,
+        storage_options=storage_options,
+    )
     return df
 
 def get_parking_data_for_selected_sensor(selected_sensor):
 
-    """Fetches parking data for a specified sensor from S3.
-
-    This function searches through a list of S3 object paths to find
-    the most relevant object that contains the specified sensor name.
-    It then retrieves the parking data from the corresponding Parquet file.
+    """Fetches parking data for a specified sensor from the cloud.
 
     Args:
-        objects (list): A list of S3 object paths to search for the
-            selected sensor.
         selected_sensor (str): The name of the sensor to filter the
             objects.
 
@@ -428,8 +416,12 @@ def get_parking_data_for_selected_sensor(selected_sensor):
     Raises:
         ValueError: If the selected sensor is not found in any object.
     """
-    path = f"s3://{aws_s3_bucket}/preprocessed_data/preprocessed_parking_data/merged_parking_data/{selected_sensor}.csv"
-    df = wr.s3.read_csv(path)
+
+    df = read_dataframe_from_azure(
+        file_name=selected_sensor,
+        file_format="csv",
+        source_folder="preprocessed_data/preprocessed_parking_data/merged_parking_data",
+    )
     df.set_index("time", inplace=True)
     return df
 
@@ -489,8 +481,7 @@ def get_data_from_query(selected_category,selected_query,selected_query_type, st
 
     """Retrieve data based on the selected category and query.
 
-    This function extracts values from the provided query, retrieves data from
-    AWS based on the selected category, processes the data, and returns a DataFrame
+    This function extracts values from the provided query, retrieves data from the cloud based on the selected category, processes the data, and returns a DataFrame
     containing the queried information.
 
     Args:
@@ -512,7 +503,12 @@ def get_data_from_query(selected_category,selected_query,selected_query_type, st
     """
 
     if selected_category == 'visitor_sensors':
-        sensor_df = get_sensors_data()
+        sensor_df = read_dataframe_from_azure(
+            file_name="preprocessed_visitor_count_sensors_data.parquet",
+            file_format="parquet",
+            source_folder="preprocessed_data",
+        )
+
         sensor_df = sensor_df.set_index('Time') 
         processed_category_df = create_temporal_columns(sensor_df)
         
@@ -521,13 +517,11 @@ def get_data_from_query(selected_category,selected_query,selected_query_type, st
         processed_category_df = create_temporal_columns(category_df)
 
     if selected_category == 'weather':
-        objects = get_files_from_aws(selected_category)
-        category_df = get_weather_data(objects)
+        category_df = get_weather_data()
         processed_category_df = create_temporal_columns(category_df)
 
     if selected_category == 'visitor_centers':
-        objects = get_files_from_aws(selected_category)
-        category_df = get_visitor_centers_data(objects)
+        category_df = get_visitor_centers_data()
         category_df = category_df.set_index('Datum')
         processed_category_df = create_temporal_columns(category_df)
 

@@ -4,7 +4,7 @@ import altair as alt
 from src.streamlit_app.pages_in_dashboard.data_accessibility.query_box import get_query_section
 from src.streamlit_app.pages_in_dashboard.data_accessibility.upload import upload_section
 from src.streamlit_app.pages_in_dashboard.data_accessibility.download import download_section
-from src.streamlit_app.pages_in_dashboard.admin.password import check_password
+from src.streamlit_app.pages_in_dashboard.password import check_password
 
 # Initialize language in session state if it doesn't exist
 if 'selected_language' not in st.session_state:
@@ -20,7 +20,9 @@ initial_sidebar_state="expanded")
 alt.themes.enable("dark")
 
 # Password-protect the page
-if not check_password():
+if not check_password(
+    type_of_password="admin"
+):
     st.stop()  # Do not continue if check_password is not True.
 
 # Define the app layout

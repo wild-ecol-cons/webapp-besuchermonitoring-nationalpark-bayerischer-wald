@@ -1,15 +1,17 @@
-import awswrangler as wr
 import pandas as pd
 import streamlit as st
-import boto3
 import joblib
+import pickle
+import io
 import io
 from pycaret.regression import load_model
 from sklearn.preprocessing import MinMaxScaler
-from src.config import regions, aws_s3_bucket
+from src.config import regions, CONTAINER_NAME, CONNECTION_STRING
+from src.utils import upload_dataframe_to_azure
+from azure.storage.blob import BlobClient
 
 
-# Your AWS bucket and folder details where models are stored
+# Folder where models are stored
 folder_prefix = 'models/models_trained/1483317c-343a-4424-88a6-bd57459901d1/'  # If you have a specific folder
 
 
@@ -26,40 +28,57 @@ target_vars_et  = ['traffic_abs', 'sum_IN_abs', 'sum_OUT_abs',
 model_names = [f'extra_trees_{var}' for var in target_vars_et]
 
 @st.cache_resource(max_entries=1)
-def load_latest_models(bucket_name, folder_prefix, models_names):
+def load_latest_models_azure(connection_string, container_name, folder_prefix, models_names):
     """
-    Load the latest files from an S3 folder based on the model names, 
-    and dynamically create variables with 'loaded_' as prefix.
+    Load the models from an Azure Blob Storage container.
 
     Parameters:
-    - bucket_name (str): The name of the S3 bucket.
-    - folder_prefix (str): The folder path within the bucket.
-    - models (list): List of model names without the 'extra_trees_' prefix.
+    - connection_string (str): The connection string for the Azure Storage Account.
+    - container_name (str): The name of the Blob Storage container.
+    - folder_prefix (str): The folder/virtual path prefix within the container.
+    - models_names (list): List of model names.
 
     Returns:
-    - dict: A dictionary containing the loaded models with keys prefixed by 'loaded_'.
+    - dict: A dictionary containing the loaded models.
     """
 
     # Dictionary to store loaded models
     loaded_models = {}
 
-    # Loop through each model to get the latest pickle (.pkl) file
+    # Loop through each model
     for model in models_names:
         
-        # Create an S3 client
-        s3 = boto3.client('s3')
-
-        s3_key = folder_prefix + model + '.pkl'
-        print(f"Retrieving the trained model {model} saved under AWS S3 in bucket {bucket_name} with key {s3_key}")
-
-        # Get the object from S3
-        response = s3.get_object(Bucket=bucket_name, Key=s3_key)
-
-        # Load the pickled model from the response object using joblib
-        loaded_regressor_model = joblib.load(io.BytesIO(response['Body'].read()))
+        # Construct the full blob name (key)
+        blob_name = folder_prefix + model + '.pkl'
+        print(f"Retrieving the trained model {model} saved under Azure container {container_name} with blob name {blob_name}")
         
-        # Store the loaded model in the dictionary
-        loaded_models[f'{model}'] = loaded_regressor_model
+        # 1. Create a BlobClient
+        # This client is used to interact with a specific blob.
+        blob_client = BlobClient.from_connection_string(
+            conn_str=connection_string, 
+            container_name=container_name, 
+            blob_name=blob_name
+        )
+        
+        # 2. Download the blob content
+        # download_blob() returns a BlobLeaseClient, from which you can read the data.
+        download_stream = blob_client.download_blob()
+        
+        # Read all data into a byte stream
+        bytes_data = download_stream.readall()
+
+        # 3. Load the model from the byte stream using JOBLIB.LOAD
+        # Joblib is generally recommended for models with large NumPy arrays (like scikit-learn models).
+        # It's highly likely this is how the models were saved.
+        
+        # We wrap the bytes in io.BytesIO to simulate a file object for joblib.load()
+        loaded_model = joblib.load(io.BytesIO(bytes_data))
+        
+        # Store the loaded model
+        loaded_models[f'{model}'] = loaded_model
+        
+        # Optional: Print the type to confirm the fix
+        print(f"Successfully loaded model '{model}'. Type: {type(loaded_model)}")
     
     return loaded_models
 
@@ -68,7 +87,7 @@ def load_latest_models(bucket_name, folder_prefix, models_names):
 def predict_with_models(loaded_models, df_features):
     """
     Given a dictionary of models and a DataFrame of features, this function predicts the target
-    values using each model and saves the inference predictions to AWS S3 (to be further loaded from Streamlit).
+    values using each model and saves the inference predictions to the cloud (to be further loaded from Streamlit).
     
     Parameters:
     - loaded_models (dict): A dictionary of models where keys are model names and values are the trained models.
@@ -96,8 +115,13 @@ def predict_with_models(loaded_models, df_features):
             # Make sure predictions are integers and not floats
             df_predictions['predictions'] = df_predictions['predictions'].astype(int)
     
-            # save the prediction dataframe as a parquet file in aws
-            wr.s3.to_parquet(df_predictions,path = f"s3://{aws_s3_bucket}/models/inference_data_outputs/{model_name}.parquet")
+            # save the prediction dataframe as a parquet file
+            upload_dataframe_to_azure(
+                df=df_predictions,
+                file_name=model_name,
+                target_folder="models/inference_data_outputs",
+                file_format="parquet"
+            )
 
             print(f"Predictions for {model_name} stored successfully")
             df_predictions["region"] = model_name.split('extra_trees_')[1].split('.parquet')[0]
@@ -140,7 +164,12 @@ def preprocess_overall_inference_predictions(overall_predictions: pd.DataFrame) 
 @st.cache_data(max_entries=1)
 def visitor_predictions(inference_data):
 
-    loaded_models = load_latest_models(aws_s3_bucket, folder_prefix, model_names)
+    loaded_models = load_latest_models_azure(
+        connection_string=CONNECTION_STRING,
+        container_name=CONTAINER_NAME,
+        folder_prefix=folder_prefix,
+        models_names=model_names
+    )
 
     print("Models loaded successfully")
     

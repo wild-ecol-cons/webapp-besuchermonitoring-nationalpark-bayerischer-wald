@@ -51,7 +51,7 @@ The weather data was sourced and preprocessed to ensure consistency and reliabil
     - This approach helped maintain the integrity of the dataset while providing a more accurate representation of weather conditions.
 
 - **Data Storage**: 
-     - The processed weather data was saved to an AWS S3 bucket, facilitating easy access and retrieval for subsequent analyses.
+     - The processed weather data was saved to the cloud, facilitating easy access and retrieval for subsequent analyses.
 
 By carefully processing the weather data, we ensured it was well-prepared for integration with visitor count data and other datasets in our predictive modeling pipeline.
 

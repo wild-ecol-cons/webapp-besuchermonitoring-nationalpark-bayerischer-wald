@@ -1,0 +1,16 @@
+# Install Python base image
+FROM python:3.10
+
+# Create folder for source code and make it working directory
+RUN mkdir -p /app
+WORKDIR /app
+
+# Copy entire source code to working directory (for Azure container)
+COPY . .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Specify port
+EXPOSE 8501
+
+# Run pipeline and dashboard entry script
+CMD ["streamlit", "run", "Dashboard.py", "--server.port=8501", "--server.address=0.0.0.0"]

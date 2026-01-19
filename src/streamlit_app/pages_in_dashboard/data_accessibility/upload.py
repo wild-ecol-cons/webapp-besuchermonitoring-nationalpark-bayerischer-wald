@@ -1,17 +1,11 @@
 import pandas as pd
 import streamlit as st
-import awswrangler as wr
 from src.streamlit_app.pages_in_dashboard.data_accessibility.pandas_profiling_styling import custom_pandas_profiling_report 
 from src.streamlit_app.pre_processing.data_quality_check import data_quality_check
-from src.config import aws_s3_bucket
+from src.utils import upload_dataframe_to_azure
 
-# AWS Setup
+# Setup
 base_folder = "raw-data/bf_raw_files"
-
-
-def write_csv_file_to_aws_s3(df: pd.DataFrame, path: str, **kwargs) -> None:
-    """Writes a CSV file to AWS S3."""
-    wr.s3.to_csv(df, path=path, **kwargs)
 
 def generate_file_name(category: str, upload_timestamp: str) -> str:
     """Generates a file name based on the category."""
@@ -83,7 +77,7 @@ def upload_section():
                 custom_pandas_profiling_report(st.session_state.data)
 
         if upload_confirm:
-            # Check the data and if it passes, upload the preprocessed file to AWS S3
+            # Check the data and if it passes, upload the preprocessed file to the cloud
             status = data_quality_check(st.session_state.data, category)
 
             if not status:
@@ -93,10 +87,14 @@ def upload_section():
                 # Capture upload timestamp
                 upload_timestamp = pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')
 
-                # Generate file name and S3 path
+                # Generate file name and cloud path
                 file_name = generate_file_name(category, upload_timestamp)
-                s3_path = f"s3://{aws_s3_bucket}/{base_folder}/{category.replace(' ', '_')}/{file_name}"
 
-                # Upload the raw file to AWS S3
-                write_csv_file_to_aws_s3(st.session_state.data, s3_path, index=False)
+                # Upload the raw file to the cloud
+                upload_dataframe_to_azure(
+                    df=st.session_state.data,
+                    file_name=file_name,
+                    target_folder=f"{base_folder}/{category.replace(' ', '_')}",
+                    file_format="csv"
+                )
                 st.success("File successfully uploaded.")

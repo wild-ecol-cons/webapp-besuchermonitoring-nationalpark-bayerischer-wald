@@ -1,6 +1,5 @@
 pandas
 streamlit
-awswrangler
 meteostat
 plotly
 pydeck
@@ -10,3 +9,4 @@ pyarrow
 toml
 pycaret
 openpyxl
+adlfs

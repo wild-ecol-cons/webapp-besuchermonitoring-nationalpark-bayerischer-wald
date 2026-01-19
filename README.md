@@ -27,7 +27,7 @@ We contribute to the project in the following ways:
 ![Overall Solution](docs/asset/overall-dashboard.gif)
 _A glimpse of the final dashboard ✨_
 
-## How to use the code 🛠️
+## How to use the code
 
 ### Run Dashboard and Pipeline via a Docker Container
 
@@ -150,6 +150,36 @@ bavarian-forest-visitor-monitoring-dssgx-24/
 ├── requirements.txt        # Contains the dependencies for running the Streamlit dashboard application
 
 ```
+
+## Current Deployment / Infrastructure Setup
+
+Currently, the web app is being hosted and managed via Azure. The following infrastructure is used:
+
+- App Service plan to host the web app on Azure
+- Container registry to have containerized apps enlisted
+- App Service to provide the infrastructure to host the web app on Azure
+- Storage account to host the data of the project via Azure Blob Storage
+
+## How to Deploy a New Version of the Web App 🚀
+
+As mentioned, the web app is hosted via Azure App Service in form of a container. To deploy a new version of the web app, you need to follow these steps:
+
+1. Follow the steps of [local code setup](#how-to-use-the-code).
+2. Do changes to the code and test them locally.
+3. From root, locally build the Docker container for the expected Linux platform with the Azure-specific Dockerfile with the following command:
+
+    ```
+    docker buildx build -f Dockerfile-azure --platform linux/amd64 -t besuchermonitoring.azurecr.io/webapp:{version-tag} .
+    ```
+4. Login via the CLI into Azure and push the image to the container registry:
+
+    ```
+    az acr login --name besuchermonitoring
+    docker push besuchermonitoring.azurecr.io/webapp:{version-tag}
+    ```
+5. In the Azure portal, go to the App Service service and to "Deployment Center". Here, select the new version of the successfully pushed Docker image and deploy it.
+
+6. After some time, the new version of the app should be available.
 
 ## Technical Documentation 📚
 

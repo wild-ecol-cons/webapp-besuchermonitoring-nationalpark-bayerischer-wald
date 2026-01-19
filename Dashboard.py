@@ -7,12 +7,13 @@ import pytz
 # get the streamlit app modules
 import src.streamlit_app.pages_in_dashboard.visitors.page_layout_config as page_layout_config
 import src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu as lang_sel_menu
-from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
 import src.streamlit_app.pages_in_dashboard.visitors.weather as weather
 import src.streamlit_app.pages_in_dashboard.visitors.parking as parking 
 import src.streamlit_app.pages_in_dashboard.visitors.visitor_count as visitor_count
 import src.streamlit_app.pages_in_dashboard.visitors.recreational_activities as recreation
 import src.streamlit_app.pages_in_dashboard.visitors.other_information as other_info
+from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
+from src.streamlit_app.pages_in_dashboard.password import check_password
 
 # imports for the sourcing and preprocessing pipeline
 from src.prediction_pipeline.sourcing_data.source_visitor_center_data import source_preprocessed_hourly_visitor_center_data
@@ -113,6 +114,12 @@ def run_training():
 
 
 if __name__ == "__main__":
+
+    # Password-protect the page
+    if not check_password(
+        type_of_password="general_access"
+    ):
+        st.stop()  # Do not continue if check_password is not True.
 
     preprocessed_hourly_visitor_center_data = source_preprocessed_hourly_visitor_center_data()
 

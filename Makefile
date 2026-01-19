@@ -3,7 +3,7 @@ BAYERN_CLOUD_API_KEY := $(shell echo $(BAYERN_CLOUD_API_KEY))
 AZURE_STORAGE_ACCOUNT_NAME := $(shell echo $(AZURE_STORAGE_ACCOUNT_NAME))
 AZURE_STORAGE_ACCOUNT_KEY := $(shell echo $(AZURE_STORAGE_ACCOUNT_KEY))
 REPO_PATH := $(shell pwd)
-PATH_TO_STREAMLIT_SECRETS := ~/.streamlit/secrets.toml
+PATH_TO_STREAMLIT_SECRETS := $(shell pwd)/.streamlit/secrets.toml
 IMAGE_NAME := bavarian-forest
 
 # Build the Docker image

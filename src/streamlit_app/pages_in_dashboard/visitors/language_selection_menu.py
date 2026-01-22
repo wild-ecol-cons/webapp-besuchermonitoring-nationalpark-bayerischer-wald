@@ -8,7 +8,9 @@ LANGUAGE_OPTIONS= {
     }
 # Language dictionary with translations
 TRANSLATIONS = {
-    "English": {
+        "English": {
+        'page_description_data_hub': 'The Data Hub enables you to query and download data from the Bavarian Forest National Park. The data can be specified by using various filters, such as data categories and time filters. Various data sources are available, amongst others manually provided data. In order to update manually added data, you can use the upload function to upload new data.',
+        'page_title_data_hub': 'Bavarian Forest: Data Hub ☁️',
         'title': 'Plan Your Trip to the Bavarian Forest 🌲',
         'select_language': 'Select Language',
         'visitor_counts_forecasted': 'Popular Times (Forecast)',
@@ -78,6 +80,8 @@ TRANSLATIONS = {
         'admin_page_title': 'Bavarian Forest - Admin - Visitor Monitoring',
     },
     "German": {
+        'page_description_data_hub': 'Der Data Hub ermöglicht Ihnen die Abfrage und den Download von Daten aus dem Nationalpark Bayerischer Wald. Die Daten können mithilfe verschiedener Filter, wie Datenkategorien und Zeitfiltern, spezifiziert werden. Es stehen verschiedene Datenquellen zur Verfügung, darunter auch manuell bereitgestellte Daten. Um manuell hinzugefügte Daten zu aktualisieren, können Sie die Upload-Funktion nutzen, um neue Daten hochzuladen.',
+        'page_title_data_hub': 'Bayerischer Wald: Data Hub ☁️',
         'title': 'Planen Sie Ihren Besuch im Nationalpark Bayerischer Wald 🌲',
         'select_language': 'Sprache auswählen',
         'visitor_counts_forecasted': 'Besucheraufkommen (Prognose)',

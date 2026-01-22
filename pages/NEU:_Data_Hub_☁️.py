@@ -284,7 +284,7 @@ with tab_upload_data:
         df = pd.read_csv(uploaded_file)
 
         # Preview file before upload
-        st.markdown(f"Preview of {uploaded_file.name}")
+        st.markdown(f"#### Preview of `{uploaded_file.name}`")
         st.dataframe(df.head())
 
         # Confirm upload

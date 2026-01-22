@@ -250,9 +250,16 @@ with tab_query_download_data:
                 ],
             )
 
-        preview_rich_dataframe(create_dummy_data())
+        dummy_data = create_dummy_data()
+        preview_rich_dataframe(dummy_data)
 
-    # Button to download data
+        # Button to download data
+        st.download_button(
+            label="Download Data",
+            data=dummy_data.to_csv(index=False).encode('utf-8'),
+            file_name="dummy_data.csv",
+            icon=":material/download:",
+        )
 with tab_upload_data:
     # Select category that it is being uploaded to
     # Select local file to upload

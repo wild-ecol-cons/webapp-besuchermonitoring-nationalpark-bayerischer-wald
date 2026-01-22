@@ -40,12 +40,14 @@ with tab_query_download_data:
     # Select one or multiple data categories
     available_data_categories = st.multiselect(
         "Ausgewählte Datenkategorien:",
-        ["Permanente Besucherzählung (Eco-Counter)",
-         "Häuser: Öffnungszeiten & Zählungen",
-         "Schulferien & Feiertage (BY & CZ)",
-         "Parkplatzzählungen",
-         "Sonderzählungen",
-         "Wetterdaten"],
+        [
+            "Permanente Besucherzählung (Eco-Counter)",
+            "Häuser: Öffnungszeiten & Zählungen",
+            "Schulferien & Feiertage (BY & CZ)",
+            "Parkplatzzählungen",
+            "Sonderzählungen",
+            "Wetterdaten"
+        ]
     )
 
     # Select entire timeframe or a specific start and end date
@@ -261,9 +263,34 @@ with tab_query_download_data:
             icon=":material/download:",
         )
 with tab_upload_data:
-    # Select category that it is being uploaded to
-    # Select local file to upload
-    # Preview file before upload
-    # Button to upload data
 
     st.markdown("## Upload Data")
+
+    # Select category that it is being uploaded to
+    category_to_upload_data_to = st.radio(
+    "Select the category to upload data to:",
+    [
+        "Permanente Besucherzählung (Eco-Counter)",
+        "Häuser: Öffnungszeiten & Zählungen",
+        "Sonderzählungen",
+    ],
+    )
+
+    # Select local file to upload
+    uploaded_files = st.file_uploader(
+    "Upload data", accept_multiple_files=True, type="csv"
+    )
+    for uploaded_file in uploaded_files:
+        df = pd.read_csv(uploaded_file)
+
+        # Preview file before upload
+        st.markdown(f"Preview of {uploaded_file.name}")
+        st.dataframe(df.head())
+
+        # Confirm upload
+        if st.button(
+            "Upload Data",
+            key=uploaded_file.file_id,
+            type="primary"
+        ):
+            st.success(f"{uploaded_file.name} uploaded successfully!")

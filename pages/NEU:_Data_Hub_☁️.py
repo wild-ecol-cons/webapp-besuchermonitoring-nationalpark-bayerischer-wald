@@ -72,8 +72,8 @@ with tab_query_download_data:
         type="primary"
     ):
         # Preview data (now: dummy data)
-        st.markdown("# Preview of data:")
-        st.markdown(" ⚠️ For testing purposes, dummy data is being presented.")
+        st.markdown("# Data Preview:")
+        st.markdown(" ⚠️ Für Testzwecke, werden hier Dummy-Daten präsentiert.")
 
         def create_dummy_data() -> pd.DataFrame:
             np.random.seed(42)
@@ -149,7 +149,7 @@ with tab_query_download_data:
             return df
 
         # --- Rich st.dataframe with column_config ------------------------------
-        st.markdown("#### Dummy Data: Rich `st.dataframe` with diverse data types")
+        st.markdown("#### Dummy Data: Rich `st.dataframe` mit diversen Datentypen")
 
         def preview_rich_dataframe(df: pd.DataFrame) -> None:
             st.dataframe(
@@ -268,7 +268,7 @@ with tab_upload_data:
 
     # Select category that it is being uploaded to
     category_to_upload_data_to = st.radio(
-    "Select the category to upload data to:",
+    "Wähle die Datenkategorie aus:",
     [
         "Permanente Besucherzählung (Eco-Counter)",
         "Häuser: Öffnungszeiten & Zählungen",
@@ -284,7 +284,7 @@ with tab_upload_data:
         df = pd.read_csv(uploaded_file)
 
         # Preview file before upload
-        st.markdown(f"#### Preview of `{uploaded_file.name}`")
+        st.markdown(f"#### Preview: `{uploaded_file.name}`")
         st.dataframe(df.head())
 
         # Confirm upload
@@ -293,4 +293,4 @@ with tab_upload_data:
             key=uploaded_file.file_id,
             type="primary"
         ):
-            st.success(f"{uploaded_file.name} uploaded successfully!")
+            st.success(f"`{uploaded_file.name}` wurde erfolgreich hochgeladen!")

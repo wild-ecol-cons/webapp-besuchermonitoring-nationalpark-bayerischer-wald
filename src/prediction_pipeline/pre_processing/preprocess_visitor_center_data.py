@@ -132,6 +132,8 @@ def remove_last_row_if_needed(df):
     return df
 
 def clean_visitor_center_data(df_visitcenters):
+    # Remove white spaces as values in all columns
+    df_visitcenters = df_visitcenters.replace(r'^\s*$', np.nan, regex=True)
     # Change boolean variables
     df_visitcenters=change_binary_variables(df_visitcenters)
     # Change object variables

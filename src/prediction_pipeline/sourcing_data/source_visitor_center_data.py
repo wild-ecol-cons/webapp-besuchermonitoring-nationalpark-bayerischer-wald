@@ -5,7 +5,7 @@ from src.utils import read_dataframe_from_azure
 def source_visitor_center_data():
     # Source data - this is the preprocessed data
     sourced_visitor_count_data = read_dataframe_from_azure(
-        file_name="national-park-vacation-times-houses-opening-times-visitors.xlsx",
+        file_name="04022026-daily-visitor-centers-huts-openings-historic-visitor-counts-vacation-holidays-weather-station-2017-2026.xlsx",
         file_format="xlsx",
         source_folder="raw-data",
     )
@@ -22,7 +22,7 @@ def source_preprocessed_hourly_visitor_center_data():
 
     # Load visitor count data from the cloud
     preprocessed_hourly_visitor_center_data = read_dataframe_from_azure(
-        file_name="visitor_centers_hourly_2017_to_2025.parquet",
+        file_name="visitor_centers_hourly_2017_to_2026.parquet",
         file_format="parquet",
         source_folder="preprocessed_data",
     )

@@ -175,6 +175,8 @@ with tab_upload_data:
     ],
     )
 
+    st.info(f'Aktuell vorhandene Spaltennamen in der Datenkategorie "{category_to_upload_data_to} sind:', icon="ℹ️")
+
     # Select local file to upload
     uploaded_files = st.file_uploader(
     "Upload data", accept_multiple_files=True, type="csv"

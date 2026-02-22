@@ -44,37 +44,88 @@ from src.config import CONNECTION_STRING, AZURE_ACCOUNT_NAME, AZURE_ACCOUNT_KEY
 # ---- TEST DUCK DB ----
 
 import duckdb
-
-# --- Configuration ---
-CONTAINER       = "webapp-besuchermonitoring-data-dev"
-DIRECTORY       = "duck-db-test/visitor_centers_data"
-
-# Connect to a transient in-memory DuckDB
-conn = duckdb.connect(database=':memory:')
+from typing import List, Optional
 
 
-# Install and load the Azure extension (one-time per session)
-conn.execute("INSTALL azure; LOAD azure;")
+def set_up_duck_db_connection() -> duckdb.DuckDBPyConnection:
+    """
+    Set up a DuckDB connection via files on Azure Blob Storage to a transient in-memory database. This connection is used to query data with SQL queries.
+
+    Returns:
+        duckdb.DuckDBPyConnection: A DuckDB connection
+    """
+    # Connect to a transient in-memory DuckDB
+    conn = duckdb.connect(database=':memory:')
+
+    # Install and load the Azure extension (one-time per session)
+    conn.execute("INSTALL azure; LOAD azure;")
+
+    # Authenticate with Azure
+    secret_query = f"""
+    CREATE OR REPLACE SECRET (
+        TYPE AZURE,
+        CONNECTION_STRING '{CONNECTION_STRING}'
+    );
+    """
+    conn.execute(secret_query)
+
+    # Set parameter to solve certificate issue
+    conn.execute("SET azure_transport_option_type = 'curl';")
+    return conn
+
+def query_azure_with_duck_db(
+    conn: duckdb.DuckDBPyConnection,
+    directory: str,
+    columns: List[str] = ["*"],
+    filters: Optional[str] = None,
+    limit: Optional[int] = 10
+) -> pd.DataFrame:
+    """
+    Queries Parquet files on Azure with optional filtering and selection.
+
+    Args:
+        conn (duckdb.DuckDBPyConnection): A DuckDB connection
+        directory (str): The directory path within the container
+        columns (List[str], optional): A list of column names to select. Defaults to ["*"].
+        filters (Optional[str], optional): An SQL WHERE clause to apply to the query. Defaults to None.
+        limit (Optional[int], optional): The maximum number of rows to return. Defaults to 10.
+
+    Returns:
+        pd.DataFrame: A Pandas DataFrame containing the results of the query
+    """
+    # 1. Construct the column string
+    col_selector = ", ".join(columns)
+    
+    # 2. Base URL
+    path = f"az://webapp-besuchermonitoring-data-dev/{directory}/*.parquet"
+    
+    # 3. Build the SQL string dynamically
+    query = f"SELECT {col_selector} FROM read_parquet('{path}')"
+    
+    # 4. Append WHERE clause if filters are provided
+    if filters:
+        query += f" WHERE {filters}"
+    
+    # 5. Append LIMIT
+    if limit:
+        query += f" LIMIT {limit}"
+    
+    try:
+        return conn.execute(query).df()
+    except Exception as e:
+        print(f"Query failed: {e}")
+        return pd.DataFrame()
 
 
-# Using the modern Secret syntax is more reliable than SET variables
-secret_query = f"""
-CREATE OR REPLACE SECRET (
-    TYPE AZURE,
-    CONNECTION_STRING '{CONNECTION_STRING}'
-);
-"""
-conn.execute(secret_query)
+DIRECTORY = "duck-db-test/visitor_centers_data"
+conn = set_up_duck_db_connection()
 
-conn.execute("SET azure_transport_option_type = 'curl';")
+test_data = query_azure_with_duck_db(
+    conn=conn,
+    directory=DIRECTORY,
+    columns=["Time", "Jahr"],
+    filters="Time > '2021-01-01' AND Time < '2024-01-01'",
+    limit=20
+)
 
-# --- Query: only load specific columns and filter rows ---
-query = f"""
-    SELECT Time, Jahr
-    FROM
-        read_parquet('az://{CONTAINER}/{DIRECTORY}/*.parquet')
-    LIMIT 10
-"""
-
-df = conn.execute(query).df()  # returns a Pandas DataFrame
-print(df.head())
+print(test_data)

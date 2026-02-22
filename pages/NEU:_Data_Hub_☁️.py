@@ -175,7 +175,12 @@ with tab_upload_data:
     ],
     )
 
-    st.info(f'Aktuell vorhandene Spaltennamen in der Datenkategorie "{category_to_upload_data_to} sind:', icon="ℹ️")
+    already_existing_columns = [
+        "Datum",
+        "Besucherzahlen"
+    ]
+
+    st.info(f'Aktuell vorhandene Spaltennamen in der Datenkategorie "{category_to_upload_data_to} sind: {", ".join(already_existing_columns)}', icon="ℹ️")
 
     # Select local file to upload
     uploaded_files = st.file_uploader(
@@ -183,6 +188,12 @@ with tab_upload_data:
     )
     for uploaded_file in uploaded_files:
         df = pd.read_csv(uploaded_file)
+
+        # List all columns that are not in the already existing columns
+        new_columns = [col for col in df.columns if col not in already_existing_columns]
+
+        if new_columns:
+            st.warning(f'Achtung! Es wurden die folgenden, neuen Spaltennamen in der hochgeladenen Datei gefunden: {", ".join(new_columns)}', icon="⚠️")
 
         # Preview file before upload
         st.markdown(f"#### Preview: `{uploaded_file.name}`")

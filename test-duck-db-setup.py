@@ -44,6 +44,7 @@ from src.config import CONNECTION_STRING
 # ---- TEST DUCK DB ----
 
 import duckdb
+import os
 
 # Connect to a transient in-memory DuckDB
 conn = duckdb.connect(database=':memory:')
@@ -53,23 +54,26 @@ conn.execute("INSTALL azure; LOAD azure;")
 
 # Using the modern Secret syntax is more reliable than SET variables
 secret_query = f"""
-CREATE SECRET (
+CREATE OR REPLACE SECRET (
     TYPE AZURE,
     CONNECTION_STRING '{CONNECTION_STRING}'
 );
 """
 conn.execute(secret_query)
 
-# 2. Querying directly on the Blob URL
+# 3. The Query
+# Note: Ensure the 'az://' prefix is used
 container_url = "az://webapp-besuchermonitoring-data-dev/duck-db-test/visitor_centers_data/*.parquet"
 
 query = f"""
     SELECT Time, Jahr, Jahreszeit 
-    FROM '{container_url}'
+    FROM read_parquet('{container_url}')
+    LIMIT 10
 """
 
 try:
-    queried_data = conn.execute(query)
+    # Use .df() to get a Pandas DataFrame for Streamlit/Visualization
+    queried_data = conn.execute(query).df()
     print(queried_data)
 except Exception as e:
-    print(e)
+    print(f"Connection Error: {e}")

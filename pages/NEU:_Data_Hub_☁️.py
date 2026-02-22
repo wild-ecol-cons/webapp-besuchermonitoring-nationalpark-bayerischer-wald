@@ -6,7 +6,86 @@ from datetime import datetime, timedelta
 from numpy.random import default_rng as rng
 from src.streamlit_app.pages_in_dashboard.password import check_password
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
+from src.prediction_pipeline.pre_processing.preprocess_historic_visitor_count_data import parse_german_dates
 
+data_upload_categories_time_cols_freq = {
+    "Permanente Besucherzählung (Eco-Counter)": {"col": "Time", "freq": "1 hour"},
+    "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage": {"col": "Datum", "freq": "1 day"},
+    "Sonderzählungen": {"col": None, "freq": None}
+}
+
+def validate_time_frequency(df, time_col, freq_string, category):
+    """
+    Validates if the dataframe follows a specific frequency.
+    freq_string: e.g., '1 hour', '1 day', '30 minutes'
+    """
+    # Convert to datetime
+    if category == "Permanente Besucherzählung (Eco-Counter)":
+        df = parse_german_dates(df=df, date_column_name=time_col)
+    else:
+        df[time_col] = pd.to_datetime(df[time_col], format="mixed")
+    
+    # Sort to ensure we're checking chronological continuity
+    df = df.sort_values(by=time_col)
+
+    if freq_string is None:
+        # Ask user to specify the time column via an text input field
+        freq_string = st.text_input("Bitte trage hier die Frequenz der Zeitspalte ein (z.B. ""1 hour"", ""1 day"", ""30 minutes""):")
+    
+    # Calculate the expected timedelta
+    try:
+        expected_delta = pd.to_timedelta(freq_string)
+    except ValueError:
+        st.error(f"Ungültiges Frequenz-Format: '{freq_string}'")
+        st.stop()
+
+    # Calculate differences between consecutive rows
+    time_diffs = df[time_col].diff().dropna()
+    
+    # Check if the data mostly follows the expected frequency
+    most_prevelant_time_diff = time_diffs.value_counts().index[0]
+
+    if not most_prevelant_time_diff == expected_delta:
+        st.error(f"Error: Die Datenfrequenz entspricht nicht '{freq_string}'. "
+                 "Bitte überprüfe die Datei.")
+        st.stop()
+    
+    return df
+
+def process_and_validate_upload(uploaded_file, category):
+    # Check extension and read file
+    if uploaded_file.name.endswith('.csv'):
+        if category == "Permanente Besucherzählung (Eco-Counter)":
+            df = pd.read_csv(uploaded_file, skiprows=2)
+        else:
+            df = pd.read_csv(uploaded_file)
+    elif uploaded_file.name.endswith(('.xls', '.xlsx')):
+        df = pd.read_excel(uploaded_file)
+    else:
+        st.error("Error: Bitte nur Excel (.xlsx, .xls) oder CSV Dateien hochladen.")
+        st.stop()
+
+    # Map category to expected time column name
+    time_col = data_upload_categories_time_cols_freq[category]["col"]
+    
+    if time_col is None:
+        # Ask user to specify the time column via an text input field
+        time_col = st.text_input("Bitte trage hier den exakten Namen der Zeitspalte ein:")
+    
+    if time_col not in df.columns:
+        st.error(f"Error: Die Zeitspalte '{time_col}' konnte nicht in der hochgeladenen Datei gefunden werden. Der Upload wird abgebrochen.")
+        st.stop()
+    
+    else:
+
+        preprocessed_df = validate_time_frequency(
+            df,
+            time_col,
+            freq_string=data_upload_categories_time_cols_freq[category]["freq"],
+            category=category
+        )
+
+        return preprocessed_df
 
 # Initialize language in session state if it doesn't exist
 if 'selected_language' not in st.session_state:
@@ -184,10 +263,11 @@ with tab_upload_data:
 
     # Select local file to upload
     uploaded_files = st.file_uploader(
-    "Upload data", accept_multiple_files=True, type="csv"
+    "Upload data", accept_multiple_files=True, type=["csv", "xlsx", "xls"]
     )
     for uploaded_file in uploaded_files:
-        df = pd.read_csv(uploaded_file)
+        
+        df = process_and_validate_upload(uploaded_file, category_to_upload_data_to)
 
         # List all columns that are not in the already existing columns
         new_columns = [col for col in df.columns if col not in already_existing_columns]

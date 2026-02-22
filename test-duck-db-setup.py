@@ -1,6 +1,6 @@
 import pandas as pd
 from src.utils import read_dataframe_from_azure, upload_dataframe_to_azure
-from src.config import CONNECTION_STRING
+from src.config import CONNECTION_STRING, AZURE_ACCOUNT_NAME, AZURE_ACCOUNT_KEY
 
 # ----- UPLOAD TEST DATA -----
 
@@ -44,13 +44,18 @@ from src.config import CONNECTION_STRING
 # ---- TEST DUCK DB ----
 
 import duckdb
-import os
+
+# --- Configuration ---
+CONTAINER       = "webapp-besuchermonitoring-data-dev"
+DIRECTORY       = "duck-db-test/visitor_centers_data"
 
 # Connect to a transient in-memory DuckDB
 conn = duckdb.connect(database=':memory:')
 
+
 # Install and load the Azure extension (one-time per session)
 conn.execute("INSTALL azure; LOAD azure;")
+
 
 # Using the modern Secret syntax is more reliable than SET variables
 secret_query = f"""
@@ -61,19 +66,15 @@ CREATE OR REPLACE SECRET (
 """
 conn.execute(secret_query)
 
-# 3. The Query
-# Note: Ensure the 'az://' prefix is used
-container_url = "az://webapp-besuchermonitoring-data-dev/duck-db-test/visitor_centers_data/*.parquet"
+conn.execute("SET azure_transport_option_type = 'curl';")
 
+# --- Query: only load specific columns and filter rows ---
 query = f"""
-    SELECT Time, Jahr, Jahreszeit 
-    FROM read_parquet('{container_url}')
+    SELECT Time, Jahr
+    FROM
+        read_parquet('az://{CONTAINER}/{DIRECTORY}/*.parquet')
     LIMIT 10
 """
 
-try:
-    # Use .df() to get a Pandas DataFrame for Streamlit/Visualization
-    queried_data = conn.execute(query).df()
-    print(queried_data)
-except Exception as e:
-    print(f"Connection Error: {e}")
+df = conn.execute(query).df()  # returns a Pandas DataFrame
+print(df.head())

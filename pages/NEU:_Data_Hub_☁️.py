@@ -42,7 +42,7 @@ with tab_query_download_data:
         "Ausgewählte Datenkategorien:",
         [
             "Permanente Besucherzählung (Eco-Counter)",
-            "Häuser: Öffnungszeiten & Zählungen",
+            "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage",
             "Schulferien & Feiertage (BY & CZ)",
             "Parkplatzzählungen",
             "Sonderzählungen",
@@ -170,7 +170,7 @@ with tab_upload_data:
     "Wähle die Datenkategorie aus:",
     [
         "Permanente Besucherzählung (Eco-Counter)",
-        "Häuser: Öffnungszeiten & Zählungen",
+        "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage",
         "Sonderzählungen",
     ],
     )

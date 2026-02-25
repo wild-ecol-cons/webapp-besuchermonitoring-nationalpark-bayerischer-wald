@@ -1,6 +1,8 @@
 import pandas as pd
-from src.config import CONTAINER_NAME, storage_options
+from src.config import CONTAINER_NAME, storage_options, CONNECTION_STRING
 from typing import Dict, Any, Optional
+from azure.storage.blob import BlobServiceClient
+import streamlit as st
 
 def read_dataframe_from_azure(
     file_name: str,
@@ -157,3 +159,33 @@ def upload_dataframe_to_azure(
     except Exception as e:
         print(f"❌ An error occurred while writing to Azure Blob Storage: {e}")
         raise e
+    
+
+def upload_file_to_azure(file_obj: object, target_folder: str, filename: str) -> bool:
+    """
+    Uploads a file object to Azure Blob Storage.
+
+    Args:
+        file_obj (object): The file object to upload.
+        target_folder (str): The folder path within the container.
+        filename (str): The name of the file to upload (including the file extension).
+
+    Returns:
+        bool: True if the upload is successful, False otherwise.
+    """
+    
+    # Standardize and validate folder path
+    if target_folder and not target_folder.endswith("/"):
+        target_folder += "/"
+    
+    try:
+        # Create the BlobServiceclient
+        blob_service_client = BlobServiceClient.from_connection_string(CONNECTION_STRING)
+        blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=f"{target_folder}{filename}")
+
+        # Upload the file object directly
+        blob_client.upload_blob(file_obj, overwrite=True)
+        return True
+    except Exception as e:
+        st.error(f"An error occurred when trying to upload the file: {e}")
+        return False

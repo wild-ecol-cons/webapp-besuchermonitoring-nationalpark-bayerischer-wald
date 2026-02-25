@@ -7,12 +7,39 @@ from numpy.random import default_rng as rng
 from src.streamlit_app.pages_in_dashboard.password import check_password
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
 from src.prediction_pipeline.pre_processing.preprocess_historic_visitor_count_data import parse_german_dates
+from src.utils import upload_file_to_azure
+
+# Mapping data upload categories to specific folders in Azure Blob Storage
+data_upload_categories_to_azure_folders = {
+    "Permanente Besucherzählung (Eco-Counter)": "visitor-counts-eco-counter",
+    "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage": "huts-counts-openings-weather-station-holidays",
+    "Sonderzählungen": "special-counts",
+}
 
 data_upload_categories_time_cols_freq = {
     "Permanente Besucherzählung (Eco-Counter)": {"col": "Time", "freq": "1 hour"},
     "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage": {"col": "Datum", "freq": "1 day"},
     "Sonderzählungen": {"col": None, "freq": None}
 }
+
+def save_raw_data_to_cloud(raw_file_to_upload: object, category_to_upload_data_to: str) -> None:
+    """
+    Save raw data file provided via Data Hub to Azure Cloud as it is.
+    
+    Args:
+        raw_file_to_upload (object): Raw data file to upload
+        category_to_upload_data_to (str): Category to upload data to
+    """
+    # IMPORTANT: Rewind the file if you read it earlier in your code
+    raw_file_to_upload.seek(0)
+
+    success = upload_file_to_azure(
+        file_obj=raw_file_to_upload,
+        target_folder=f"data-hub/raw-data/{data_upload_categories_to_azure_folders[category_to_upload_data_to]}",
+        filename=raw_file_to_upload.name
+    )
+    if success:
+        st.success(f"Die Rohdatei {raw_file_to_upload.name} wurde erfolgreich zur Cloud hochgeladen!")
 
 def validate_time_frequency(df, time_col, freq_string, category):
     """
@@ -285,4 +312,4 @@ with tab_upload_data:
             key=uploaded_file.file_id,
             type="primary"
         ):
-            st.success(f"`{uploaded_file.name}` wurde erfolgreich hochgeladen!")
+            save_raw_data_to_cloud(uploaded_file, category_to_upload_data_to)

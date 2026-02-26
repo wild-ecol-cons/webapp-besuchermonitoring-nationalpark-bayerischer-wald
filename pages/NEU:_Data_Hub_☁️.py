@@ -54,7 +54,8 @@ def retrieve_already_existing_features(category_to_upload_data_to: str) -> list:
 
     already_existing_columns = queried_data.columns.to_list()
 
-    st.info(f'Aktuell vorhandene Spaltennamen in der Datenkategorie "{category_to_upload_data_to} sind: {", ".join(already_existing_columns)}', icon="ℹ️")
+    with st.expander("Information zu aktuell vorhandenen Spaltennamen"):
+        st.info(f'Aktuell vorhandene Spaltennamen in der Datenkategorie "{category_to_upload_data_to} sind: {", ".join(already_existing_columns)}', icon="ℹ️")
 
     return already_existing_columns
 

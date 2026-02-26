@@ -7,7 +7,7 @@ from numpy.random import default_rng as rng
 from src.streamlit_app.pages_in_dashboard.password import check_password
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
 from src.prediction_pipeline.pre_processing.preprocess_historic_visitor_count_data import parse_german_dates
-from src.utils import upload_file_to_azure, upload_dataframe_to_azure
+from src.utils import upload_file_to_azure, upload_dataframe_to_azure, query_azure_with_duck_db
 
 # Mapping data upload categories to specific folders in Azure Blob Storage
 data_upload_categories_to_azure_folders = {
@@ -21,6 +21,42 @@ data_upload_categories_time_cols_freq = {
     "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage": {"col": "Datum", "freq": "1 day"},
     "Sonderzählungen": {"col": None, "freq": None}
 }
+
+def warning_for_new_columns(df: pd.DataFrame, already_existing_columns: list) -> None:
+    """
+    Warns the user about new columns that are not in the already listed as features in the Data Hub.
+
+    Args:
+        df (pd.DataFrame): DataFrame to check for new columns
+        already_existing_columns (list): List of already existing columns
+    """
+    # List all columns that are not in the already existing columns
+    new_columns = [col for col in df.columns if col not in already_existing_columns]
+
+    if new_columns:
+        st.warning(f'Achtung! Es wurden die folgenden, neuen Spaltennamen in der hochgeladenen Datei gefunden: {", ".join(new_columns)}', icon="⚠️")
+
+def retrieve_already_existing_features(category_to_upload_data_to: str) -> list:
+    """
+    Retrieve already in the Data Hub existing features for a specific data category.
+
+    Args:
+        category_to_upload_data_to (str): Category to upload data to
+
+    Returns:
+        list: List of already existing features
+    """
+
+    queried_data = query_azure_with_duck_db(
+        directory=f"data-hub/preprocessed-data/{data_upload_categories_to_azure_folders[category_to_upload_data_to]}",
+        limit=1
+    )
+
+    already_existing_columns = queried_data.columns.to_list()
+
+    st.info(f'Aktuell vorhandene Spaltennamen in der Datenkategorie "{category_to_upload_data_to} sind: {", ".join(already_existing_columns)}', icon="ℹ️")
+
+    return already_existing_columns
 
 def save_preprocessed_data_to_cloud(preprocessed_data: pd.DataFrame, category_to_upload_data_to: str) -> None:
     """
@@ -307,13 +343,8 @@ with tab_upload_data:
         "Sonderzählungen",
     ],
     )
-
-    already_existing_columns = [
-        "Datum",
-        "Besucherzahlen"
-    ]
-
-    st.info(f'Aktuell vorhandene Spaltennamen in der Datenkategorie "{category_to_upload_data_to} sind: {", ".join(already_existing_columns)}', icon="ℹ️")
+    
+    already_existing_columns = retrieve_already_existing_features(category_to_upload_data_to)
 
     # Select local file to upload
     uploaded_files = st.file_uploader(
@@ -323,11 +354,7 @@ with tab_upload_data:
         
         df = process_and_validate_upload(uploaded_file, category_to_upload_data_to)
 
-        # List all columns that are not in the already existing columns
-        new_columns = [col for col in df.columns if col not in already_existing_columns]
-
-        if new_columns:
-            st.warning(f'Achtung! Es wurden die folgenden, neuen Spaltennamen in der hochgeladenen Datei gefunden: {", ".join(new_columns)}', icon="⚠️")
+        warning_for_new_columns(df, already_existing_columns)
 
         # Preview file before upload
         st.markdown(f"#### Preview: `{uploaded_file.name}`")

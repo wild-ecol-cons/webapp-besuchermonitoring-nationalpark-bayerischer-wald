@@ -7,7 +7,7 @@ from numpy.random import default_rng as rng
 from src.streamlit_app.pages_in_dashboard.password import check_password
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
 from src.prediction_pipeline.pre_processing.preprocess_historic_visitor_count_data import parse_german_dates
-from src.utils import upload_file_to_azure
+from src.utils import upload_file_to_azure, upload_dataframe_to_azure
 
 # Mapping data upload categories to specific folders in Azure Blob Storage
 data_upload_categories_to_azure_folders = {
@@ -313,3 +313,23 @@ with tab_upload_data:
             type="primary"
         ):
             save_raw_data_to_cloud(uploaded_file, category_to_upload_data_to)
+
+            data_upload_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            # Add column to df with current timestamp
+            df["data_upload_time"] = data_upload_time
+            # Save preprocessed data (df) to Azure
+
+            file_name = f"preprocessed-{data_upload_categories_to_azure_folders[category_to_upload_data_to]}-{data_upload_time}"
+
+            try:
+                upload_dataframe_to_azure(
+                    df,
+                    file_name=file_name,
+                    target_folder=f"data-hub/preprocessed-data/{data_upload_categories_to_azure_folders[category_to_upload_data_to]}",
+                    file_format="parquet",
+                )
+                st.success(f"Die Datei wurde erfolgreich vorverarbeitet und als {file_name} erfolgreich in der Cloud gespeichert!")
+            except Exception as e:
+                st.error(f"Beim Hochladen der verarbeitetten Datei {uploaded_file.name} ist ein Fehler aufgetreten: {e}")
+                continue

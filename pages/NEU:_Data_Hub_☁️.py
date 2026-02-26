@@ -105,7 +105,7 @@ def save_raw_data_to_cloud(raw_file_to_upload: object, category_to_upload_data_t
     if success:
         st.success(f"Die Rohdatei {raw_file_to_upload.name} wurde erfolgreich zur Cloud hochgeladen!")
 
-def validate_time_frequency(df, time_col, freq_string, category):
+def validate_time_frequency(df, time_col, freq_string, category, file_id):
     """
     Validates if the dataframe follows a specific frequency.
     freq_string: e.g., '1 hour', '1 day', '30 minutes'
@@ -121,27 +121,33 @@ def validate_time_frequency(df, time_col, freq_string, category):
 
     if freq_string is None:
         # Ask user to specify the time column via an text input field
-        freq_string = st.text_input("Bitte trage hier die Frequenz der Zeitspalte ein (z.B. ""1 hour"", ""1 day"", ""30 minutes""):")
+        freq_string = st.text_input(
+            label="Bitte trage hier die Frequenz der Zeitspalte ein (z.B. ""1 hour"", ""1 day"", ""30 minutes""). Hinweis: Falls die Zeitspalte keine regelmässige Frequenz hat, bitte den Wert ""no_time_frequency"" eingeben:",
+            key=f"text_input_freq_string_{uploaded_file.file_id}"
+        )
     
-    # Calculate the expected timedelta
-    try:
-        expected_delta = pd.to_timedelta(freq_string)
-    except ValueError:
-        st.error(f"Ungültiges Frequenz-Format: '{freq_string}'")
-        st.stop()
+    if freq_string == "no_time_frequency":
+        return df
+    else:
+        # Calculate the expected timedelta
+        try:
+            expected_delta = pd.to_timedelta(freq_string)
+        except ValueError:
+            st.error(f"Ungültiges Frequenz-Format: '{freq_string}'")
+            st.stop()
 
-    # Calculate differences between consecutive rows
-    time_diffs = df[time_col].diff().dropna()
-    
-    # Check if the data mostly follows the expected frequency
-    most_prevelant_time_diff = time_diffs.value_counts().index[0]
+        # Calculate differences between consecutive rows
+        time_diffs = df[time_col].diff().dropna()
+        
+        # Check if the data mostly follows the expected frequency
+        most_prevelant_time_diff = time_diffs.value_counts().index[0]
 
-    if not most_prevelant_time_diff == expected_delta:
-        st.error(f"Error: Die Datenfrequenz entspricht nicht '{freq_string}'. "
-                 "Bitte überprüfe die Datei.")
-        st.stop()
-    
-    return df
+        if not most_prevelant_time_diff == expected_delta:
+            st.error(f"Error: Die Datenfrequenz entspricht nicht '{freq_string}'. "
+                    "Bitte überprüfe die Datei.")
+            st.stop()
+        
+        return df
 
 def process_and_validate_upload(uploaded_file, category):
     # Check extension and read file
@@ -161,10 +167,13 @@ def process_and_validate_upload(uploaded_file, category):
     
     if time_col is None:
         # Ask user to specify the time column via an text input field
-        time_col = st.text_input("Bitte trage hier den exakten Namen der Zeitspalte ein:")
+        time_col = st.text_input(
+            label=f"Bitte trage hier den exakten Namen der Zeitspalte der Datei {uploaded_file.name} ein:",
+            key=f"text_input_time_col_{uploaded_file.file_id}"
+        )
     
     if time_col not in df.columns:
-        st.error(f"Error: Die Zeitspalte '{time_col}' konnte nicht in der hochgeladenen Datei gefunden werden. Der Upload wird abgebrochen.")
+        st.error(f"Error: Die Zeitspalte '{time_col}' der Datei {uploaded_file.name} konnte nicht in der hochgeladenen Datei gefunden werden. Der Upload wird abgebrochen.")
         st.stop()
     
     else:
@@ -173,7 +182,8 @@ def process_and_validate_upload(uploaded_file, category):
             df,
             time_col,
             freq_string=data_upload_categories_time_cols_freq[category]["freq"],
-            category=category
+            category=category,
+            file_id=uploaded_file.file_id
         )
 
         return preprocessed_df
@@ -364,7 +374,7 @@ with tab_upload_data:
         # Confirm upload
         if st.button(
             "Upload Data",
-            key=uploaded_file.file_id,
+            key=f"data_upload_button_{uploaded_file.file_id}",
             type="primary"
         ):
             save_raw_data_to_cloud(uploaded_file, category_to_upload_data_to)

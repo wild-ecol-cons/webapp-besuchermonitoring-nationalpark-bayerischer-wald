@@ -22,6 +22,33 @@ data_upload_categories_time_cols_freq = {
     "Sonderzählungen": {"col": None, "freq": None}
 }
 
+def save_preprocessed_data_to_cloud(preprocessed_data: pd.DataFrame, category_to_upload_data_to: str) -> None:
+    """
+    Save preprocessed data to Azure Cloud with adding the current timestamp as a new feature.
+    
+    Args:
+        preprocessed_data (pd.DataFrame): Preprocessed data to upload
+        category_to_upload_data_to (str): Category to upload data to
+    """
+    data_upload_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # Add column to df with current timestamp
+    preprocessed_data["data_upload_time"] = data_upload_time
+    # Save preprocessed data (df) to Azure
+
+    file_name = f"preprocessed-{data_upload_categories_to_azure_folders[category_to_upload_data_to]}-{data_upload_time}"
+
+    try:
+        upload_dataframe_to_azure(
+            df=preprocessed_data,
+            file_name=file_name,
+            target_folder=f"data-hub/preprocessed-data/{data_upload_categories_to_azure_folders[category_to_upload_data_to]}",
+            file_format="parquet",
+        )
+        st.success(f"Die Datei wurde erfolgreich vorverarbeitet und als {file_name} erfolgreich in der Cloud gespeichert!")
+    except Exception as e:
+        st.error(f"Beim Hochladen der verarbeitetten Datei {uploaded_file.name} ist ein Fehler aufgetreten: {e}")
+
 def save_raw_data_to_cloud(raw_file_to_upload: object, category_to_upload_data_to: str) -> None:
     """
     Save raw data file provided via Data Hub to Azure Cloud as it is.
@@ -314,22 +341,4 @@ with tab_upload_data:
         ):
             save_raw_data_to_cloud(uploaded_file, category_to_upload_data_to)
 
-            data_upload_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-            # Add column to df with current timestamp
-            df["data_upload_time"] = data_upload_time
-            # Save preprocessed data (df) to Azure
-
-            file_name = f"preprocessed-{data_upload_categories_to_azure_folders[category_to_upload_data_to]}-{data_upload_time}"
-
-            try:
-                upload_dataframe_to_azure(
-                    df,
-                    file_name=file_name,
-                    target_folder=f"data-hub/preprocessed-data/{data_upload_categories_to_azure_folders[category_to_upload_data_to]}",
-                    file_format="parquet",
-                )
-                st.success(f"Die Datei wurde erfolgreich vorverarbeitet und als {file_name} erfolgreich in der Cloud gespeichert!")
-            except Exception as e:
-                st.error(f"Beim Hochladen der verarbeitetten Datei {uploaded_file.name} ist ein Fehler aufgetreten: {e}")
-                continue
+            save_preprocessed_data_to_cloud(df, category_to_upload_data_to)

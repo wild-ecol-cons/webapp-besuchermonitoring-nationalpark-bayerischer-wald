@@ -95,6 +95,7 @@ def upload_dataframe_to_azure(
     file_name: str,
     target_folder: str = "",
     file_format: str = "parquet",
+    index: bool = False,
     write_options: Optional[Dict[str, Any]] = None,
     container_name: str = CONTAINER_NAME,
     storage_options: dict = storage_options,
@@ -145,14 +146,14 @@ def upload_dataframe_to_azure(
         if file_format == "csv":
             df.to_csv(
                 full_azure_path,
-                index=False,
+                index=index,
                 storage_options=storage_options,
                 **write_options
             )
         elif file_format == "parquet":
             df.to_parquet(
                 full_azure_path,
-                index=False,
+                index=index,
                 storage_options=storage_options,
                 **write_options
             )

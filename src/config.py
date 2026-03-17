@@ -35,3 +35,16 @@ regions = {
     'Lusen-Mauth-Finsterau': ['Lusen-Mauth-Finsterau IN', 'Lusen-Mauth-Finsterau OUT'],
     'Rachel-Spiegelau': ['Rachel-Spiegelau IN', 'Rachel-Spiegelau OUT'],
 }
+
+# Mapping data upload categories to specific folders in Azure Blob Storage
+data_upload_categories_to_azure_folders = {
+    "Permanente Besucherzählung (Eco-Counter)": "visitor-counts-eco-counter",
+    "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage": "huts-counts-openings-weather-station-holidays",
+    "Sonderzählungen": "special-counts",
+}
+
+data_upload_categories_time_cols_freq = {
+    "Permanente Besucherzählung (Eco-Counter)": {"col": "Time", "freq": "1 hour"},
+    "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage": {"col": "Datum", "freq": "1 day"},
+    "Sonderzählungen": {"col": None, "freq": None}
+}

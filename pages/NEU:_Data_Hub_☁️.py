@@ -291,89 +291,9 @@ with tab_query_download_data:
         help="Query the data based on the selected data categories and timeframe.",
         type="primary"
     ):
-        # Preview data (now: dummy data)
+        # Preview data # TODO: Add here preview of actual data
         st.markdown("# Data Preview:")
-        st.markdown(" ⚠️ Für Testzwecke, werden hier Dummy-Daten präsentiert.")
-
-        def create_dummy_data() -> pd.DataFrame:
-            np.random.seed(42)
-
-            n_rows = 8
-            base_date = datetime.today()
-
-            df = pd.DataFrame(
-                {
-
-                    # Emoji “rating”
-                    "mood": [
-                        "😀",
-                        "😐",
-                        "😢",
-                        "🤩",
-                        "😴",
-                        "😡",
-                        "🤔",
-                        "😂",
-                    ],
-                    # Boolean / categorical
-                    "active": [True, False, True, True, False, True, False, True],
-                    "category": ["A", "B", "C", "A", "B", "C", "A", "B"],
-                    # Numbers
-                    "score": np.round(np.random.uniform(0, 100, n_rows), 1),
-                    "category": [
-                        ["exploration", "visualization"],
-                        ["llm", "visualization"],
-                        ["exploration"],
-                        ["llm", "visualization"],
-                        ["llm"],
-                        ["llm", "exploration"],
-                        ["llm"],
-                        ["exploration", "visualization"],
-                    ],
-                    "progress": np.round(np.random.rand(n_rows), 2),
-                    # Dates and times
-                    "date": [base_date.date() + timedelta(days=i) for i in range(n_rows)],
-                    "timestamp": [base_date + timedelta(hours=i * 3) for i in range(n_rows)],
-                    # URL column
-                    "link": [
-                        "https://streamlit.io",
-                        "https://docs.streamlit.io",
-                        "https://github.com/streamlit/streamlit",
-                        "https://discuss.streamlit.io",
-                        "https://streamlit.io/gallery",
-                        "https://streamlit.io/cloud",
-                        "https://blog.streamlit.io",
-                        "https://streamlit.io/components",
-                    ],
-                    # Image URLs (can be any public images)
-                    "logo": [
-                        "https://storage.googleapis.com/s4a-prod-share-preview/default/st_app_screenshot_image/5435b8cb-6c6c-490b-9608-799b543655d3/Home_Page.png",
-                        "https://storage.googleapis.com/s4a-prod-share-preview/default/st_app_screenshot_image/ef9a7627-13f2-47e5-8f65-3f69bb38a5c2/Home_Page.png",
-                        "https://storage.googleapis.com/s4a-prod-share-preview/default/st_app_screenshot_image/31b99099-8eae-4ff8-aa89-042895ed3843/Home_Page.png",
-                        "https://storage.googleapis.com/s4a-prod-share-preview/default/st_app_screenshot_image/6a399b09-241e-4ae7-a31f-7640dc1d181e/Home_Page.png",
-                        "https://storage.googleapis.com/s4a-prod-share-preview/default/st_app_screenshot_image/5435b8cb-6c6c-490b-9608-799b543655d3/Home_Page.png",
-                        "https://storage.googleapis.com/s4a-prod-share-preview/default/st_app_screenshot_image/ef9a7627-13f2-47e5-8f65-3f69bb38a5c2/Home_Page.png",
-                        "https://storage.googleapis.com/s4a-prod-share-preview/default/st_app_screenshot_image/31b99099-8eae-4ff8-aa89-042895ed3843/Home_Page.png",
-                        "https://storage.googleapis.com/s4a-prod-share-preview/default/st_app_screenshot_image/6a399b09-241e-4ae7-a31f-7640dc1d181e/Home_Page.png",
-                    ],
-                    # Per-row mini time series for chart columns
-                    "trend_line": [
-                        np.random.randn(10).cumsum().tolist() for _ in range(n_rows)
-                    ],
-                    "trend_area": [
-                        (np.random.rand(10) * 100).tolist() for _ in range(n_rows)
-                    ],
-                }
-            )
-
-            return df
-
-        # --- Rich st.dataframe with column_config ------------------------------
-        st.markdown("#### Dummy Data Preview als normale Tabelle")
-
-        dummy_data = create_dummy_data()
-        st.dataframe(dummy_data)
-
+      
         # Button to download data
         st.download_button(
             label="Download Data",

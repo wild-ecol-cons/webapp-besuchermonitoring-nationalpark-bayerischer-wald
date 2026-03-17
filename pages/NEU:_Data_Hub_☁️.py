@@ -291,16 +291,61 @@ with tab_query_download_data:
         help="Query the data based on the selected data categories and timeframe.",
         type="primary"
     ):
-        # Preview data # TODO: Add here preview of actual data
-        st.markdown("# Data Preview:")
-      
+        overall_queried_data = pd.DataFrame(columns=["general_time_index"])
+        
+        # Query the selected data with Duck DB
+        for category in available_data_categories:
+
+            if specify_timerange:
+                queried_single_category_data = query_azure_with_duck_db(
+                    directory=f"data-hub/preprocessed-data/{data_upload_categories_to_azure_folders[category]}",
+                    filters="date_time_index >= @start_time AND date_time_index <= @end_time",
+                )
+            else:
+                queried_single_category_data = query_azure_with_duck_db(directory=f"data-hub/preprocessed-data/{data_upload_categories_to_azure_folders[category]}")
+
+            print(queried_single_category_data)
+
+            # Drop duplicate rows
+            ## First, order by data_upload_time
+            queried_single_category_data.sort_values(by="data_upload_time", ascending=True, inplace=True)
+            ## Then, drop duplicates when the same general_time_index is encountered (keep the last, so the latest uploaded version is kept)
+            queried_single_category_data.drop_duplicates(subset="general_time_index", keep="last", inplace=True)
+
+            # Do a full outer join between the current state of the overall queried data and the queried data of the current category, resulting again in the overall queried data
+            overall_queried_data = pd.merge(
+                left=overall_queried_data,
+                right=queried_single_category_data,
+                how="outer",
+                on="general_time_index",
+                suffixes=(None, f"_{category}"),
+            )
+
+        # Order queried data by time
+        overall_queried_data.sort_values(by="general_time_index", ascending=True, inplace=True)
+
+        # Preview queried data before download
+        st.markdown(f"#### Preview der Daten")
+        st.dataframe(overall_queried_data.head())
+
+        data_download_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        file_name_data_export = f"{data_download_time}_Data_Hub_Datenexport.csv"
+
         # Button to download data
-        st.download_button(
+        if st.download_button(
             label="Download Data",
-            data=dummy_data.to_csv(index=False).encode('utf-8'),
-            file_name="dummy_data.csv",
+            data=overall_queried_data.to_csv(index=False).encode('utf-8'),
+            file_name=file_name_data_export,
             icon=":material/download:",
-        )
+        ):
+
+            upload_dataframe_to_azure(
+                df=overall_queried_data,
+                file_name=file_name_data_export,
+                target_folder="data-hub/exported-data",
+                file_format="csv",
+            )
+
 with tab_upload_data:
 
     st.markdown("## Upload Data")

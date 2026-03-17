@@ -299,12 +299,10 @@ with tab_query_download_data:
             if specify_timerange:
                 queried_single_category_data = query_azure_with_duck_db(
                     directory=f"data-hub/preprocessed-data/{data_upload_categories_to_azure_folders[category]}",
-                    filters="date_time_index >= @start_time AND date_time_index <= @end_time",
+                    filters = f"general_time_index >= '{start_time}' AND general_time_index <= '{end_time}'"
                 )
             else:
                 queried_single_category_data = query_azure_with_duck_db(directory=f"data-hub/preprocessed-data/{data_upload_categories_to_azure_folders[category]}")
-
-            print(queried_single_category_data)
 
             # Drop duplicate rows
             ## First, order by data_upload_time

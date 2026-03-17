@@ -191,6 +191,32 @@ def process_and_validate_upload(uploaded_file, category):
 
         return preprocessed_df
 
+def get_min_date_from_queried_data(data_categories: list[str]) -> datetime:
+    """
+    Get the first selectable date (the earliest date available) from the queried data.
+
+    Args:
+        data_categories (list[str]): List of data categories to query.
+
+    Returns:
+        datetime: The first selectable date (the earliest date available).
+    """
+    dataset_min_times = pd.DataFrame()
+
+    for category in data_categories:
+
+        min_date = query_azure_with_duck_db(
+                directory=f"data-hub/preprocessed-data/{data_upload_categories_to_azure_folders[category]}",
+                columns=["general_time_index"],
+                order_by="general_time_index ASC",
+                limit=1
+            )
+        
+        dataset_min_times = pd.concat([dataset_min_times, min_date])
+
+    min_date = dataset_min_times.min().iloc[0]
+    return min_date
+
 # Initialize language in session state if it doesn't exist
 if 'selected_language' not in st.session_state:
     st.session_state.selected_language = 'German'  # Default language
@@ -223,30 +249,41 @@ with tab_query_download_data:
     # Select one or multiple data categories
     available_data_categories = st.multiselect(
         "Ausgewählte Datenkategorien:",
-        [
-            "Permanente Besucherzählung (Eco-Counter)",
-            "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage",
-            "Schulferien & Feiertage (BY & CZ)",
-            "Parkplatzzählungen",
-            "Sonderzählungen",
-            "Wetterdaten"
-        ]
+        data_upload_categories_to_azure_folders.keys(),
+
+            # "Schulferien & Feiertage (BY & CZ)", # TODO: Add this at the end of the project if time allows
+            # "Parkplatzzählungen", # TODO: First focus on manually collected data, then on this API-fetched data
+            # "Wetterdaten" # TODO: First focus on manually collected data, then on this API-fetched data
     )
 
     # Select entire timeframe or a specific start and end date
     ## Checkbox: All data?
-    on = st.toggle("Zeitraum eingrenzen")
+    specify_timerange = st.toggle("Zeitraum eingrenzen")
 
     ## time Selection
-    if on:
-        # TODO: The first selectable date should be the first day of the available data
+    if specify_timerange:
+        # Get the first selectable date (the earliest date available) 
+        first_selectable_date = get_min_date_from_queried_data(data_categories=available_data_categories)
+
         col_left, col_right = st.columns(2)
 
         with col_left:
-            start_time = st.datetime_input("Start:", value=None, max_value="now", step=3600)
+            start_time = st.datetime_input(
+                "Start:",
+                value=None,
+                min_value=first_selectable_date,
+                max_value="now",
+                step=3600
+            )
 
         with col_right:
-            end_time = st.datetime_input("Ende:", value=None, max_value="now", step=3600)
+            end_time = st.datetime_input(
+                "Ende:",
+                value=None,
+                min_value=first_selectable_date,
+                max_value="now",
+                step=3600
+            )
 
     # Button to query data
     if st.button(

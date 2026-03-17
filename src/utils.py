@@ -226,7 +226,8 @@ def query_azure_with_duck_db(
     columns: List[str] = ["*"],
     filters: Optional[str] = None,
     limit: Optional[int] = 10,
-    select_string: Optional[str] = None
+    select_string: Optional[str] = None,
+    order_by: Optional[str] = None
 ) -> pd.DataFrame:
     """
     Queries Parquet files on Azure with optional filtering and selection.
@@ -236,6 +237,8 @@ def query_azure_with_duck_db(
         columns (List[str], optional): A list of column names to select. Defaults to ["*"].
         filters (Optional[str], optional): An SQL WHERE clause to apply to the query. Defaults to None.
         limit (Optional[int], optional): The maximum number of rows to return. Defaults to 10.
+        select_string (Optional[str], optional): A custom SQL SELECT clause to use. Defaults to None.
+        order_by (Optional[str], optional): An SQL ORDER BY clause to apply to the query. Defaults to None.
 
     Returns:
         pd.DataFrame: A Pandas DataFrame containing the results of the query
@@ -257,8 +260,11 @@ def query_azure_with_duck_db(
     # 4. Append WHERE clause if filters are provided
     if filters:
         query += f" WHERE {filters}"
+
+    if order_by:
+        query += f" ORDER BY {order_by}"
     
-    # 5. Append LIMIT
+    # 6. Append LIMIT
     if limit:
         query += f" LIMIT {limit}"
     

@@ -186,8 +186,8 @@ def process_and_validate_upload(uploaded_file, category):
             file_id=uploaded_file.file_id
         )
 
-        # Make time column the index (to avoid remembering exact column names when retrieving data)
-        preprocessed_df = preprocessed_df.set_index(time_col)
+        # Save time column as general time index
+        preprocessed_df["general_time_index"] = preprocessed_df[time_col]
 
         return preprocessed_df
 

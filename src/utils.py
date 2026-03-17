@@ -225,7 +225,7 @@ def query_azure_with_duck_db(
     directory: str,
     columns: List[str] = ["*"],
     filters: Optional[str] = None,
-    limit: Optional[int] = 10,
+    limit: Optional[int] = None,
     select_string: Optional[str] = None,
     order_by: Optional[str] = None
 ) -> pd.DataFrame:
@@ -255,7 +255,7 @@ def query_azure_with_duck_db(
     path = f"az://webapp-besuchermonitoring-data-dev/{directory}/*.parquet"
     
     # 3. Build the SQL string dynamically
-    query = f"SELECT {col_selector} FROM read_parquet('{path}')"
+    query = f"SELECT {col_selector} FROM read_parquet('{path}', union_by_name=true)"
     
     # 4. Append WHERE clause if filters are provided
     if filters:

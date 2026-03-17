@@ -186,6 +186,9 @@ def process_and_validate_upload(uploaded_file, category):
             file_id=uploaded_file.file_id
         )
 
+        # Make time column the index (to avoid remembering exact column names when retrieving data)
+        preprocessed_df = preprocessed_df.set_index(time_col)
+
         return preprocessed_df
 
 # Initialize language in session state if it doesn't exist

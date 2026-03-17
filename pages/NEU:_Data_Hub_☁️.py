@@ -186,6 +186,9 @@ def process_and_validate_upload(uploaded_file, category):
             file_id=uploaded_file.file_id
         )
 
+        # Drop entirely empty columns
+        preprocessed_df.dropna(how="all", axis="columns", inplace=True)
+
         # Save time column as general time index
         preprocessed_df["general_time_index"] = preprocessed_df[time_col]
 

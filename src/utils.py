@@ -224,7 +224,8 @@ def query_azure_with_duck_db(
     directory: str,
     columns: List[str] = ["*"],
     filters: Optional[str] = None,
-    limit: Optional[int] = 10
+    limit: Optional[int] = 10,
+    select_string: Optional[str] = None
 ) -> pd.DataFrame:
     """
     Queries Parquet files on Azure with optional filtering and selection.
@@ -240,8 +241,11 @@ def query_azure_with_duck_db(
     """
     conn = set_up_duck_db_connection()
     
-    # 1. Construct the column string
-    col_selector = ", ".join(columns)
+    if select_string:
+        col_selector = select_string
+    else:
+        # 1. Construct the column string
+        col_selector = ", ".join(columns)
     
     # 2. Base URL
     path = f"az://webapp-besuchermonitoring-data-dev/{directory}/*.parquet"

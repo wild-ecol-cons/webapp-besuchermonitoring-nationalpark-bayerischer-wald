@@ -18,17 +18,22 @@ def get_min_date_from_queried_data(data_categories: list[str]) -> datetime:
 
     for category in data_categories:
 
-        min_date = query_azure_with_duck_db(
-                directory=f"data-hub/preprocessed-data/{data_upload_categories_to_azure_folders[category]}",
-                columns=["general_time_index"],
-                order_by="general_time_index ASC",
-                limit=1
-            )
-        
-        dataset_min_times = pd.concat([dataset_min_times, min_date])
+        if category in ["Parkplatzzählungen", "Wetterdaten", "Schulferien & Feiertage (BY & CZ)"]:
+            continue
+        else:
+            min_date = query_azure_with_duck_db(
+                    directory=f"data-hub/preprocessed-data/{data_upload_categories_to_azure_folders[category]}",
+                    columns=["general_time_index"],
+                    order_by="general_time_index ASC",
+                    limit=1
+                )
+            dataset_min_times = pd.concat([dataset_min_times, min_date])
 
-    min_date = dataset_min_times.min().iloc[0]
-    return min_date
+    if len(dataset_min_times) == 0:
+        return None
+    else:
+        min_date = dataset_min_times.min().iloc[0]
+        return min_date
 
 def query_and_preprocess_data(data_categories_to_query: list[str], specify_timerange: bool = False, start_time: datetime = None, end_time: datetime = None) -> pd.DataFrame:
     """
@@ -49,13 +54,16 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
     # Query the selected data with Duck DB
     for category in data_categories_to_query:
 
-        if specify_timerange:
-            queried_single_category_data = query_azure_with_duck_db(
-                directory=f"data-hub/preprocessed-data/{data_upload_categories_to_azure_folders[category]}",
-                filters = f"general_time_index >= '{start_time}' AND general_time_index <= '{end_time}'"
-            )
+        if category in ["Parkplatzzählungen", "Wetterdaten", "Schulferien & Feiertage (BY & CZ)"]:
+            continue
         else:
-            queried_single_category_data = query_azure_with_duck_db(directory=f"data-hub/preprocessed-data/{data_upload_categories_to_azure_folders[category]}")
+            if specify_timerange:
+                queried_single_category_data = query_azure_with_duck_db(
+                    directory=f"data-hub/preprocessed-data/{data_upload_categories_to_azure_folders[category]}",
+                    filters = f"general_time_index >= '{start_time}' AND general_time_index <= '{end_time}'"
+                )
+            else:
+                queried_single_category_data = query_azure_with_duck_db(directory=f"data-hub/preprocessed-data/{data_upload_categories_to_azure_folders[category]}")
 
         # Drop duplicate rows
         ## First, order by data_upload_time

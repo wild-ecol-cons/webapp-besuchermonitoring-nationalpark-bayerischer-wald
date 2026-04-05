@@ -41,6 +41,7 @@ data_upload_categories_to_azure_folders = {
     "Permanente Besucherzählung (Eco-Counter)": "visitor-counts-eco-counter",
     "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage": "huts-counts-openings-weather-station-holidays",
     "Sonderzählungen": "special-counts",
+    "Parkplatzzählungen": None
 }
 
 data_upload_categories_time_cols_freq = {

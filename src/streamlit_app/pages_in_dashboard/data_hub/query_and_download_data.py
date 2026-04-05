@@ -63,6 +63,9 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
         ## Then, drop duplicates when the same general_time_index is encountered (keep the last, so the latest uploaded version is kept)
         queried_single_category_data.drop_duplicates(subset="general_time_index", keep="last", inplace=True)
 
+        # Drop data_upload_time column, as it was only needed for duplicate removal
+        queried_single_category_data = queried_single_category_data.drop(columns=["data_upload_time"])
+
         if category == "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage":
             daily_value_cols_to_be_filled = queried_single_category_data.columns.difference(['general_time_index'])
 

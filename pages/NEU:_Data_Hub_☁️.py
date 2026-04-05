@@ -134,6 +134,8 @@ with tab_upload_data:
         "Es wird erwartet, dass Daten in stündlicher (1h) Frequenz vorliegen.",
     ],
     )
+
+    st.warning('Erwartete Zeitzone: Mitteleuropäische Zeit (Berlin, Amsterdam, Paris).', icon="⚠️")
     
     already_existing_columns = retrieve_already_existing_features(category_to_upload_data_to)
 

@@ -128,6 +128,11 @@ with tab_upload_data:
         "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage",
         "Sonderzählungen",
     ],
+    captions=[
+        "Es wird erwartet, dass Daten in stündlicher (1h) Frequenz vorliegen.",
+        "Es wird erwartet, dass Daten in täglicher (1D) Frequenz vorliegen.",
+        "Es wird erwartet, dass Daten in stündlicher (1h) Frequenz vorliegen.",
+    ],
     )
     
     already_existing_columns = retrieve_already_existing_features(category_to_upload_data_to)

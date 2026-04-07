@@ -1,4 +1,5 @@
 import pandas as pd
+import streamlit as st
 from datetime import datetime
 from src.config import data_upload_categories_to_azure_folders
 from src.utils import query_azure_with_duck_db
@@ -59,10 +60,15 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
         if category == "Schulferien & Feiertage (BY & CZ)":
             continue
         elif category == "Wetterdaten":
-            queried_single_category_data = source_weather_data(
+            if not specify_timerange:
+                # Stop the streamlit execution
+                st.warning("⚠️ Wetterdaten können nur für einen bestimmten Zeitraum abgefragt werden. Bitte gebe ein Start- und Enddatum an.")
+                st.stop() # Beendet die Skriptausführung an dieser Stelle (der Loop wird nie erreicht)
+            else:
+                queried_single_category_data = source_weather_data(
                 start_time=start_time,
                 end_time=end_time)
-            queried_single_category_data.rename(columns={"Time": "general_time_index"}, inplace=True)
+                queried_single_category_data.rename(columns={"Time": "general_time_index"}, inplace=True)
         elif category == "Parkplatzzählungen":
             queried_single_category_data = process_all_locations(
                 specify_timerange=specify_timerange,

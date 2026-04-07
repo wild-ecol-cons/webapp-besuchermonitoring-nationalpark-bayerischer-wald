@@ -24,8 +24,12 @@ END_TIME = datetime(2024, 7, 22 )
 
 # Coordinates of the Bavarian Forest (Haselbach)
 # These coordinates are based on the weather recommendation by Google for a Bavarian Forest Weather search
-LATITUDE = 49.31452390542327
-LONGITUDE = 12.711573421032
+# LATITUDE = 49.31452390542327
+# LONGITUDE = 12.711573421032
+
+# Update: New Coordinates for BFNP
+LATITUDE = 48.96119
+LONGITUDE = 13.36234
 
 # Define weather condition code mapping
 coco_to_coco_2_mapping = {

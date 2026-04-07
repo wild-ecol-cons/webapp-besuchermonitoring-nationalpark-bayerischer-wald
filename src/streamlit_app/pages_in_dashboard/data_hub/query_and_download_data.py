@@ -3,6 +3,7 @@ from datetime import datetime
 from src.config import data_upload_categories_to_azure_folders
 from src.utils import query_azure_with_duck_db
 from src.prediction_pipeline.sourcing_data.source_historic_parking_data import process_all_locations
+from src.prediction_pipeline.sourcing_data.source_weather import source_weather_data
 
 
 def get_min_date_from_queried_data(data_categories: list[str]) -> datetime:
@@ -58,7 +59,10 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
         if category == "Schulferien & Feiertage (BY & CZ)":
             continue
         elif category == "Wetterdaten":
-            continue
+            queried_single_category_data = source_weather_data(
+                start_time=start_time,
+                end_time=end_time)
+            queried_single_category_data.rename(columns={"Time": "general_time_index"}, inplace=True)
         elif category == "Parkplatzzählungen":
             queried_single_category_data = process_all_locations(
                 specify_timerange=specify_timerange,

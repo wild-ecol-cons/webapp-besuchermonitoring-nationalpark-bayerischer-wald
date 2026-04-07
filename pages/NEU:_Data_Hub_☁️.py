@@ -27,7 +27,6 @@ if not check_password(
 ):
     st.stop()  # Do not continue if check_password is not True.
 
-# get_upload_and_download_section()
 st.markdown("## Data Hub ☁️")
 
 st.markdown(

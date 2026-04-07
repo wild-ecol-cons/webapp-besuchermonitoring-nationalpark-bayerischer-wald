@@ -86,11 +86,11 @@ def get_historical_data_for_location(
 
 
 def process_all_locations(
-        parking_sensors,
+        parking_sensors: dict = parking_sensors,
         specify_timerange: bool = False,
         start_time: datetime = None,
         end_time: datetime = None
-        ):
+        ) -> pd.DataFrame:
     """
     Process and fetch all types of historical data for each location in the parking sensors dictionary.
 
@@ -99,6 +99,9 @@ def process_all_locations(
         specify_timerange (bool, optional): Whether to specify a specific timeframe. Defaults to False.
         start_time (datetime, optional): Start time for the timeframe. Defaults to None.
         end_time (datetime, optional): End time for the timeframe. Defaults to None.
+
+    Returns:
+        overall_historic_parking_data (pd.DataFrame): A Pandas DataFrame containing the processed historical data for all locations (either all data or a specific timeframe).
     """
 
     data_types = [
@@ -152,16 +155,7 @@ def process_all_locations(
             (overall_historic_parking_data["general_time_index"] <= end_time)
         ]
     
-    # Create a filename based on the location name
-    filename = "historical_parking_data.csv"
-
-    # make the output directory if it doesn't exist
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    output_path = os.path.join(OUTPUT_DIR, filename)
-
-    overall_historic_parking_data.to_csv(output_path, index=False)
-
-    print(f"Saved historical parking data for location: {key} to {output_path}")
+    return overall_historic_parking_data
 
 
 def main():

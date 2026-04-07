@@ -4,6 +4,7 @@ import requests
 import json
 import os
 from functools import reduce
+from datetime import datetime
 
 ########################################################################################
 # Global variables
@@ -84,12 +85,20 @@ def get_historical_data_for_location(
     return historical_df
 
 
-def process_all_locations(parking_sensors):
+def process_all_locations(
+        parking_sensors,
+        specify_timerange: bool = False,
+        start_time: datetime = None,
+        end_time: datetime = None
+        ):
     """
     Process and fetch all types of historical data for each location in the parking sensors dictionary.
 
     Args:
         parking_sensors (dict): Dictionary containing location slugs as keys and location IDs as values.
+        specify_timerange (bool, optional): Whether to specify a specific timeframe. Defaults to False.
+        start_time (datetime, optional): Start time for the timeframe. Defaults to None.
+        end_time (datetime, optional): End time for the timeframe. Defaults to None.
     """
 
     data_types = [
@@ -137,6 +146,12 @@ def process_all_locations(parking_sensors):
             on="general_time_index",
         )
 
+    if specify_timerange:
+        overall_historic_parking_data = overall_historic_parking_data[
+            (overall_historic_parking_data["general_time_index"] >= start_time) &
+            (overall_historic_parking_data["general_time_index"] <= end_time)
+        ]
+    
     # Create a filename based on the location name
     filename = "historical_parking_data.csv"
 
@@ -152,7 +167,12 @@ def process_all_locations(parking_sensors):
 def main():
 
     # Fetch historical data for all locations
-    process_all_locations(parking_sensors)
+    process_all_locations(
+        parking_sensors,
+        specify_timerange=True,
+        start_time="2025-02-26 09:00:00",
+        end_time="2025-03-04 23:00:00"
+    )
 
 if __name__ == '__main__':
     main()

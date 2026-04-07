@@ -55,7 +55,9 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
     # Query the selected data with Duck DB
     for category in data_categories_to_query:
 
-        if category in ["Wetterdaten", "Schulferien & Feiertage (BY & CZ)"]:
+        if category == "Schulferien & Feiertage (BY & CZ)":
+            continue
+        elif category == "Wetterdaten":
             continue
         elif category == "Parkplatzzählungen":
             queried_single_category_data = process_all_locations(

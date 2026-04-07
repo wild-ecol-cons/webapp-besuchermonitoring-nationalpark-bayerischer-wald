@@ -42,10 +42,6 @@ with tab_query_download_data:
     available_data_categories = st.multiselect(
         "Ausgewählte Datenkategorien:",
         data_upload_categories_to_azure_folders.keys(),
-
-            # "Schulferien & Feiertage (BY & CZ)", # TODO: Add this at the end of the project if time allows
-            # "Parkplatzzählungen", # TODO: First focus on manually collected data, then on this API-fetched data
-            # "Wetterdaten" # TODO: First focus on manually collected data, then on this API-fetched data
     )
 
     # Select entire timeframe or a specific start and end date

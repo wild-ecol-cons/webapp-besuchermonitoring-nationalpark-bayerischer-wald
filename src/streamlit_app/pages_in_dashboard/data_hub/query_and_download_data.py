@@ -83,26 +83,30 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
             else:
                 queried_single_category_data = query_azure_with_duck_db(directory=f"data-hub/preprocessed-data/{data_upload_categories_to_azure_folders[category]}")
 
-            # Drop duplicate rows
-            ## First, order by data_upload_time
-            queried_single_category_data.sort_values(by="data_upload_time", ascending=True, inplace=True)
-            ## Then, drop duplicates when the same general_time_index is encountered (keep the last, so the latest uploaded version is kept)
-            queried_single_category_data.drop_duplicates(subset="general_time_index", keep="last", inplace=True)
+            # Drop duplicate rows if not empty query
+            if len(queried_single_category_data) > 0:
+                ## First, order by data_upload_time
+                queried_single_category_data.sort_values(by="data_upload_time", ascending=True, inplace=True)
+                ## Then, drop duplicates when the same general_time_index is encountered (keep the last, so the latest uploaded version is kept)
+                queried_single_category_data.drop_duplicates(subset="general_time_index", keep="last", inplace=True)
 
-            # Drop data_upload_time column, as it was only needed for duplicate removal
-            queried_single_category_data = queried_single_category_data.drop(columns=["data_upload_time"])
+                # Drop data_upload_time column, as it was only needed for duplicate removal
+                queried_single_category_data = queried_single_category_data.drop(columns=["data_upload_time"])
 
         if category == "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage":
             daily_value_cols_to_be_filled = queried_single_category_data.columns.difference(['general_time_index'])
 
         # Do a full outer join between the current state of the overall queried data and the queried data of the current category, resulting again in the overall queried data
-        overall_queried_data = pd.merge(
-            left=overall_queried_data,
-            right=queried_single_category_data,
-            how="outer",
-            on="general_time_index",
-            suffixes=(None, f"_{category}"),
-        )
+        if len(queried_single_category_data) > 0:
+            overall_queried_data = pd.merge(
+                left=overall_queried_data,
+                right=queried_single_category_data,
+                how="outer",
+                on="general_time_index",
+                suffixes=(None, f"_{category}"),
+            )
+        else:
+            continue
 
     # Fill missing values for daily data
     if "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage" in data_categories_to_query:

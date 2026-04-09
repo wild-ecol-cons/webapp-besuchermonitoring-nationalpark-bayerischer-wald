@@ -132,6 +132,8 @@ def remove_last_row_if_needed(df):
     return df
 
 def clean_visitor_center_data(df_visitcenters):
+    # Remove white spaces as values in all columns
+    df_visitcenters = df_visitcenters.replace(r'^\s*$', np.nan, regex=True)
     # Change boolean variables
     df_visitcenters=change_binary_variables(df_visitcenters)
     # Change object variables
@@ -435,7 +437,7 @@ def process_visitor_center_data(sourced_df):
     # Save daily data to the cloud for querying
     upload_dataframe_to_azure(
         df=daily_df,
-        file_name="visitor_centers_2017_to_2024.parquet",
+        file_name="visitor_centers_daily_2017_to_2026.parquet",
         target_folder="preprocessed_data/bf_preprocessed_files/visitor_centers",
         file_format="parquet",
     )
@@ -443,7 +445,7 @@ def process_visitor_center_data(sourced_df):
     # Save houly data to the cloud for joining/modeling
     upload_dataframe_to_azure(
         df=hourly_df,
-        file_name="visitor_centers_hourly.parquet",
+        file_name="visitor_centers_hourly_2017_to_2026.parquet",
         target_folder="preprocessed_data",
         file_format="parquet",
     )

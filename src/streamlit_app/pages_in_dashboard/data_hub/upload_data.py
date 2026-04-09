@@ -4,6 +4,7 @@ from datetime import datetime
 from src.utils import query_azure_with_duck_db, upload_dataframe_to_azure, upload_file_to_azure
 from src.prediction_pipeline.pre_processing.preprocess_historic_visitor_count_data import parse_german_dates
 from src.config import data_upload_categories_to_azure_folders, data_upload_categories_time_cols_freq
+from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
 
 
 def warning_for_new_columns(df: pd.DataFrame, already_existing_columns: list) -> None:
@@ -18,7 +19,7 @@ def warning_for_new_columns(df: pd.DataFrame, already_existing_columns: list) ->
     new_columns = [col for col in df.columns if col not in already_existing_columns]
 
     if new_columns:
-        st.warning(f'Achtung! Es wurden die folgenden, neuen Spaltennamen in der hochgeladenen Datei gefunden: {", ".join(new_columns)}', icon="⚠️")
+        st.warning(f'{TRANSLATIONS[st.session_state.selected_language]["warning_msg_new_cols_found"]}{", ".join(new_columns)}', icon="⚠️")
 
 def retrieve_already_existing_features(category_to_upload_data_to: str) -> list:
     """
@@ -38,8 +39,8 @@ def retrieve_already_existing_features(category_to_upload_data_to: str) -> list:
 
     already_existing_columns = queried_data.columns.to_list()
 
-    with st.expander("Information zu aktuell vorhandenen Spaltennamen"):
-        st.info(f'Aktuell vorhandene Spaltennamen in der Datenkategorie "{category_to_upload_data_to} sind: {", ".join(already_existing_columns)}', icon="ℹ️")
+    with st.expander(TRANSLATIONS[st.session_state.selected_language]["info_title_existing_data_cols"]):
+        st.info(f'{TRANSLATIONS[st.session_state.selected_language]["info_existing_data_cols_details"]}"{category_to_upload_data_to}": {", ".join(already_existing_columns)}', icon="ℹ️")
 
     return already_existing_columns
 
@@ -153,12 +154,12 @@ def process_and_validate_upload(uploaded_file, category):
     if time_col is None:
         # Ask user to specify the time column via an text input field
         time_col = st.text_input(
-            label=f"Bitte trage hier den exakten Namen der Zeitspalte der Datei {uploaded_file.name} ein:",
+            label=f"{TRANSLATIONS[st.session_state.selected_language]['ask_user_to_define_time_col']}{uploaded_file.name}:",
             key=f"text_input_time_col_{uploaded_file.file_id}"
         )
     
     if time_col not in df.columns:
-        st.error(f"Error: Die Zeitspalte '{time_col}' der Datei {uploaded_file.name} konnte nicht in der hochgeladenen Datei gefunden werden. Der Upload wird abgebrochen.")
+        st.error(TRANSLATIONS[st.session_state.selected_language]['error_msg_time_col_not_found'])
         st.stop()
     
     else:

@@ -34,18 +34,19 @@ st.markdown(
 )
 
 # Tabs for Upload and Download
-tab_query_download_data, tab_upload_data = st.tabs(["Query/Download Data", "Upload Data"])
+tab_query_download_data, tab_upload_data = st.tabs([TRANSLATIONS[st.session_state.selected_language]['query_tab_data_hub'], TRANSLATIONS[st.session_state.selected_language]['upload_tab_data_hub']])
 
 with tab_query_download_data:
     # Select one or multiple data categories
     available_data_categories = st.multiselect(
-        "Ausgewählte Datenkategorien:",
+        TRANSLATIONS[st.session_state.selected_language]['selected_data_categories'],
         data_upload_categories_to_azure_folders.keys(),
+        placeholder=TRANSLATIONS[st.session_state.selected_language]['choose_data_categories']
     )
 
     # Select entire timeframe or a specific start and end date
     ## Checkbox: All data?
-    specify_timerange = st.toggle("Zeitraum eingrenzen")
+    specify_timerange = st.toggle(TRANSLATIONS[st.session_state.selected_language]['specify_time_range'])
 
     ## time Selection
     if specify_timerange:
@@ -56,7 +57,7 @@ with tab_query_download_data:
 
         with col_left:
             start_time = st.datetime_input(
-                "Start:",
+                TRANSLATIONS[st.session_state.selected_language]['start_time'],
                 value=None,
                 min_value=first_selectable_date,
                 max_value="now",
@@ -65,7 +66,7 @@ with tab_query_download_data:
 
         with col_right:
             end_time = st.datetime_input(
-                "Ende:",
+                TRANSLATIONS[st.session_state.selected_language]['end_time'],
                 value=None,
                 min_value=first_selectable_date,
                 max_value="now",
@@ -77,8 +78,8 @@ with tab_query_download_data:
 
     # Button to query data
     if st.button(
-        label="Query Data",
-        help="Query the data based on the selected data categories and timeframe.",
+        label=TRANSLATIONS[st.session_state.selected_language]['button_query_data'],
+        help=TRANSLATIONS[st.session_state.selected_language]['query_button_hover_text'],
         type="primary"
     ):
 
@@ -90,7 +91,7 @@ with tab_query_download_data:
         )
         
         # Preview queried data before download
-        st.markdown(f"#### Preview der Daten")
+        st.markdown(f"#### {TRANSLATIONS[st.session_state.selected_language]['preview_data_title']}")
         st.dataframe(overall_queried_data.head())
 
         data_download_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -98,7 +99,7 @@ with tab_query_download_data:
 
         # Button to download data
         if st.download_button(
-            label="Download Data",
+            label=TRANSLATIONS[st.session_state.selected_language]['button_download_data'],
             data=overall_queried_data.to_csv(index=False).encode('utf-8'),
             file_name=file_name_data_export,
             icon=":material/download:",
@@ -113,30 +114,30 @@ with tab_query_download_data:
 
 with tab_upload_data:
 
-    st.markdown("## Upload Data")
-
     # Select category that it is being uploaded to
     category_to_upload_data_to = st.radio(
-    "Wähle die Datenkategorie aus:",
+    TRANSLATIONS[st.session_state.selected_language]['title_data_upload_data_category_selection'],
     [
         "Permanente Besucherzählung (Eco-Counter)",
         "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage",
         "Sonderzählungen",
     ],
     captions=[
-        "Es wird erwartet, dass Daten in stündlicher (1h) Frequenz vorliegen.",
-        "Es wird erwartet, dass Daten in täglicher (1D) Frequenz vorliegen.",
-        "Es wird erwartet, dass Daten in stündlicher (1h) Frequenz vorliegen.",
+        TRANSLATIONS[st.session_state.selected_language]['upload_tip_1_hour_frequency'],
+        TRANSLATIONS[st.session_state.selected_language]['upload_tip_1_day_frequency'],
+        TRANSLATIONS[st.session_state.selected_language]['upload_tip_1_hour_frequency'],
     ],
     )
 
-    st.warning('Erwartete Zeitzone: Mitteleuropäische Zeit (Berlin, Amsterdam, Paris).', icon="⚠️")
+    st.warning(TRANSLATIONS[st.session_state.selected_language]['warning_time_col_in_berlin_timezone'], icon="⚠️")
     
     already_existing_columns = retrieve_already_existing_features(category_to_upload_data_to)
 
     # Select local file to upload
     uploaded_files = st.file_uploader(
-    "Upload data", accept_multiple_files=True, type=["csv", "xlsx", "xls"]
+        TRANSLATIONS[st.session_state.selected_language]['data_upload_title'],
+        accept_multiple_files=True,
+        type=["csv", "xlsx", "xls"]
     )
     for uploaded_file in uploaded_files:
         
@@ -150,7 +151,7 @@ with tab_upload_data:
 
         # Confirm upload
         if st.button(
-            "Upload Data",
+            TRANSLATIONS[st.session_state.selected_language]['button_upload_data'],
             key=f"data_upload_button_{uploaded_file.file_id}",
             type="primary"
         ):

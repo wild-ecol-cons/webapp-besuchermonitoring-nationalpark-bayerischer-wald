@@ -168,7 +168,7 @@ def process_and_validate_upload(uploaded_file, category):
             time_col,
             freq_string=data_upload_categories_time_cols_freq[category]["freq"],
             category=category,
-            file_id=uploaded_file.file_id
+            uploaded_file=uploaded_file.file_id
         )
 
         # Drop entirely empty columns

@@ -49,5 +49,5 @@ data_upload_categories_to_azure_folders = {
 data_upload_categories_time_cols_freq = {
     "Permanente Besucherzählung (Eco-Counter)": {"col": "Time", "freq": "1 hour"},
     "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage": {"col": "Datum", "freq": "1 day"},
-    "Sonderzählungen": {"col": None, "freq": None}
+    "Sonderzählungen": {"col": None, "freq": "1 hour"},
 }

@@ -4,6 +4,7 @@ import requests
 import json
 import os
 from functools import reduce
+from datetime import datetime
 
 ########################################################################################
 # Global variables
@@ -68,20 +69,39 @@ def get_historical_data_for_location(
     response = requests.get(API_endpoint, params=request_params)
     response_json = response.json()
 
-    # Convert the response to a Pandas DataFrame and preprocess it
+    # Convert the response to a Pandas DataFrame
     historical_df = pd.DataFrame(response_json['data'], columns=['time', column_name])
-    historical_df["time"] = pd.to_datetime(historical_df["time"])
-    # historical_df.set_index("time", inplace=True)
+
+    # Preprocess data to match expected 1h-frequency
+    # Parse as timezone-aware, convert to local wall-clock time, then strip tz
+    historical_df["time"] = (
+        pd.to_datetime(historical_df["time"], utc=True, format="mixed")  # parse → UTC-aware
+        .dt.tz_convert("Europe/Berlin")                  # convert to CET/CEST
+        .dt.tz_localize(None)                            # drop tz → naive local time
+    )
+
+    historical_df = historical_df.set_index("time")
 
     return historical_df
 
 
-def process_all_locations(parking_sensors):
+def process_all_locations(
+        parking_sensors: dict = parking_sensors,
+        specify_timerange: bool = False,
+        start_time: datetime = None,
+        end_time: datetime = None
+        ) -> pd.DataFrame:
     """
     Process and fetch all types of historical data for each location in the parking sensors dictionary.
 
     Args:
         parking_sensors (dict): Dictionary containing location slugs as keys and location IDs as values.
+        specify_timerange (bool, optional): Whether to specify a specific timeframe. Defaults to False.
+        start_time (datetime, optional): Start time for the timeframe. Defaults to None.
+        end_time (datetime, optional): End time for the timeframe. Defaults to None.
+
+    Returns:
+        overall_historic_parking_data (pd.DataFrame): A Pandas DataFrame containing the processed historical data for all locations (either all data or a specific timeframe).
     """
 
     data_types = [
@@ -89,6 +109,8 @@ def process_all_locations(parking_sensors):
         ('occupancy_rate', 'dcls_occupancy_rate', 'occupancy_rate'),
         ('capacity', 'dcls_capacity', 'capacity')
     ]
+
+    overall_historic_parking_data = pd.DataFrame(columns=["general_time_index"])
 
     for key, value in parking_sensors.items():
         historical_data = []
@@ -105,22 +127,46 @@ def process_all_locations(parking_sensors):
             historical_data.append(parking_df)
         merged_df = reduce(lambda x, y: pd.merge(x, y, on='time'), historical_data)
         
-        # Create a filename based on the location name
-        filename = f"{key}_historical_parking_data.csv"
+        # Resample to 1-hour buckets
+        resampled_parking_df = merged_df.resample("1h").agg(
+            occupancy=("occupancy", "mean"),
+            occupancy_rate=("occupancy_rate", "mean"),
+            capacity=("capacity", "mean"),               
+        ).reset_index(names="general_time_index")
 
-        # make the output directory if it doesn't exist
-        os.makedirs(OUTPUT_DIR, exist_ok=True)
-        output_path = os.path.join(OUTPUT_DIR, filename)
+        # Rename columns explicitely to avoid duplicate column names and know for which parking sensor the data is
+        resampled_parking_df = resampled_parking_df.rename(columns={
+            col: f"{col}_{key}"
+            for col in resampled_parking_df.columns
+            if col != "general_time_index"
+        })
 
-        merged_df.to_csv(output_path, index=False)
+        # Merge each resampled DataFrame into a single DataFrame
+        overall_historic_parking_data = pd.merge(
+            left=overall_historic_parking_data,
+            right=resampled_parking_df,
+            how="outer",
+            on="general_time_index",
+        )
 
-        print(f"Saved historical parking data for location: {key} to {output_path}")
+    if specify_timerange:
+        overall_historic_parking_data = overall_historic_parking_data[
+            (overall_historic_parking_data["general_time_index"] >= start_time) &
+            (overall_historic_parking_data["general_time_index"] <= end_time)
+        ]
+    
+    return overall_historic_parking_data
 
 
 def main():
 
     # Fetch historical data for all locations
-    process_all_locations(parking_sensors)
+    process_all_locations(
+        parking_sensors,
+        specify_timerange=True,
+        start_time="2025-02-26 09:00:00",
+        end_time="2025-03-04 23:00:00"
+    )
 
 if __name__ == '__main__':
     main()

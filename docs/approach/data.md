@@ -46,8 +46,8 @@ access to a comprehensive database of weather and climate
 information. This library allows users to retrieve data for specific 
 locations worldwide. For our analysis, we obtained hourly historical 
 and forecasted weather data for the Haselbach region, with specific 
-coordinates of Latitude = 49.31452390542327 and Longitude = 
-12.711573421032. Our analysis focused on several key variables, 
+coordinates of Latitude = 48.96119 and Longitude = 
+13.36234. Our analysis focused on several key variables, 
 including wind speed (km/h), relative humidity (%), and temperature 
 (Celsius). Additionally, we included a categorical variable that 
 classifies the weather conditions at each hour into 27 levels, 

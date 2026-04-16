@@ -1,4 +1,5 @@
 # imports libraries
+import hashlib
 import streamlit as st
 from datetime import datetime
 from src.config import data_upload_categories_to_azure_folders
@@ -89,6 +90,9 @@ with tab_query_download_data:
             start_time=start_time,
             end_time=end_time
         )
+
+        # Create a unique key for this specific dataset preview
+        data_hash = hashlib.md5(overall_queried_data.to_csv().encode()).hexdigest()
         
         # Preview queried data before download
         st.markdown(f"#### {TRANSLATIONS[st.session_state.selected_language]['preview_data_title']}")
@@ -97,20 +101,24 @@ with tab_query_download_data:
         data_download_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         file_name_data_export = f"{data_download_time}_Data_Hub_Datenexport.csv"
 
-        # Button to download data
-        if st.download_button(
-            label=TRANSLATIONS[st.session_state.selected_language]['button_download_data'],
-            data=overall_queried_data.to_csv(index=False).encode('utf-8'),
-            file_name=file_name_data_export,
-            icon=":material/download:",
-        ):
-            print("debug printout: trying to upload data")
+        # Check if we have already logged this specific version of the data
+        if st.session_state.get("last_uploaded_hash") != data_hash:
             upload_dataframe_to_azure(
                 df=overall_queried_data,
                 file_name=file_name_data_export,
                 target_folder="data-hub/exported-data",
                 file_format="csv",
             )
+        # Mark this hash as uploaded so it doesn't repeat on every rerun
+        st.session_state.last_uploaded_hash = data_hash
+        st.toast("Data was successfully logged to Azure", icon="☁️")
+
+        st.download_button(
+            label=TRANSLATIONS[st.session_state.selected_language]['button_download_data'],
+            data=overall_queried_data.to_csv(index=False).encode('utf-8'),
+            file_name=file_name_data_export,
+            icon=":material/download:",
+        )
 
 with tab_upload_data:
 

@@ -51,3 +51,23 @@ data_upload_categories_time_cols_freq = {
     "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage": {"col": "Datum", "freq": "1 day"},
     "Sonderzählungen": {"col": None, "freq": "1 hour"},
 }
+
+# Define sensor renaming dictionary: key = old sensor name, value = new sensor name
+sensor_mapping_dictioanry = {
+    'Bucina IN': 'Bucina_Multi IN',
+    'Bucina OUT': 'Bucina_Multi OUT',
+    'Falkenstein 1 IN': 'TFG_Falkenstein_1 zum HZW',
+    'Falkenstein 1 OUT': 'TFG_Falkenstein_1 zum Parkplatz',
+    'Falkenstein 2 IN': 'TFG_Falkenstein_2 In Richtung TFG',
+    'Falkenstein 2 OUT': 'TFG_Falkenstein_2 zum Parkplatz',
+    'Lusen 1 IN': 'TFG_Lusen_1 IN',
+    'Lusen 1 OUT': 'TFG_Lusen_1 Richtung Parkplatz',
+    'Lusen 2 IN': 'TFG_Lusen_2 Richtung Vögel am Waldrand',
+    'Lusen 2 OUT': 'TFG_Lusen_2 Richtung Parkplatz',
+    'Lusen 3 IN': 'TFG_Lusen_3 In Richtung TFG',
+    'Lusen 3 OUT': 'TFG_Lusen_3 In Richtung Parkplatz',
+    'Trinkwassertalsperre IN': 'Trinkwassertalsperre_MULTI IN',
+    'Trinkwassertalsperre OUT': 'Trinkwassertalsperre_MULTI OUT',
+    'Waldspielgelände IN': 'Waldspielgelände_1 IN (Ins WSG)',
+    'Waldspielgelände OUT': 'Waldspielgelände_1 OUT (aus dem WSG)'
+}

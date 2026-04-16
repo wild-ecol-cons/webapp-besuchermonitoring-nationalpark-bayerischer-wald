@@ -1,9 +1,10 @@
 import pandas as pd
+import numpy as np
 import streamlit as st
 from datetime import datetime
 from src.utils import query_azure_with_duck_db, upload_dataframe_to_azure, upload_file_to_azure
 from src.prediction_pipeline.pre_processing.preprocess_historic_visitor_count_data import parse_german_dates
-from src.config import data_upload_categories_to_azure_folders, data_upload_categories_time_cols_freq
+from src.config import data_upload_categories_to_azure_folders, data_upload_categories_time_cols_freq, sensor_mapping_dictioanry
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
 
 
@@ -138,10 +139,16 @@ def validate_time_frequency(df, time_col, freq_string, category, uploaded_file):
 def process_and_validate_upload(uploaded_file, category):
     # Check extension and read file
     if uploaded_file.name.endswith('.csv'):
+        df = pd.read_csv(uploaded_file)
+
         if category == "Permanente Besucherzählung (Eco-Counter)":
-            df = pd.read_csv(uploaded_file, skiprows=2)
-        else:
-            df = pd.read_csv(uploaded_file)
+            # Rename sensor columns according to sensor mapping
+            df.rename(columns=sensor_mapping_dictioanry, inplace=True)
+            
+            # Group by column name and take the first non-null value
+            # This merges columns with identical names into one.
+            df = df.groupby(level=0, axis=1).first()
+            
     elif uploaded_file.name.endswith(('.xls', '.xlsx')):
         df = pd.read_excel(uploaded_file)
     else:
@@ -172,8 +179,8 @@ def process_and_validate_upload(uploaded_file, category):
             uploaded_file=uploaded_file.file_id
         )
 
-        # Drop entirely empty columns
-        preprocessed_df.dropna(how="all", axis="columns", inplace=True)
+        # Convert empty strings to NaN, then drop
+        preprocessed_df = preprocessed_df.replace("", np.nan).dropna(axis=1, how='all')
 
         # Save time column as general time index
         preprocessed_df["general_time_index"] = preprocessed_df[time_col]

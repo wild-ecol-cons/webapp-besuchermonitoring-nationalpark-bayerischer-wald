@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import streamlit as st
 from datetime import datetime
 from src.config import data_upload_categories_to_azure_folders
@@ -95,6 +96,9 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
 
         if category == "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage":
             daily_value_cols_to_be_filled = queried_single_category_data.columns.difference(['general_time_index'])
+
+        # Convert empty strings to NaN and drop empty columns (before merge or preview)
+        queried_single_category_data = queried_single_category_data.replace("", np.nan).dropna(axis=1, how='all')
 
         # Do a full outer join between the current state of the overall queried data and the queried data of the current category, resulting again in the overall queried data
         if len(queried_single_category_data) > 0:

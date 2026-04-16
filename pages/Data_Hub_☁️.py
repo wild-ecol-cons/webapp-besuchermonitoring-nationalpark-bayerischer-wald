@@ -104,7 +104,7 @@ with tab_query_download_data:
             file_name=file_name_data_export,
             icon=":material/download:",
         ):
-
+            print("debug printout: trying to upload data")
             upload_dataframe_to_azure(
                 df=overall_queried_data,
                 file_name=file_name_data_export,
@@ -157,4 +157,4 @@ with tab_upload_data:
         ):
             save_raw_data_to_cloud(uploaded_file, category_to_upload_data_to)
 
-            save_preprocessed_data_to_cloud(df, category_to_upload_data_to)
+            save_preprocessed_data_to_cloud(df, category_to_upload_data_to, uploaded_file)

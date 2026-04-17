@@ -69,7 +69,7 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
                 queried_single_category_data = source_weather_data(
                 start_time=start_time,
                 end_time=end_time)
-                queried_single_category_data.rename(columns={"Time": "general_time_index"}, inplace=True)
+                queried_single_category_data = queried_single_category_data.rename(columns={"Time": "general_time_index"})
         elif category == "Parkplatzzählungen":
             queried_single_category_data = process_all_locations(
                 specify_timerange=specify_timerange,
@@ -87,9 +87,9 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
             # Drop duplicate rows if not empty query
             if len(queried_single_category_data) > 0:
                 ## First, order by data_upload_time
-                queried_single_category_data.sort_values(by="data_upload_time", ascending=True, inplace=True)
+                queried_single_category_data = queried_single_category_data.sort_values(by="data_upload_time", ascending=True)
                 ## Then, drop duplicates when the same general_time_index is encountered (keep the last, so the latest uploaded version is kept)
-                queried_single_category_data.drop_duplicates(subset="general_time_index", keep="last", inplace=True)
+                queried_single_category_data = queried_single_category_data.drop_duplicates(subset="general_time_index", keep="last")
 
                 # Drop data_upload_time column, as it was only needed for duplicate removal
                 queried_single_category_data = queried_single_category_data.drop(columns=["data_upload_time"])
@@ -119,6 +119,6 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
         overall_queried_data[daily_value_cols_to_be_filled] = overall_queried_data.groupby(overall_queried_data['general_time_index'].dt.date)[daily_value_cols_to_be_filled].ffill()
     
     # Order queried data by time
-    overall_queried_data.sort_values(by="general_time_index", ascending=True, inplace=True)
+    overall_queried_data = overall_queried_data.sort_values(by="general_time_index", ascending=True)
 
     return overall_queried_data

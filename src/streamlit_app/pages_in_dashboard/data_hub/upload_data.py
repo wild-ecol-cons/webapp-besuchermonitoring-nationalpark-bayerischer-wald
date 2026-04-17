@@ -22,6 +22,34 @@ def warning_for_new_columns(df: pd.DataFrame, already_existing_columns: list) ->
     if new_columns:
         st.warning(f'{TRANSLATIONS[st.session_state.selected_language]["warning_msg_new_cols_found"]}{", ".join(new_columns)}', icon="⚠️")
 
+def rename_sensor_name(sensor_df: pd.DataFrame, sensor_mapping_dictionary: dict) -> pd.DataFrame:
+    """
+    Renames the sensor names in the dataframe based on a mapping dictionary.
+
+    Args:
+        sensor_df (pd.DataFrame): The dataframe to rename the sensor names in.
+        sensor_mapping_dictionary (dict): A dictionary mapping old sensor names to new sensor names.
+
+    Returns:
+        pd.DataFrame: The dataframe with renamed sensor names.
+    """
+    # Clean the columns first
+    sensor_df.columns = sensor_df.columns.str.strip()
+
+    # Apply rename
+    sensor_df_renamed = sensor_df.rename(columns=sensor_mapping_dictionary)
+
+    # Check if a specific critical column was actually renamed
+    for key, value in sensor_mapping_dictionary.items():
+        if key in sensor_df_renamed.columns:
+            print(f"Warning: Rename failed for column {key}!")
+
+    # Group by column name and take the first non-null value
+    # This merges columns with identical names into one.
+    sensor_df_renamed = sensor_df_renamed.groupby(level=0, axis=1).first()
+
+    return sensor_df_renamed
+
 def retrieve_already_existing_features(category_to_upload_data_to: str) -> list:
     """
     Retrieve already in the Data Hub existing features for a specific data category.
@@ -142,12 +170,7 @@ def process_and_validate_upload(uploaded_file, category):
         df = pd.read_csv(uploaded_file)
 
         if category == "Permanente Besucherzählung (Eco-Counter)":
-            # Rename sensor columns according to sensor mapping
-            df.rename(columns=sensor_mapping_dictioanry, inplace=True)
-            
-            # Group by column name and take the first non-null value
-            # This merges columns with identical names into one.
-            df = df.groupby(level=0, axis=1).first()
+            df = rename_sensor_name(sensor_df=df, sensor_mapping_dictionary=sensor_mapping_dictioanry)
             
     elif uploaded_file.name.endswith(('.xls', '.xlsx')):
         df = pd.read_excel(uploaded_file)

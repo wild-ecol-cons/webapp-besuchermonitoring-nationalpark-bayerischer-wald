@@ -112,8 +112,9 @@ def run_training():
     # train the model
     train_regressor(feature_df)
 
-
-if __name__ == "__main__":
+def run_pipeline_and_create_dashboard(run_training: bool = False):
+    if run_training:
+        run_training()
 
     # Password-protect the page
     if not check_password(
@@ -128,3 +129,7 @@ if __name__ == "__main__":
 
     # create the dashboard
     create_dashboard_main_page(inference_predictions)
+
+
+if __name__ == "__main__":
+    run_pipeline_and_create_dashboard()

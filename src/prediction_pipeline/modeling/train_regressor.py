@@ -6,7 +6,7 @@ from pycaret.regression import *
 import os
 import uuid
 from src.config import CONNECTION_STRING, CONTAINER_NAME
-from src.utils import upload_dataframe_to_azure
+from src.utils import upload_dataframe_to_azure, upload_file_to_azure
 from azure.storage.blob import BlobClient
 
 
@@ -66,16 +66,11 @@ def save_models_to_azure(model, save_path_models: str, model_name: str, local_pa
     blob_name = f"{save_path_models}/{uuid}/{model_name}.pkl"
 
     try:
-        # 3. Create a BlobClient using the connection string
-        blob_client = BlobClient.from_connection_string(
-            conn_str=CONNECTION_STRING, 
-            container_name=CONTAINER_NAME, 
-            blob_name=blob_name
+        upload_file_to_azure(
+            file_obj="outputs/models_trained/extra_trees_traffic_abs.pkl",
+            target_folder=save_path_models,
+            filename=f"{uuid}/{model_name}.pkl"
         )
-
-        # Upload the pickled model file
-        with open(save_model_path, "rb") as model:
-            blob_client.upload_blob(model, overwrite=True)
         
         print(f"Successfully saved model {model_name} to Azure Blob Storage at: {CONTAINER_NAME}/{blob_name}")
         
@@ -133,7 +128,6 @@ def train_regressor(feature_dataframe: pd.DataFrame) -> None:
                 uuid=uuid
             )
                 
-            print(f"Model with {target} saved to the cloud.")
             
             # save predictions to the cloud
             file_name = f"y_test_predicted_{target}.parquet"

@@ -1,12 +1,45 @@
 import pandas as pd
 import numpy as np
+import hashlib
 import streamlit as st
 from datetime import datetime
 from src.config import data_upload_categories_to_azure_folders
-from src.utils import query_azure_with_duck_db
+from src.utils import query_azure_with_duck_db, upload_dataframe_to_azure
 from src.prediction_pipeline.sourcing_data.source_historic_parking_data import process_all_locations
 from src.prediction_pipeline.sourcing_data.source_weather import source_weather_data
+from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
 
+
+def log_queried_data_to_azure(queried_data: pd.DataFrame) -> str:
+    """
+    If not already done before for the same data, log the queried data to Azure.
+
+    Args:
+        queried_data (pd.DataFrame): The data to log to Azure.
+
+    Returns:
+        str: The file name of the exported data
+    """
+    with st.spinner(TRANSLATIONS[st.session_state.selected_language]['spinner_msg_logging_data_to_azure'], show_time=True):
+        # Create a unique key for this specific dataset preview
+        data_hash = hashlib.md5(queried_data.to_csv().encode()).hexdigest()
+
+        data_download_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        file_name_data_export = f"{data_download_time}_Data_Hub_Datenexport.csv"
+
+        # Check if we have already logged this specific version of the data
+        if st.session_state.get("last_uploaded_hash") != data_hash:
+            upload_dataframe_to_azure(
+                df=queried_data,
+                file_name=file_name_data_export,
+                target_folder="data-hub/exported-data",
+                file_format="csv",
+            )
+    # Mark this hash as uploaded so it doesn't repeat on every rerun
+    st.session_state.last_uploaded_hash = data_hash
+    st.toast(TRANSLATIONS[st.session_state.selected_language]['toast_msg_data_logged_to_azure'], icon="☁️")
+
+    return file_name_data_export
 
 def get_min_date_from_queried_data(data_categories: list[str]) -> datetime:
     """

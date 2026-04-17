@@ -9,6 +9,9 @@ LANGUAGE_OPTIONS= {
 # Language dictionary with translations
 TRANSLATIONS = {
         "English": {
+        'spinner_msg_logging_data_to_azure': 'Logging queried data to Azure...',
+        'toast_msg_data_logged_to_azure': 'Data was successfully logged to Azure',
+        'spinner_msg_querying_data': 'Querying data...',
         'query_tab_data_hub': 'Query/Download Data',
         'upload_tab_data_hub': 'Upload Data',
         'selected_data_categories': 'Data Categories to Query/Download:',
@@ -102,6 +105,9 @@ TRANSLATIONS = {
         'admin_page_title': 'Bavarian Forest - Admin - Visitor Monitoring',
     },
     "German": {
+        'spinner_msg_logging_data_to_azure': 'Ablage der abgefragten Daten in Azure...',
+        'toast_msg_data_logged_to_azure': 'Die Daten wurden erfolgreich in Azure abgelegt',
+        'spinner_msg_querying_data': 'Abfragen der Daten...',
         'query_tab_data_hub': 'Daten abfragen/herunterladen',
         'upload_tab_data_hub': 'Daten hochladen',
         'selected_data_categories': 'Ausgewählte Datenkategorien für Abfrage/Download:',

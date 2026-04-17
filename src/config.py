@@ -66,8 +66,14 @@ sensor_mapping_dictioanry = {
     'Lusen 2 OUT': 'TFG_Lusen_2 Richtung Parkplatz',
     'Lusen 3 IN': 'TFG_Lusen_3 In Richtung TFG',
     'Lusen 3 OUT': 'TFG_Lusen_3 In Richtung Parkplatz',
+    'TFG_Lusen_3 TFG Lusen 3 IN': 'TFG_Lusen_3 In Richtung TFG',
+    'TFG_Lusen_3 TFG Lusen 3 OUT': 'TFG_Lusen_3 In Richtung Parkplatz',
     'Trinkwassertalsperre IN': 'Trinkwassertalsperre_MULTI IN',
     'Trinkwassertalsperre OUT': 'Trinkwassertalsperre_MULTI OUT',
     'Waldspielgelände IN': 'Waldspielgelände_1 IN (Ins WSG)',
-    'Waldspielgelände OUT': 'Waldspielgelände_1 OUT (aus dem WSG)'
+    'Waldspielgelände OUT': 'Waldspielgelände_1 OUT (aus dem WSG)',
+    'Waldspielgelände_1 IN': 'Waldspielgelände_1 IN (Ins WSG)',
+    'Waldspielgelände_1 OUT': 'Waldspielgelände_1 OUT (aus dem WSG)',
+    'Gsenget IN.1': 'Gsenget IN',
+    'Gsenget OUT.1': 'Gsenget OUT',
 }

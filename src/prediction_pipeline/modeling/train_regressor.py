@@ -136,7 +136,7 @@ def train_regressor(feature_dataframe: pd.DataFrame) -> None:
                 file_name=file_name,
                 target_folder=f"{save_path_predictions}/{uuid}",
                 file_format="parquet",
-                write_options={"index": True}
+                index=True,
             )
             print(f"Predictions with {target} saved to the cloud.")
 

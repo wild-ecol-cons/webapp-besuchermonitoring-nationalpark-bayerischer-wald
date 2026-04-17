@@ -29,7 +29,7 @@ def create_datetimeindex(df):
     
     return df
 
-def join_dataframes(df_list) -> pd.DataFrame:
+def join_dataframes(df_list: list[pd.DataFrame]) -> pd.DataFrame:
     """
     Joins a list of DataFrames using an outer join along the columns.
 
@@ -39,7 +39,10 @@ def join_dataframes(df_list) -> pd.DataFrame:
     Returns:
         pd.DataFrame: A single DataFrame resulting from concatenating all input DataFrames along columns.
     """
-    return reduce(lambda left, right: pd.concat([left, right], axis=1, join='outer'), df_list)
+
+    joined_df = df_list[0].join(df_list[1:], how="outer")
+
+    return joined_df
 
 
 def get_joined_dataframe(weather_data, visitor_count_data, visitorcenter_data) -> pd.DataFrame:

@@ -112,8 +112,9 @@ def run_training():
     # train the model
     train_regressor(feature_df)
 
-def run_pipeline_and_create_dashboard(run_training: bool = False):
-    if run_training:
+def run_pipeline_and_create_dashboard(should_run_training: bool = False):
+    if should_run_training:
+        print("Running training pipeline...")
         run_training()
 
     # Password-protect the page

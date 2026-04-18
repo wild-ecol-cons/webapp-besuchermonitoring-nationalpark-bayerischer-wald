@@ -91,24 +91,24 @@ def train_regressor(feature_dataframe: pd.DataFrame) -> None:
         if isinstance(feature_dataframe.index, pd.DatetimeIndex):
             # Define date ranges for training, testing, and unseen data
             train_start = '2023-01-01'
-            train_end = '2024-04-30'
-            test_start = '2024-05-01'
-            test_end = '2024-07-21'
+            train_end = '2024-12-31'
+            test_start = '2025-01-01'
+            test_end = '2025-12-31'
     
             # Split the data into train, test, and unseen sets based on date ranges
             df_train = feature_dataframe[numeric_features+categorical_features+[target]].loc[train_start:train_end]
             df_test = feature_dataframe[numeric_features+categorical_features+[target]].loc[test_start:test_end]
  
             # Setup PyCaret for the target variable with the combined data
-            reg_setup = setup(data=df_train,
-                            target=target, 
-                            numeric_features=numeric_features, 
-                            categorical_features=categorical_features,
-                            fold=5,
-                            preprocess=False,
-                            data_split_shuffle=True,
-                            session_id=123,
-                            test_data=df_test)  # Use 90% of data for training 
+            reg_setup = setup(
+                data=df_train,
+                target=target, 
+                numeric_features=numeric_features, 
+                categorical_features=categorical_features,
+                fold=5,
+                data_split_shuffle=False,
+                session_id=123,
+                test_data=df_test)
                 
             # Train the Extra Trees Regressor model
             extra_trees_model = create_model('et')

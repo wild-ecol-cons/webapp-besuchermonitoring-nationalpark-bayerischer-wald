@@ -15,6 +15,7 @@ Output:
 import pandas as pd
 import re
 import numpy as np
+from src.config import sensor_mapping_to_traffic_metrics
 
 pd.options.mode.chained_assignment = None  
 
@@ -359,30 +360,25 @@ def merge_columns(df):
 
     return df
 
-def calculate_traffic_metrics_abs(df):
+def calculate_traffic_metrics_abs(df: pd.DataFrame, columns_for_sums: dict = sensor_mapping_to_traffic_metrics) -> pd.DataFrame:
     """
       This function calculates several traffic metrics and adds them to the DataFrame:
     - `traffic_abs`: The sum of all INs and OUTs for every sensor
     - `sum_IN_abs`: The sum of all columns containing 'IN' in their names.
     - `sum_OUT_abs`: The sum of all columns containing 'OUT' in their names.
-    - `diff_abs`: The difference between `sum_IN_abs` and `sum_OUT_abs`.
-    - `occupancy_abs`: The cumulative sum of `diff_abs`, representing the occupancy over time.
 
     Args:
         df (pandas.DataFrame): DataFrame containing traffic data.
+        columns_for_sums (dict): A dictionary with keys 'abs_col', 'in_col', and 'out_col'
+                                 containing lists of column names to sum for each traffic type.
 
     Returns:
-        pandas.DataFrame: The DataFrame with additional columns for absolute traffic metrics.
+        pandas.DataFrame: The DataFrame with additional columns for absolute traffic metrics.   
     """
-    # Calculate total traffic
-    df["traffic_abs"] = df.filter(regex='IN|OUT').sum(axis=1)
 
-    # Calculate sum of 'IN' columns
-    df["sum_IN_abs"] = df.filter(like='IN').sum(axis=1)
-
-    # Calculate sum of 'OUT' columns
-    df["sum_OUT_abs"] = df.filter(like='OUT').sum(axis=1)
-    
+    df['traffic_abs'] = df[columns_for_sums['abs_col']].sum(axis=1)
+    df['sum_IN_abs'] = df[columns_for_sums['in_col']].sum(axis=1)
+    df['sum_OUT_abs'] = df[columns_for_sums['out_col']].sum(axis=1)
     return df
 
 

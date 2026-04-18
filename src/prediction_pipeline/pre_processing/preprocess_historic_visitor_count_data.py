@@ -286,7 +286,7 @@ def correct_overlapping_sensor_data(df):
 
 def handle_outliers(df):
     """
-    Transform to NaN every value higher than 800. During exploration we found that values over that are outliers. There were only 6 rows with any count over 800
+    Transform to NaN every value of a numeric column higher than 800. During exploration we found that values over that are outliers. There were only 6 rows with any count over 800
 
     Args:
         df (pandas.DataFrame): DataFrame with values to be turned to NaN.
@@ -294,8 +294,8 @@ def handle_outliers(df):
     Returns:
         pandas.DataFrame: The modified DataFrame with values over 800 turned to NaN
     """
-
-    df[df > 800] = np.nan
+    numeric_cols = df.select_dtypes(include='number').columns
+    df[numeric_cols] = df[numeric_cols].where(df[numeric_cols] <= 800, other=np.nan)
 
     return df
 

@@ -111,7 +111,7 @@ def train_regressor(feature_dataframe: pd.DataFrame) -> None:
                 test_data=df_test)
                 
             # Train the Extra Trees Regressor model
-            extra_trees_model = create_model('et')
+            extra_trees_model = create_model('lightgbm')
                 
             # Predict on the unseen data
             predictions = predict_model(extra_trees_model) # predicts on hold-out data defined above

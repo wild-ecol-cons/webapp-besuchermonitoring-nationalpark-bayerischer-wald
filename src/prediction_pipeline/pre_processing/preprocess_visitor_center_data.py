@@ -380,7 +380,7 @@ def handle_outliers(df, num_sd=7):
 
 def create_hourly_dataframe(df):
     """
-    Expands the daily data in the DataFrame to an hourly level by duplicating each day into 24 hourly rows.
+    Expands the daily data in the DataFrame to an hourly level using resampling.
     
     Parameters:
     df (pandas.DataFrame): DataFrame containing daily data with a 'Datum' column representing dates.
@@ -388,16 +388,17 @@ def create_hourly_dataframe(df):
     Returns:
     pandas.DataFrame: New DataFrame with an hourly level where each day is expanded into 24 hourly rows.
     """
-    # Generate a new DataFrame where each day is expanded into 24 rows (one per hour)
-    df_hourly = df.loc[df.index.repeat(24)].copy()
-    
-    # Create the hourly timestamps by adding hours to the 'Datum' column
-    df_hourly['Datum'] = df_hourly['Datum'] + pd.to_timedelta(df_hourly.groupby(df_hourly.index).cumcount(), unit='h')
-    
-    # Rename columns for clarity
-    df_hourly = df_hourly.rename(columns=lambda x: x.strip())
+    # Rename and set 'Datum' as the index to enable resampling
+    df_hourly = df.rename(columns=lambda x: x.strip())
     df_hourly = df_hourly.rename(columns={'Datum': 'Time'})
-    
+    df_hourly = df_hourly.set_index('Time')
+
+    # Resample to hourly and forward-fill missing hours
+    df_hourly = df_hourly.resample('H').ffill()
+
+    # Restore Time as a column
+    df_hourly = df_hourly.reset_index()
+
     return df_hourly
 
 def rename_and_set_time_as_index(df):

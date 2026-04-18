@@ -100,15 +100,15 @@ def train_regressor(feature_dataframe: pd.DataFrame) -> None:
             df_test = feature_dataframe[numeric_features+categorical_features+[target]].loc[test_start:test_end]
  
             # Setup PyCaret for the target variable with the combined data
-            reg_setup = setup(
-                data=df_train,
-                target=target, 
-                numeric_features=numeric_features, 
-                categorical_features=categorical_features,
-                fold=5,
-                data_split_shuffle=False,
-                session_id=123,
-                test_data=df_test)
+            reg_setup = setup(data=df_train,
+                            target=target, 
+                            numeric_features=numeric_features, 
+                            categorical_features=categorical_features,
+                            fold=5,
+                            preprocess=False,
+                            data_split_shuffle=True,
+                            session_id=123,
+                            test_data=df_test)  # Use 90% of data for training 
                 
             # Train the Extra Trees Regressor model
             extra_trees_model = create_model('lightgbm')

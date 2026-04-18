@@ -139,6 +139,7 @@ dtype_dict = {
         'ZScore_Daily_Max_Relative Humidity (%)',
         'ZScore_Daily_Max_Wind Speed (km/h)',
         'ZScore_Daily_Max_Precipitation (mm)',
+        'ZScore_Daily_Sum_Precipitation (mm)',
         
         # Distance to nearest holidays
         'Distance_to_Nearest_Holiday_Bayern',
@@ -236,6 +237,7 @@ def merge_new_features(df: pd.DataFrame, df_newfeatures: pd.DataFrame) -> pd.Dat
         'ZScore_Daily_Max_Relative Humidity (%)',
         'ZScore_Daily_Max_Wind Speed (km/h)',
         'ZScore_Daily_Max_Precipitation (mm)',
+        'ZScore_Daily_Sum_Precipitation (mm)',
         'Distance_to_Nearest_Holiday_Bayern',
         'Distance_to_Nearest_Holiday_CZ'
     ]

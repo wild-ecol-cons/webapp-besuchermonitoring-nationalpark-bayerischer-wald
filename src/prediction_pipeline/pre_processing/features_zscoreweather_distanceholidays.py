@@ -135,7 +135,7 @@ def add_daily_max_values(df, columns):
 
     return df
 
-def add_daily_precipidation_sum_value(df):
+def add_daily_precipidation_sum_value(df: pd.DataFrame) -> pd.DataFrame:
     """
     Adds the daily precipitation sum column to the DataFrame.
 

@@ -4,7 +4,7 @@ import streamlit as st
 from datetime import datetime
 from src.utils import query_azure_with_duck_db, upload_dataframe_to_azure, upload_file_to_azure
 from src.prediction_pipeline.pre_processing.preprocess_historic_visitor_count_data import parse_german_dates
-from src.config import data_upload_categories_to_azure_folders, data_upload_categories_time_cols_freq, sensor_mapping_dictioanry
+from src.config import data_upload_categories_to_azure_folders, data_upload_categories_time_cols_freq, sensor_renaming_dictionary
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
 
 
@@ -170,7 +170,7 @@ def process_and_validate_upload(uploaded_file, category):
         df = pd.read_csv(uploaded_file)
 
         if category == "Permanente Besucherzählung (Eco-Counter)":
-            df = rename_sensor_name(sensor_df=df, sensor_mapping_dictionary=sensor_mapping_dictioanry)
+            df = rename_sensor_name(sensor_df=df, sensor_mapping_dictionary=sensor_renaming_dictionary)
             
     elif uploaded_file.name.endswith(('.xls', '.xlsx')):
         df = pd.read_excel(uploaded_file)

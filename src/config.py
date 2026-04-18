@@ -53,7 +53,7 @@ data_upload_categories_time_cols_freq = {
 }
 
 # Define sensor renaming dictionary: key = old sensor name, value = new sensor name
-sensor_mapping_dictioanry = {
+sensor_renaming_dictionary = {
     'Bucina IN': 'Bucina_Multi IN',
     'Bucina OUT': 'Bucina_Multi OUT',
     'Falkenstein 1 IN': 'TFG_Falkenstein_1 zum HZW',

@@ -102,43 +102,9 @@ def fix_columns_names(df):
 
     drop = ['Brechhäuslau Fußgänger IN', 'Brechhäuslau Fußgänger OUT', 'Waldhausreibe Channel 1 IN', 'Waldhausreibe Channel 2 OUT'] #Waldhausreibe Channel 1 (IN and OUT) had a total sum of values of 10 and 13. Brechhäuslau columns were duplicated.
 
-    rename = {'Bucina_Multi IN': 'Bucina PYRO IN',
-          'Bucina_Multi OUT': 'Bucina PYRO OUT',
-          'Gsenget IN': 'Gsenget Fußgänger IN',
-          'Gsenget OUT': 'Gsenget Fußgänger OUT',
-          'Gfäll Fußgänger IN' : 'Gfäll IN',
-          'Gfäll Fußgänger OUT': 'Gfäll OUT',
-          'Fredenbrücke Fußgänger IN' : 'Fredenbrücke IN',
-          'Fredenbrücke Fußgänger OUT': 'Fredenbrücke OUT',
-          'Diensthüttenstraße Fußgänger IN': 'Diensthüttenstraße IN' ,
-          'Diensthüttenstraße Fußgänger OUT': 'Diensthüttenstraße OUT',
-          'Racheldiensthütte Cyclist OUT' : 'Racheldiensthütte Fahrräder OUT',
-          'Racheldiensthütte Pedestrian IN' : 'Racheldiensthütte Fußgänger IN',
-          'Racheldiensthütte Pedestrian OUT' : 'Racheldiensthütte Fußgänger OUT',
-          'Sagwassersäge Fußgänger IN' : 'Sagwassersäge IN',
-          'Sagwassersäge Fußgänger OUT': 'Sagwassersäge OUT',
-          'Schwarzbachbrücke Fußgänger IN' : 'Schwarzbachbrücke IN',
-          'Schwarzbachbrücke Fußgänger OUT' : 'Schwarzbachbrücke OUT',
-          'NPZ_Falkenstein IN' : 'Falkenstein 1 PYRO IN',
-          'NPZ_Falkenstein OUT' : 'Falkenstein 1 PYRO OUT',
-          'TFG_Falkenstein_1 Fußgänger zum Parkplatz' : 'TFG_Falkenstein_1 zum Parkplatz',
-          'TFG_Falkenstein_1 Fußgänger zum HZW' : 'TFG_Falkenstein_1 zum HZW',
-          'TFG_Falkenstein_2 Fußgänger In Richtung Parkplatz' : 'TFG_Falkenstein_2 zum Parkplatz',
-          'TFG_Falkenstein_2 Fußgänger In Richtung TFG' : 'TFG_Falkenstein_2 In Richtung TFG',
-          'TFG_Lusen IN' : 'Lusen 1 PYRO IN',
-          'TFG_Lusen OUT' : 'Lusen 1 PYRO OUT',
+    rename = {
           'TFG_Lusen_1 Fußgänger Richtung TFG': 'Lusen 1 EVO IN',
           'TFG_Lusen_1 Fußgänger Richtung Parkplatz' : 'Lusen 1 EVO OUT',
-          'TFG_Lusen_2 Fußgänger Richtung Vögel am Waldrand': 'TFG_Lusen_2 Richtung Vögel am Waldrand',
-          'TFG_Lusen_2 Fußgänger Richtung Parkplatz' : 'TFG_Lusen_2 Richtung Parkplatz',
-          'TFG_Lusen_3 In Richtung TFG': 'TFG_Lusen_3 In Richtung TFG',
-          'TFG_Lusen_3 In Richtung Parkplatz': 'TFG_Lusen_3 In Richtung Parkplatz',
-          'Waldspielgelände_1 IN (Ins WSG)': 'Waldspielgelände_1 IN (Ins WSG)',
-          'Waldspielgelände_1 OUT (aus dem WSG)': 'Waldspielgelände_1 OUT (aus dem WSG)',
-          'Wistlberg Fußgänger IN' : 'Wistlberg IN',
-          'Wistlberg Fußgänger OUT' : 'Wistlberg OUT',
-          'Trinkwassertalsperre_MULTI IN' : 'Trinkwassertalsperre PYRO IN', 
-          'Trinkwassertalsperre_MULTI OUT' : 'Trinkwassertalsperre PYRO OUT'
           }
 
 

@@ -15,7 +15,7 @@ Output:
 import pandas as pd
 import re
 import numpy as np
-from src.config import sensor_mapping_to_traffic_metrics
+from src.config import sensor_mapping_to_traffic_metrics, individual_sensor_region_mapping
 
 pd.options.mode.chained_assignment = None  
 
@@ -381,6 +381,25 @@ def calculate_traffic_metrics_abs(df: pd.DataFrame, columns_for_sums: dict = sen
     df['sum_OUT_abs'] = df[columns_for_sums['out_col']].sum(axis=1)
     return df
 
+def calculate_regionwise_traffic_metrics(df: pd.DataFrame, location_mapping: dict = individual_sensor_region_mapping) -> pd.DataFrame:
+
+    # Extract unique regions
+    regions = set(location_mapping.values())
+
+    # Iterate over each region
+    for region in regions:
+        # Filter the keys in location_mapping that belong to the current region
+        region_in_columns = [col for col in location_mapping if location_mapping[col] == region and ' IN' in col]
+        region_out_columns = [col for col in location_mapping if location_mapping[col] == region and ' OUT' in col]
+
+        # Sum the values for all IN columns of the current region, while retaining NaN where all are NaN
+        df[f'{region} IN'] = df[region_in_columns].sum(axis=1, min_count=1)
+        
+        # Sum the values for all OUT columns of the current region, while retaining NaN where all are NaN
+        df[f'{region} OUT'] = df[region_out_columns].sum(axis=1, min_count=1)
+
+    return df
+
 
 def preprocess_visitor_count_data(visitor_counts: pd.DataFrame) -> pd.DataFrame:
 
@@ -410,6 +429,8 @@ def preprocess_visitor_count_data(visitor_counts: pd.DataFrame) -> pd.DataFrame:
     df_no_outliers = handle_outliers(df_merged_columns)
    
     df_traffic_metrics = calculate_traffic_metrics_abs(df_no_outliers)
+
+    df_traffic_metrics = calculate_regionwise_traffic_metrics(df_traffic_metrics)
 
     df_traffic_metrics.reset_index(inplace=True)
 

@@ -17,9 +17,9 @@ columns_to_use = [
 'Gfäll IN',  'Gfäll OUT',  'Gsenget IN',  'Gsenget OUT',  'Klingenbrunner Wald IN',  'Klingenbrunner Wald OUT',  
 'Klosterfilz IN',  'Klosterfilz OUT',  'Racheldiensthütte IN',  'Racheldiensthütte OUT',  'Sagwassersäge IN',  
 'Sagwassersäge OUT',  'Scheuereck IN',  'Scheuereck OUT',  'Schillerstraße IN',  'Schillerstraße OUT',  
-'Schwarzbachbrücke IN',  'Schwarzbachbrücke OUT',  'Falkenstein 2 OUT',  'Falkenstein 2 IN',  'Lusen 2 IN',  
-'Lusen 2 OUT',  'Lusen 3 IN',  'Lusen 3 OUT',  'Waldhausreibe IN',  'Waldhausreibe OUT',  'Waldspielgelände IN',  
-'Waldspielgelände OUT',  'Wistlberg IN',  'Wistlberg OUT',  'Bucina MERGED IN',  'Bucina MERGED OUT',  
+'Schwarzbachbrücke IN',  'Schwarzbachbrücke OUT',  'TFG_Falkenstein_2 zum Parkplatz',  'TFG_Falkenstein_2 In Richtung TFG',  'TFG_Lusen_2 Richtung Vögel am Waldrand',  
+'TFG_Lusen_2 Richtung Parkplatz',  'TFG_Lusen_3 In Richtung TFG',  'TFG_Lusen_3 In Richtung Parkplatz',  'Waldhausreibe IN',  'Waldhausreibe OUT',  'Waldspielgelände_1 IN (Ins WSG)',  
+'Waldspielgelände_1 OUT (aus dem WSG)',  'Wistlberg IN',  'Wistlberg OUT',  'Bucina MERGED IN',  'Bucina MERGED OUT',  
 'Falkenstein 1 MERGED IN',  'Falkenstein 1 MERGED OUT',  'Lusen 1 MERGED IN',  'Lusen 1 MERGED OUT',  
 'Trinkwassertalsperre MERGED IN',  'Trinkwassertalsperre MERGED OUT',  
 'traffic_abs',  'sum_IN_abs',  'sum_OUT_abs',  'Temperature (°C)',  'Relative Humidity (%)',  
@@ -44,36 +44,36 @@ regionwise_sensor_mapping = {
         ]
     },
     'Nationalparkzentrum Falkenstein': {
-        'IN': ['Falkenstein 1 IN', 'Falkenstein 2 IN'],
-        'OUT': ['Falkenstein 1 OUT', 'Falkenstein 2 OUT']
+        'IN': ['TFG_Falkenstein_1 zum HZW', 'TFG_Falkenstein_2 In Richtung TFG'],
+        'OUT': ['TFG_Falkenstein_1 zum Parkplatz', 'TFG_Falkenstein_2 zum Parkplatz']
     },
     'Scheuereck-Schachten-Trinkwassertalsperre': {
-        'IN': ['Gsenget IN', 'Scheuereck IN', 'Trinkwassertalsperre IN'],
-        'OUT': ['Gsenget OUT', 'Scheuereck OUT', 'Trinkwassertalsperre OUT']
+        'IN': ['Gsenget IN', 'Scheuereck IN', 'Trinkwassertalsperre_MULTI IN'],
+        'OUT': ['Gsenget OUT', 'Scheuereck OUT', 'Trinkwassertalsperre_MULTI OUT']
     },
     'Lusen-Mauth-Finsterau': {
         'IN': [
-            'Bucina IN', 'Felswandergebiet IN', 'Fredenbrücke IN', 
+            'Bucina_Multi IN', 'Felswandergebiet IN', 'Fredenbrücke IN', 
             'Schwarzbachbrücke IN', 'Waldhausreibe IN', 'Wistlberg IN', 'Sagwassersäge IN'
         ],
         'OUT': [
-            'Bucina OUT', 'Felswandergebiet OUT', 'Fredenbrücke OUT', 
+            'Bucina_Multi OUT', 'Felswandergebiet OUT', 'Fredenbrücke OUT', 
             'Schwarzbachbrücke OUT', 'Waldhausreibe OUT', 'Wistlberg OUT', 'Sagwassersäge OUT'
         ]
     },
     'Rachel-Spiegelau': {
         'IN': [
             'Diensthüttenstraße IN', 'Gfäll IN', 'Klingenbrunner Wald IN', 
-            'Klosterfilz IN', 'Racheldiensthütte IN', 'Waldspielgelände IN'
+            'Klosterfilz IN', 'Racheldiensthütte IN', 'Waldspielgelände_1 IN (Ins WSG)'
         ],
         'OUT': [
             'Diensthüttenstraße OUT', 'Gfäll OUT', 'Klingenbrunner Wald OUT', 
-            'Klosterfilz OUT', 'Racheldiensthütte OUT', 'Waldspielgelände OUT'
+            'Klosterfilz OUT', 'Racheldiensthütte OUT', 'Waldspielgelände_1 OUT (aus dem WSG)'
         ]
     },
     'Nationalparkzentrum Lusen': {
-        'IN': ['Lusen 1 IN', 'Lusen 2 IN', 'Lusen 3 IN'],
-        'OUT': ['Lusen 1 OUT', 'Lusen 2 OUT', 'Lusen 3 OUT']
+        'IN': ['TFG_Lusen_1 IN', 'TFG_Lusen_2 Richtung Vögel am Waldrand', 'TFG_Lusen_3 In Richtung TFG'],
+        'OUT': ['TFG_Lusen_1 Richtung Parkplatz', 'TFG_Lusen_2 Richtung Parkplatz', 'TFG_Lusen_3 In Richtung Parkplatz']
     }
 }
 
@@ -123,16 +123,16 @@ dtype_dict = {
         'Scheuereck IN', 'Scheuereck OUT',
         'Schillerstraße IN', 'Schillerstraße OUT',
         'Schwarzbachbrücke IN', 'Schwarzbachbrücke OUT',
-        'Falkenstein 1 IN', 'Falkenstein 1 OUT',
-        'Falkenstein 2 IN', 'Falkenstein 2 OUT',
-        'Lusen 1 IN', 'Lusen 1 OUT',
-        'Lusen 2 IN', 'Lusen 2 OUT',
-        'Lusen 3 IN', 'Lusen 3 OUT',
+        'TFG_Falkenstein_1 zum HZW', 'TFG_Falkenstein_1 zum Parkplatz',
+        'TFG_Falkenstein_2 In Richtung TFG', 'TFG_Falkenstein_2 zum Parkplatz',
+        'TFG_Lusen_1 IN', 'TFG_Lusen_1 Richtung Parkplatz',
+        'TFG_Lusen_2 Richtung Vögel am Waldrand', 'TFG_Lusen_2 Richtung Parkplatz',
+        'TFG_Lusen_3 In Richtung TFG', 'TFG_Lusen_3 In Richtung Parkplatz',
         'Waldhausreibe IN', 'Waldhausreibe OUT',
-        'Waldspielgelände IN', 'Waldspielgelände OUT',
+        'Waldspielgelände_1 IN (Ins WSG)', 'Waldspielgelände_1 OUT (aus dem WSG)',
         'Wistlberg IN', 'Wistlberg OUT',
-        'Bucina IN', 'Bucina OUT',
-        'Trinkwassertalsperre IN', 'Trinkwassertalsperre OUT',
+        'Bucina_Multi IN', 'Bucina_Multi OUT',
+        'Trinkwassertalsperre_MULTI IN', 'Trinkwassertalsperre_MULTI OUT',
         
         # Z-Score data
         'ZScore_Daily_Max_Temperature (°C)',

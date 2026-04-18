@@ -102,10 +102,10 @@ def fix_columns_names(df):
 
     drop = ['Brechhäuslau Fußgänger IN', 'Brechhäuslau Fußgänger OUT', 'Waldhausreibe Channel 1 IN', 'Waldhausreibe Channel 2 OUT'] #Waldhausreibe Channel 1 (IN and OUT) had a total sum of values of 10 and 13. Brechhäuslau columns were duplicated.
 
-    rename = {'Bucina IN': 'Bucina PYRO IN',
-          'Bucina OUT': 'Bucina PYRO OUT',
-          'Gsenget IN.1': 'Gsenget Fußgänger IN',
-          'Gsenget OUT.1': 'Gsenget Fußgänger OUT',
+    rename = {'Bucina_Multi IN': 'Bucina PYRO IN',
+          'Bucina_Multi OUT': 'Bucina PYRO OUT',
+          'Gsenget IN': 'Gsenget Fußgänger IN',
+          'Gsenget OUT': 'Gsenget Fußgänger OUT',
           'Gfäll Fußgänger IN' : 'Gfäll IN',
           'Gfäll Fußgänger OUT': 'Gfäll OUT',
           'Fredenbrücke Fußgänger IN' : 'Fredenbrücke IN',
@@ -121,24 +121,24 @@ def fix_columns_names(df):
           'Schwarzbachbrücke Fußgänger OUT' : 'Schwarzbachbrücke OUT',
           'NPZ_Falkenstein IN' : 'Falkenstein 1 PYRO IN',
           'NPZ_Falkenstein OUT' : 'Falkenstein 1 PYRO OUT',
-          'TFG_Falkenstein_1 Fußgänger zum Parkplatz' : 'Falkenstein 1 OUT',
-          'TFG_Falkenstein_1 Fußgänger zum HZW' : 'Falkenstein 1 IN',
-          'TFG_Falkenstein_2 Fußgänger In Richtung Parkplatz' : 'Falkenstein 2 OUT',
-          'TFG_Falkenstein_2 Fußgänger In Richtung TFG' : 'Falkenstein 2 IN',
+          'TFG_Falkenstein_1 Fußgänger zum Parkplatz' : 'TFG_Falkenstein_1 zum Parkplatz',
+          'TFG_Falkenstein_1 Fußgänger zum HZW' : 'TFG_Falkenstein_1 zum HZW',
+          'TFG_Falkenstein_2 Fußgänger In Richtung Parkplatz' : 'TFG_Falkenstein_2 zum Parkplatz',
+          'TFG_Falkenstein_2 Fußgänger In Richtung TFG' : 'TFG_Falkenstein_2 In Richtung TFG',
           'TFG_Lusen IN' : 'Lusen 1 PYRO IN',
           'TFG_Lusen OUT' : 'Lusen 1 PYRO OUT',
           'TFG_Lusen_1 Fußgänger Richtung TFG': 'Lusen 1 EVO IN',
           'TFG_Lusen_1 Fußgänger Richtung Parkplatz' : 'Lusen 1 EVO OUT',
-          'TFG_Lusen_2 Fußgänger Richtung Vögel am Waldrand': 'Lusen 2 IN',
-          'TFG_Lusen_2 Fußgänger Richtung Parkplatz' : 'Lusen 2 OUT',
-          'TFG_Lusen_3 TFG Lusen 3 IN': 'Lusen 3 IN',
-          'TFG_Lusen_3 TFG Lusen 3 OUT': 'Lusen 3 OUT',
-          'Waldspielgelände_1 IN': 'Waldspielgelände IN',
-          'Waldspielgelände_1 OUT': 'Waldspielgelände OUT',
+          'TFG_Lusen_2 Fußgänger Richtung Vögel am Waldrand': 'TFG_Lusen_2 Richtung Vögel am Waldrand',
+          'TFG_Lusen_2 Fußgänger Richtung Parkplatz' : 'TFG_Lusen_2 Richtung Parkplatz',
+          'TFG_Lusen_3 In Richtung TFG': 'TFG_Lusen_3 In Richtung TFG',
+          'TFG_Lusen_3 In Richtung Parkplatz': 'TFG_Lusen_3 In Richtung Parkplatz',
+          'Waldspielgelände_1 IN (Ins WSG)': 'Waldspielgelände_1 IN (Ins WSG)',
+          'Waldspielgelände_1 OUT (aus dem WSG)': 'Waldspielgelände_1 OUT (aus dem WSG)',
           'Wistlberg Fußgänger IN' : 'Wistlberg IN',
           'Wistlberg Fußgänger OUT' : 'Wistlberg OUT',
-          'Trinkwassertalsperre IN' : 'Trinkwassertalsperre PYRO IN', 
-          'Trinkwassertalsperre OUT' : 'Trinkwassertalsperre PYRO OUT'
+          'Trinkwassertalsperre_MULTI IN' : 'Trinkwassertalsperre PYRO IN', 
+          'Trinkwassertalsperre_MULTI OUT' : 'Trinkwassertalsperre PYRO OUT'
           }
 
 
@@ -213,7 +213,7 @@ def correct_non_replaced_sensors(df):
     """
 
     dict_non_replaced = {'2020-07-30 00:00:00' : ['Lusen 1 PYRO IN', 'Lusen 1 PYRO OUT'],
-                     '2022-12-20 00:00:00' : ['Lusen 3 IN', 'Lusen 3 OUT'],
+                     '2022-12-20 00:00:00' : ['TFG_Lusen_3 In Richtung TFG', 'TFG_Lusen_3 In Richtung Parkplatz'],
                      '2022-10-12 00:00:00' : ['Gsenget IN', 'Gsenget OUT']}
 
 
@@ -267,8 +267,8 @@ def correct_overlapping_sensor_data(df):
             'Bucina_Multi IN'
         ],
         'falkenstein 1': [
-            'Falkenstein 1 OUT',
-            'Falkenstein 1 IN'
+            'TFG_Falkenstein_1 zum Parkplatz',
+            'TFG_Falkenstein_1 zum HZW'
         ]
     }
 
@@ -338,8 +338,8 @@ def merge_columns(df):
     merge_dict = {
         'Bucina MERGED IN': ['Bucina PYRO IN', 'Bucina_Multi IN'],
         'Bucina MERGED OUT': ['Bucina PYRO OUT', 'Bucina_Multi OUT'],
-        'Falkenstein 1 MERGED IN': ['Falkenstein 1 PYRO IN', 'Falkenstein 1 IN'],
-        'Falkenstein 1 MERGED OUT': ['Falkenstein 1 PYRO OUT', 'Falkenstein 1 OUT'],
+        'Falkenstein 1 MERGED IN': ['Falkenstein 1 PYRO IN', 'TFG_Falkenstein_1 zum HZW'],
+        'Falkenstein 1 MERGED OUT': ['Falkenstein 1 PYRO OUT', 'TFG_Falkenstein_1 zum Parkplatz'],
         'Lusen 1 MERGED IN': ['Lusen 1 PYRO IN', 'Lusen 1 EVO IN'],
         'Lusen 1 MERGED OUT': ['Lusen 1 PYRO OUT', 'Lusen 1 EVO OUT'],
         'Trinkwassertalsperre MERGED IN': ['Trinkwassertalsperre PYRO IN', 'Trinkwassertalsperre_MULTI IN'],

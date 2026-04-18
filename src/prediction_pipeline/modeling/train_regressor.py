@@ -105,10 +105,9 @@ def train_regressor(feature_dataframe: pd.DataFrame) -> None:
                             numeric_features=numeric_features, 
                             categorical_features=categorical_features,
                             fold=5,
-                            preprocess=False,
-                            data_split_shuffle=True,
+                            data_split_shuffle=False,
                             session_id=123,
-                            test_data=df_test)  # Use 90% of data for training 
+                            test_data=df_test)
                 
             # Train the Extra Trees Regressor model
             extra_trees_model = create_model('lightgbm')

@@ -1,4 +1,4 @@
-from src.utils import read_dataframe_from_azure
+from src.utils import query_azure_with_duck_db
 
 raw_data_folder = "raw-data"
 visitor_counts_folder = "hourly-historic-visitor-counts-all-sensors"
@@ -103,17 +103,8 @@ common_columns = ['Time',
 
 
 def source_historic_visitor_count():
-    """Source historic visitor count data from the cloud."""
+    """Source historic visitor count data from the Data Hub."""
 
-    # Load visitor count data from the cloud
-    visitor_counts = read_dataframe_from_azure(
-        file_name="*.csv",
-        file_format="csv",
-        source_folder=raw_data_folder + "/" + visitor_counts_folder,
-        read_options={
-            "skiprows": 2,
-            "usecols": common_columns
-        }
-    )
+    visitor_counts = query_azure_with_duck_db(directory=f"data-hub/preprocessed-data/visitor-counts-eco-counter")
 
     return visitor_counts

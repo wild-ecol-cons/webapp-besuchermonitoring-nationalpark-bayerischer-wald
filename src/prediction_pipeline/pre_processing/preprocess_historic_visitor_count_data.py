@@ -402,9 +402,8 @@ def preprocess_visitor_count_data(visitor_counts: pd.DataFrame) -> pd.DataFrame:
     else:
         print("No duplicates found in 'Time' column of visitor_counts ✅")
 
-    visitor_counts_parsed_dates = parse_german_dates(df=visitor_counts, date_column_name="Time")
     # Remove data before 2016-05-10 03:00:00 as there were no sensors installed
-    df = visitor_counts_parsed_dates[visitor_counts_parsed_dates['Time'] >= "2016-05-10 03:00:00"].reset_index(drop=True)
+    df = visitor_counts[visitor_counts['Time'] >= "2016-05-10 03:00:00"].reset_index(drop=True)
    
     df_mapped = fix_columns_names(df)
     

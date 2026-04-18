@@ -369,7 +369,7 @@ def remove_merge_from_columns(df: pd.DataFrame) -> pd.DataFrame:
 
 def process_transformations(df: pd.DataFrame) -> pd.DataFrame:
     """Process the transformations on the DataFrame."""
-    df = apply_cliclic_tranformations(df, cyclic_features = ['Tag','Hour', 'Monat', 'Wochentag'])
+    df = apply_cliclic_tranformations(df, cyclic_features = ['Tag','Hour', 'Monat', 'Wochentag', 'DayOfTheYear'])
     df = standardize_numeric_features(df, standardize_features = ['Temperature (°C)', 'Relative Humidity (%)', 'Wind Speed (km/h)', 'Precipitation (mm)',
                                                                   'Distance_to_Nearest_Holiday_Bayern','Distance_to_Nearest_Holiday_CZ'])
     df = get_dummy_encodings(df, columns_to_use = ['Jahreszeit', 'coco_2'])

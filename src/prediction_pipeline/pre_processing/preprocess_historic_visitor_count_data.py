@@ -196,6 +196,15 @@ def correct_and_impute_times(df):
         df.loc[idx, 'Time'] = df.loc[idx, 'Time'] - pd.Timedelta(hours=1)  # Adjust for daylight saving
         df.loc[idx, df.columns != 'Time'] = df.loc[idx + 1, df.columns != 'Time']  # Impute values from the next row
 
+        # Check for duplicates in visitor_counts.Time
+    if df['Time'].duplicated().sum() > 0:
+        print("⚠️ Duplicates found in 'Time' column of visitor_counts!")
+        print("The following duplicated timestamps were found:")
+        # Investigate duplicates
+        print(df[df['Time'].duplicated(keep=False)]["Time"].unique())
+    else:
+        print("No duplicates found in 'Time' column of visitor_counts ✅")
+
     # Set 'Time' as index and sort by index
     df = df.set_index('Time').sort_index()
 
@@ -387,6 +396,9 @@ def preprocess_visitor_count_data(visitor_counts: pd.DataFrame) -> pd.DataFrame:
     # Check for duplicates in visitor_counts.Time
     if visitor_counts['Time'].duplicated().sum() > 0:
         print("⚠️ Duplicates found in 'Time' column of visitor_counts!")
+        print("The following duplicated timestamps were found:")
+        # Investigate duplicates
+        print(visitor_counts[visitor_counts['Time'].duplicated(keep=False)]["Time"].unique())
     else:
         print("No duplicates found in 'Time' column of visitor_counts ✅")
 

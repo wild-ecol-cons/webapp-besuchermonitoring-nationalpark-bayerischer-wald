@@ -135,6 +135,25 @@ def add_daily_max_values(df, columns):
 
     return df
 
+def add_daily_precipidation_sum_value(df):
+    """
+    Adds the daily precipitation sum column to the DataFrame.
+
+    Args:
+        df (pd.DataFrame): DataFrame with 'Time' and multiple weather-related columns.
+
+    Returns:
+        pd.DataFrame: DataFrame with new daily precipitation sum column.
+    """
+
+    daily_sum_prcp_df = df.groupby('Date')['Precipitation (mm)'].sum().reset_index()
+    daily_sum_prcp_df = daily_sum_prcp_df.rename(columns={'Precipitation (mm)': 'Daily_Sum_Precipitation (mm)'})
+
+    # Merge the daily sum of precipitation back into the original DataFrame
+    df = df.merge(daily_sum_prcp_df, on='Date', how='left')
+
+    return df
+
 def add_moving_z_scores(df, columns, window_size):
     """
     Add moving z-score columns for weather characteristics based on their daily maximum values.
@@ -148,37 +167,34 @@ def add_moving_z_scores(df, columns, window_size):
     Returns:
         pd.DataFrame: DataFrame with new columns that contain the moving z-scores for each column.
     """
+    columns = [f'Daily_Max_{col}' for col in columns] + ['Daily_Sum_Precipitation (mm)']
+
     # Ensure the Time column is in datetime format
     df['Time'] = pd.to_datetime(df['Time'])
 
     # Extract unique dates with daily max values
-    daily_df = df[['Date'] + [f'Daily_Max_{col}' for col in columns]].drop_duplicates()
+    daily_df = df[['Date'] + columns].drop_duplicates()
 
     # Calculate rolling mean and standard deviation for daily max values
     for col in columns:
-        daily_max_col = f'Daily_Max_{col}'
-
         # Calculate rolling mean and standard deviation over the specified window size
-        daily_df[f'Rolling_Mean_{daily_max_col}'] = daily_df[daily_max_col].rolling(window=window_size, min_periods=window_size).mean()
-        daily_df[f'Rolling_Std_{daily_max_col}'] = daily_df[daily_max_col].rolling(window=window_size, min_periods=window_size).std()
+        daily_df[f'Rolling_Mean_{col}'] = daily_df[col].rolling(window=window_size, min_periods=window_size).mean()
+        daily_df[f'Rolling_Std_{col}'] = daily_df[col].rolling(window=window_size, min_periods=window_size).std()
 
         # Calculate the z-score
-        daily_df[f'ZScore_{daily_max_col}'] = (
-            (daily_df[daily_max_col] - daily_df[f'Rolling_Mean_{daily_max_col}']) /
-            (daily_df[f'Rolling_Std_{daily_max_col}'] + 1e-8)  # Add a small value to prevent division by zero
+        daily_df[f'ZScore_{col}'] = (
+            (daily_df[col] - daily_df[f'Rolling_Mean_{col}']) /
+            (daily_df[f'Rolling_Std_{col}'] + 1e-8)  # Add a small value to prevent division by zero
         )
 
         # Drop the rolling mean and std columns as they are intermediate calculations
-        daily_df.drop(columns=[f'Rolling_Mean_{daily_max_col}', f'Rolling_Std_{daily_max_col}'], inplace=True)
+        daily_df.drop(columns=[f'Rolling_Mean_{col}', f'Rolling_Std_{col}'], inplace=True)
 
     # Merge the z-scores back into the original hourly DataFrame
-    df = df.merge(daily_df[['Date'] + [f'ZScore_Daily_Max_{col}' for col in columns]], on='Date', how='left')
-
-    # List of columns to drop (daily max columns)
-    daily_max_columns = [f'Daily_Max_{col}' for col in columns]
+    df = df.merge(daily_df[['Date'] + [f'ZScore_{col}' for col in columns]], on='Date', how='left')
 
     # Drop the daily max columns from the main DataFrame
-    df.drop(columns=daily_max_columns, inplace=True)
+    df.drop(columns=columns, inplace=True)
 
     return df
 
@@ -199,7 +215,9 @@ def get_zscores_and_nearest_holidays(df,columns_for_zscores):
 
     df_daily_max = add_daily_max_values(df_holidays, columns_for_zscores)
 
-    df_zscores_and_nearest_holidays = add_moving_z_scores(df_daily_max, columns_for_zscores, window_size)
+    df_daily_max_with_precip_sum = add_daily_precipidation_sum_value(df_daily_max)
+
+    df_zscores_and_nearest_holidays = add_moving_z_scores(df_daily_max_with_precip_sum, columns_for_zscores, window_size)
 
     # Remove NaN values (as there will be NaNs in the first rows of the dataframe due to zscore being NaN)
     df_zscores_and_nearest_holidays = df_zscores_and_nearest_holidays.dropna()

@@ -38,7 +38,7 @@ def slice_at_first_non_null(df):
 
 def add_nearest_holiday_distance(df):
     """
-    Add columns to the DataFrame calculating the distance to the nearest holiday for both 'Feiertag_Bayern' and 'Feiertag_CZ'.
+    Add columns to the DataFrame calculating the distance to the nearest public holiday for both 'Feiertag_Bayern' and 'Feiertag_CZ'.
 
     Args:
         df (pd.DataFrame): DataFrame with 'Time', 'Feiertag_Bayern', and 'Feiertag_CZ' columns.
@@ -52,15 +52,25 @@ def add_nearest_holiday_distance(df):
             - 'Distance_to_Nearest_Holiday_CZ': Distance in days to the nearest holiday in CZ for each day/row.
     """
 
+    # Check if required columns for this function execution exist
+    required_columns = ['Time', 'Feiertag_Bayern', 'Feiertag_CZ']
+    for col in required_columns:
+        if col not in df.columns:
+            raise ValueError(f"Column '{col}' is missing from the DataFrame!")
+    
     # Ensure the Time column is in datetime format
     df['Time'] = pd.to_datetime(df['Time'])
 
     # Extract date from Time column
     df['Date'] = df['Time'].dt.date
 
+    # make sure Feiertag columns are integers
+    df['Feiertag_Bayern'] = df['Feiertag_Bayern'].astype(int)
+    df['Feiertag_CZ'] = df['Feiertag_CZ'].astype(int)
+
     # Extract unique dates for holidays
-    bayern_holidays = df[df['Feiertag_Bayern']]['Date'].unique()
-    cz_holidays = df[df['Feiertag_CZ']]['Date'].unique()
+    bayern_holidays = df[df['Feiertag_Bayern'] == 1]['Date'].unique()
+    cz_holidays = df[df['Feiertag_CZ'] == 1]['Date'].unique()
 
     # Create a DataFrame with unique dates
     dates_df = pd.DataFrame({'Date': df['Date'].unique()})

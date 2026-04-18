@@ -19,9 +19,7 @@ columns_to_use = [
 'Sagwassersäge OUT',  'Scheuereck IN',  'Scheuereck OUT',  'Schillerstraße IN',  'Schillerstraße OUT',  
 'Schwarzbachbrücke IN',  'Schwarzbachbrücke OUT',  'TFG_Falkenstein_2 zum Parkplatz',  'TFG_Falkenstein_2 In Richtung TFG',  'TFG_Lusen_2 Richtung Vögel am Waldrand',  
 'TFG_Lusen_2 Richtung Parkplatz',  'TFG_Lusen_3 In Richtung TFG',  'TFG_Lusen_3 In Richtung Parkplatz',  'Waldhausreibe IN',  'Waldhausreibe OUT',  'Waldspielgelände_1 IN (Ins WSG)',  
-'Waldspielgelände_1 OUT (aus dem WSG)',  'Wistlberg IN',  'Wistlberg OUT',  'Bucina MERGED IN',  'Bucina MERGED OUT',  
-'Falkenstein 1 MERGED IN',  'Falkenstein 1 MERGED OUT',  'Lusen 1 MERGED IN',  'Lusen 1 MERGED OUT',  
-'Trinkwassertalsperre MERGED IN',  'Trinkwassertalsperre MERGED OUT',  
+'Waldspielgelände_1 OUT (aus dem WSG)',  'Wistlberg IN',  'Wistlberg OUT',
 'traffic_abs',  'sum_IN_abs',  'sum_OUT_abs',  'Temperature (°C)',  'Relative Humidity (%)',  
 'Precipitation (mm)',  'Wind Speed (km/h)',  'Sunshine Duration (min)',  'Tag',  'Monat',  
 'Wochentag',  'Wochenende',  'Jahreszeit',  'Laubfärbung',  'Schulferien_Bayern',  'Schulferien_CZ',  
@@ -360,15 +358,6 @@ def handle_binary_values(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-def remove_merge_from_columns(df: pd.DataFrame) -> pd.DataFrame:
-
-    # remove the MERGED from the column names and remove the extra gap
-    if df.columns.str.contains('MERGED').any():
-        df.columns = df.columns.str.replace('MERGED', '')
-        df.columns = df.columns.str.replace('  ', ' ')
-    
-    return df
-
 def process_transformations(df: pd.DataFrame) -> pd.DataFrame:
     """Process the transformations on the DataFrame."""
     df = apply_cliclic_tranformations(df, cyclic_features = ['Tag','Hour', 'Monat', 'Wochentag', 'DayOfTheYear'])
@@ -394,8 +383,7 @@ def get_features(with_zscores_and_nearest_holidays_df, train_start_date, train_e
     sliced_df = with_zscores_and_nearest_holidays_df[(with_zscores_and_nearest_holidays_df['Time'] >= train_start_date) & (with_zscores_and_nearest_holidays_df['Time'] <= train_end_date)]
 
     # Further feature engineering
-    removed_merged_df = remove_merge_from_columns(sliced_df)
-    regionwise_df = get_regionwise_IN_and_OUT_columns(removed_merged_df)
+    regionwise_df = get_regionwise_IN_and_OUT_columns(sliced_df)
     changed_datatypes_df = change_datatypes(regionwise_df, dtype_dict)
     processed_features_df = process_transformations(changed_datatypes_df)
 

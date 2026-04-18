@@ -299,36 +299,16 @@ def handle_outliers(df):
 
     return df
 
-def merge_columns(df):
+def remove_certain_unnecessary_cols(df):
     """
-    Merges columns from replaced sensors in the DataFrame into new combined columns based on a predefined mapping
-    and drops the original columns after merging. Additionally, drops columns with names containing "Fahrräder" or "Fußgänger" as we will not use that distinction.
+    Drops columns with names containing "Fahrräder" or "Fußgänger" as we will not use that distinction.
 
     Args:
-        df (pandas.DataFrame): A DataFrame containing columns to be merged.
+        df (pandas.DataFrame): A DataFrame.
 
     Returns:
-        pandas.DataFrame: The modified DataFrame with the new merged columns, original columns removed, and Fahrräder or Fußgänger columns dropped.
+        pandas.DataFrame: The modified DataFrame.
     """
-    merge_dict = {
-        'Bucina MERGED IN': ['Bucina PYRO IN', 'Bucina_Multi IN'],
-        'Bucina MERGED OUT': ['Bucina PYRO OUT', 'Bucina_Multi OUT'],
-        'Falkenstein 1 MERGED IN': ['Falkenstein 1 PYRO IN', 'TFG_Falkenstein_1 zum HZW'],
-        'Falkenstein 1 MERGED OUT': ['Falkenstein 1 PYRO OUT', 'TFG_Falkenstein_1 zum Parkplatz'],
-        'Lusen 1 MERGED IN': ['Lusen 1 PYRO IN', 'Lusen 1 EVO IN'],
-        'Lusen 1 MERGED OUT': ['Lusen 1 PYRO OUT', 'Lusen 1 EVO OUT'],
-        'Trinkwassertalsperre MERGED IN': ['Trinkwassertalsperre PYRO IN', 'Trinkwassertalsperre_MULTI IN'],
-        'Trinkwassertalsperre MERGED OUT': ['Trinkwassertalsperre PYRO OUT', 'Trinkwassertalsperre_MULTI OUT']
-    }
-
-    # Iterate over each item in the dictionary to merge columns
-    for new_col, cols in merge_dict.items():
-        # Combine the two columns into one using the first non-null value
-        df[new_col] = df[cols[0]].combine_first(df[cols[1]])
-
-    # Drop the original columns used for merging
-    cols_to_drop = [col for cols in merge_dict.values() for col in cols]
-    df = df.drop(columns=cols_to_drop)
 
     # Drop columns with names containing "Fahrräder" or "Fußgänger"
     df = df.loc[:, ~df.columns.str.contains("Fahrräder|Fußgänger")]
@@ -379,12 +359,12 @@ def preprocess_visitor_count_data(visitor_counts: pd.DataFrame) -> pd.DataFrame:
 
     df_corrected_sensors = correct_overlapping_sensor_data(df_corrected_sensors)
 
-    df_merged_columns = merge_columns(df_corrected_sensors)
+    df_removed_columns = remove_certain_unnecessary_cols(df_corrected_sensors)
 
     # Remove columns that are entirely empty
-    df_merged_columns = df_merged_columns.dropna(axis=1, how='all')
+    df_removed_columns = df_removed_columns.dropna(axis=1, how='all')
 
-    df_no_outliers = handle_outliers(df_merged_columns)
+    df_no_outliers = handle_outliers(df_removed_columns)
    
     df_traffic_metrics = calculate_traffic_metrics_abs(df_no_outliers)
 

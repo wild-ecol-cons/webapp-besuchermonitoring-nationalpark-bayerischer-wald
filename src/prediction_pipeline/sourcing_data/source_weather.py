@@ -4,6 +4,7 @@ from datetime import datetime
 import pandas as pd
 from meteostat import Point, Hourly
 import streamlit as st
+import pytz
 
 
 # Ignore warnings
@@ -133,11 +134,11 @@ def process_hourly_data(data):
         'prcp': 'Precipitation (mm)'
     })
 
-
-    # Convert the 'Time' column to datetime format
-    data['Time'] = pd.to_datetime(data['Time'])
     # Map weather condition codes to new codes
     data['coco_2'] = data['coco_2'].map(coco_to_coco_2_mapping)
+
+    # Convert the 'Time' column to datetime format again in Europe/Berlin time
+    data['Time'] = pd.to_datetime(data['Time'], utc=True).dt.tz_convert('Europe/Berlin')
 
     return data
 
@@ -155,14 +156,17 @@ def source_weather_data(start_time, end_time):
     # Include the 10 nearest weather stations
     bavarian_forest.max_count = 10
 
+    # Convert both start_time and end_time in utc
+    start_time = start_time.astimezone(pytz.UTC).replace(tzinfo=None)
+    end_time = end_time.astimezone(pytz.UTC).replace(tzinfo=None)
+
     # Fetch hourly data for the location
-    hourly_data = get_hourly_data(bavarian_forest, start_time, end_time)
+    weather_hourly = get_hourly_data(bavarian_forest, start_time, end_time)
 
-    # Process the hourly data to extract and format necessary weather parameters
-    sourced_hourly_data = process_hourly_data(hourly_data)
-    
+    # Preprocess hourly weather data further
+    weather_hourly = process_hourly_data(weather_hourly)
 
-    return sourced_hourly_data
+    return weather_hourly
 
 
 

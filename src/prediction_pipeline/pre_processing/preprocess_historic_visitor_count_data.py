@@ -148,7 +148,7 @@ def fix_columns_names(df):
     print(len(rename), ' columns were renamed')
 
     # Remove the specified columns from the DataFrame
-    df.drop(columns=drop, inplace=True)
+    df.drop(columns=drop, inplace=True, errors='ignore')
     print(len(drop), ' repeated columns were dropped')
 
     # Add Bucina_Multi IN column by summing Fahrraeder and Fussgaenger columns

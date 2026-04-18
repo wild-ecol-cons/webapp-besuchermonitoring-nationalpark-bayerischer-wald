@@ -120,7 +120,7 @@ def process_hourly_data(data):
             - coco_2: Weather condition code.
     """
         # Drop unnecessary columns
-    data = data.drop(columns=['dwpt', 'wdir', 'wpgt', 'pres','snow', 'tsun', 'prcp'])
+    data = data.drop(columns=['dwpt', 'wdir', 'wpgt', 'pres','snow', 'tsun'])
 
     # Rename columns for clarity
     data = data.rename(columns={
@@ -128,7 +128,8 @@ def process_hourly_data(data):
         'temp': 'Temperature (°C)',
         'wspd': 'Wind Speed (km/h)',
         'rhum': 'Relative Humidity (%)',
-        'coco': 'coco_2'
+        'coco': 'coco_2',
+        'prcp': 'Precipitation (mm)'
     })
 
 
@@ -150,6 +151,8 @@ def source_weather_data(start_time, end_time):
 
     # Create a Point object for the Bavarian Forest National Park entry
     bavarian_forest = Point(lat=LATITUDE, lon=LONGITUDE)
+    # Include the 10 nearest weather stations
+    bavarian_forest.max_count = 10
 
     # Fetch hourly data for the location
     hourly_data = get_hourly_data(bavarian_forest, start_time, end_time)

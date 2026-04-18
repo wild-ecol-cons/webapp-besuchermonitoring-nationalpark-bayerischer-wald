@@ -7,7 +7,7 @@ import streamlit as st
 
 
 
-weather_columns_for_zscores = ['Temperature (°C)', 'Relative Humidity (%)', 'Wind Speed (km/h)']
+weather_columns_for_zscores = ['Temperature (°C)', 'Relative Humidity (%)', 'Wind Speed (km/h)', 'Precipitation (mm)']
 window_size_for_zscores = 5
 
 def join_inference_data(weather_data_inference, visitor_centers_data):

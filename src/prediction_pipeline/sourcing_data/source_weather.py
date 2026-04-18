@@ -118,6 +118,7 @@ def process_hourly_data(data):
             - Wind Speed (km/h): Wind speed in km/h.
             - Relative Humidity (%): Relative humidity in percent.
             - coco_2: Weather condition code.
+            - Precipitation (mm): Precipitation in millimeters.
     """
         # Drop unnecessary columns
     data = data.drop(columns=['dwpt', 'wdir', 'wpgt', 'pres','snow', 'tsun'])

@@ -89,6 +89,7 @@ dtype_dict = {
         'Temperature (°C)',
         'Relative Humidity (%)',
         'Wind Speed (km/h)',
+        'Precipitation (mm)',
         'Monat',
         'sum_IN_abs',
         'sum_OUT_abs',
@@ -137,6 +138,7 @@ dtype_dict = {
         'ZScore_Daily_Max_Temperature (°C)',
         'ZScore_Daily_Max_Relative Humidity (%)',
         'ZScore_Daily_Max_Wind Speed (km/h)',
+        'ZScore_Daily_Max_Precipitation (mm)',
         
         # Distance to nearest holidays
         'Distance_to_Nearest_Holiday_Bayern',
@@ -163,7 +165,7 @@ dtype_dict = {
     ]
 }
 
-numeric_features_for_modelling = ['Temperature (°C)', 'Relative Humidity (%)', 'Wind Speed (km/h)', 'ZScore_Daily_Max_Temperature (°C)', 
+numeric_features_for_modelling = ['Temperature (°C)', 'Relative Humidity (%)', 'Wind Speed (km/h)', 'Precipitation (mm)', 'ZScore_Daily_Max_Precipitation (mm)', 'ZScore_Daily_Max_Temperature (°C)', 
                     'ZScore_Daily_Max_Relative Humidity (%)','ZScore_Daily_Max_Wind Speed (km/h)',
                     'Distance_to_Nearest_Holiday_Bayern','Distance_to_Nearest_Holiday_CZ','Tag_sin', 'Tag_cos', 'Monat_sin', 'Monat_cos',
                     'Hour_sin', 'Hour_cos','Wochentag_sin', 'Wochentag_cos']
@@ -236,6 +238,7 @@ def merge_new_features(df: pd.DataFrame, df_newfeatures: pd.DataFrame) -> pd.Dat
         'ZScore_Daily_Max_Temperature (°C)',
         'ZScore_Daily_Max_Relative Humidity (%)',
         'ZScore_Daily_Max_Wind Speed (km/h)',
+        'ZScore_Daily_Max_Precipitation (mm)',
         'Distance_to_Nearest_Holiday_Bayern',
         'Distance_to_Nearest_Holiday_CZ'
     ]
@@ -367,7 +370,7 @@ def remove_merge_from_columns(df: pd.DataFrame) -> pd.DataFrame:
 def process_transformations(df: pd.DataFrame) -> pd.DataFrame:
     """Process the transformations on the DataFrame."""
     df = apply_cliclic_tranformations(df, cyclic_features = ['Tag','Hour', 'Monat', 'Wochentag'])
-    df = standardize_numeric_features(df, standardize_features = ['Temperature (°C)', 'Relative Humidity (%)', 'Wind Speed (km/h)',
+    df = standardize_numeric_features(df, standardize_features = ['Temperature (°C)', 'Relative Humidity (%)', 'Wind Speed (km/h)', 'Precipitation (mm)',
                                                                   'Distance_to_Nearest_Holiday_Bayern','Distance_to_Nearest_Holiday_CZ'])
     df = get_dummy_encodings(df, columns_to_use = ['Jahreszeit', 'coco_2'])
     df = handle_binary_values(df)

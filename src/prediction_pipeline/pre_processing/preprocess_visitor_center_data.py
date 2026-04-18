@@ -174,10 +174,11 @@ def add_date_variables(df):
     # Convert 'Datum' column to datetime format
     df['Datum'] = pd.to_datetime(df['Datum'])
     
-    # Add new columns for day, month, and year
+    # Add new columns for day, month, day of the year, and year
     df['Tag'] = df['Datum'].dt.day
     df['Monat'] = df['Datum'].dt.month
     df['Jahr'] = df['Datum'].dt.year
+    df['DayOfTheYear'] = df['Datum'].dt.dayofyear
     
     # Change data types for modeling purposes
     df['Tag'] = df['Tag'].astype('Int64')

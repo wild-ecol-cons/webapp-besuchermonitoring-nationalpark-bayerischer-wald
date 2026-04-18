@@ -308,42 +308,6 @@ def correct_overlapping_sensor_data(df):
     return df
 
 
-def merge_columns(df):
-    """
-    Merges columns from replaced sensors in the DataFrame into new combined columns based on a predefined mapping and drops the original columns after merging.
-
-    The function merges multiple related columns into single combined columns using a predefined dictionary (`merge_dict`). 
-    For each key-value pair in the dictionary, values from the first column are used, and missing values are filled 
-    from the second column. After merging, the original columns used for merging are dropped from the DataFrame.
-
-    Args:
-        df (pandas.DataFrame): A DataFrame containing columns to be merged.
-
-    Returns:
-        pandas.DataFrame: The modified DataFrame with the new merged columns and original columns removed.
-    """
-    merge_dict = {
-        'Bucina MERGED IN': ['Bucina PYRO IN', 'Bucina_Multi IN'],
-        'Bucina MERGED OUT': ['Bucina PYRO OUT', 'Bucina_Multi OUT'],
-        'Falkenstein 1 MERGED IN': ['Falkenstein 1 PYRO IN', 'Falkenstein 1 IN'],
-        'Falkenstein 1 MERGED OUT': ['Falkenstein 1 PYRO OUT', 'Falkenstein 1 OUT'],
-        'Lusen 1 MERGED IN': ['Lusen 1 PYRO IN', 'Lusen 1 EVO IN'],
-        'Lusen 1 MERGED OUT': ['Lusen 1 PYRO OUT', 'Lusen 1 EVO OUT'],
-        'Trinkwassertalsperre MERGED IN': ['Trinkwassertalsperre PYRO IN', 'Trinkwassertalsperre_MULTI IN'],
-        'Trinkwassertalsperre MERGED OUT': ['Trinkwassertalsperre PYRO OUT', 'Trinkwassertalsperre_MULTI OUT']
-    }
-
-    # Iterate over each item in the dictionary to merge columns
-    for new_col, cols in merge_dict.items():
-        # Combine the two columns into one using the first non-null value
-        df[new_col] = df[cols[0]].combine_first(df[cols[1]])
-
-    # Drop the original columns used for merging
-    cols_to_drop = [col for cols in merge_dict.values() for col in cols]
-    df = df.drop(columns=cols_to_drop)
-
-    return df
-
 def handle_outliers(df):
     """
     Transform to NaN every value higher than 800. During exploration we found that values over that are outliers. There were only 6 rows with any count over 800

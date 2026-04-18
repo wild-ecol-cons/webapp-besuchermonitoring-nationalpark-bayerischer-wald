@@ -384,6 +384,12 @@ def calculate_traffic_metrics_abs(df: pd.DataFrame, columns_for_sums: dict = sen
 
 def preprocess_visitor_count_data(visitor_counts: pd.DataFrame) -> pd.DataFrame:
 
+    # Check for duplicates in visitor_counts.Time
+    if visitor_counts['Time'].duplicated().sum() > 0:
+        print("⚠️ Duplicates found in 'Time' column of visitor_counts!")
+    else:
+        print("No duplicates found in 'Time' column of visitor_counts ✅")
+
     visitor_counts_parsed_dates = parse_german_dates(df=visitor_counts, date_column_name="Time")
     # Remove data before 2016-05-10 03:00:00 as there were no sensors installed
     df = visitor_counts_parsed_dates[visitor_counts_parsed_dates['Time'] >= "2016-05-10 03:00:00"].reset_index(drop=True)
@@ -397,6 +403,9 @@ def preprocess_visitor_count_data(visitor_counts: pd.DataFrame) -> pd.DataFrame:
     df_corrected_sensors = correct_overlapping_sensor_data(df_corrected_sensors)
 
     df_merged_columns = merge_columns(df_corrected_sensors)
+
+    # Remove columns that are entirely empty
+    df_merged_columns = df_merged_columns.dropna(axis=1, how='all')
 
     df_no_outliers = handle_outliers(df_merged_columns)
    

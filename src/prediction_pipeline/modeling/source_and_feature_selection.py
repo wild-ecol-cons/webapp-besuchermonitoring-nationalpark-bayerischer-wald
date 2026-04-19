@@ -21,7 +21,7 @@ columns_to_use = [
 'TFG_Lusen_2 Richtung Parkplatz',  'TFG_Lusen_3 In Richtung TFG',  'TFG_Lusen_3 In Richtung Parkplatz',  'Waldhausreibe IN',  'Waldhausreibe OUT',  'Waldspielgelände_1 IN (Ins WSG)',  
 'Waldspielgelände_1 OUT (aus dem WSG)',  'Wistlberg IN',  'Wistlberg OUT',
 'traffic_abs',  'sum_IN_abs',  'sum_OUT_abs',  'Temperature (°C)',  'Relative Humidity (%)',  
-'Precipitation (mm)',  'Wind Speed (km/h)',  'Sunshine Duration (min)',  'Tag',  'Monat',  
+'Precipitation (mm)',  'Wind Speed (km/h)',  'Sunshine Duration (min)',  'Tag',  'Monat', 'DayOfTheYear', 
 'Wochentag',  'Wochenende',  'Jahreszeit',  'Laubfärbung',  'Schulferien_Bayern',  'Schulferien_CZ',  
 'Feiertag_Bayern',  'Feiertag_CZ',  'HEH_geoeffnet',  'HZW_geoeffnet',  'WGM_geoeffnet',  
 'Lusenschutzhaus_geoeffnet',  'Racheldiensthuette_geoeffnet',  'Falkensteinschutzhaus_geoeffnet',  
@@ -147,6 +147,7 @@ dtype_dict = {
     'category': [
         'Wochentag',
         'Wochenende',
+        'DayOfTheYear',
         'Jahreszeit',
         'Laubfärbung',
         'Feiertag_Bayern',
@@ -280,7 +281,7 @@ def apply_cliclic_tranformations(df: pd.DataFrame,cyclic_features: list) -> pd.D
         else:
             print(f"Warning: Feature '{feature}' not found in DataFrame")
     # Drop the original columns
-    columns_to_drop = ['Tag', 'Monat', 'Wochentag', 'Hour']
+    columns_to_drop = ['Tag', 'Monat', 'Wochentag', 'Hour', 'DayOfTheYear']
     df = df.drop(columns=columns_to_drop)
 
     return df

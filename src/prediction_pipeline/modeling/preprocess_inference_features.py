@@ -23,7 +23,7 @@ def join_inference_data(weather_data_inference, visitor_centers_data):
     """
 
     # Define the columns you want to bring from visitor_centers_data
-    columns_to_add = ['Time','Tag', 'Hour', 'Monat','Wochentag',  'Wochenende',  'Jahreszeit',  'Laubfärbung',
+    columns_to_add = ['Time','Tag', 'Hour', 'Monat', 'DayOfTheYear','Wochentag',  'Wochenende',  'Jahreszeit',  'Laubfärbung',
                     'Schulferien_Bayern', 'Schulferien_CZ','Feiertag_Bayern',  'Feiertag_CZ',
                     'HEH_geoeffnet',  'HZW_geoeffnet',  'WGM_geoeffnet', 'Lusenschutzhaus_geoeffnet',  'Racheldiensthuette_geoeffnet', 'Falkensteinschutzhaus_geoeffnet', 'Schwellhaeusl_geoeffnet']  
 

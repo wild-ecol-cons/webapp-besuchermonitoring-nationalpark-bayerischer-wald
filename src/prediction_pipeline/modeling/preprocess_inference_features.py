@@ -26,6 +26,11 @@ def join_inference_data(weather_data_inference, visitor_centers_data):
     columns_to_add = ['Time','Tag', 'Hour', 'Monat', 'DayOfTheYear','Wochentag',  'Wochenende',  'Jahreszeit',  'Laubfärbung',
                     'Schulferien_Bayern', 'Schulferien_CZ','Feiertag_Bayern',  'Feiertag_CZ',
                     'HEH_geoeffnet',  'HZW_geoeffnet',  'WGM_geoeffnet', 'Lusenschutzhaus_geoeffnet',  'Racheldiensthuette_geoeffnet', 'Falkensteinschutzhaus_geoeffnet', 'Schwellhaeusl_geoeffnet']  
+    
+    # Normalise both Time columns to naive timestamps before merging
+    datasets = [visitor_centers_data, weather_data_inference]
+    for dataset in datasets:
+        dataset['Time'] = dataset['Time'].dt.tz_localize(None) if dataset['Time'].dt.tz is None else dataset['Time'].dt.tz_convert(None)
 
     # Perform the merge, keep the min and max values of the visitor center data
     merged_data = visitor_centers_data[columns_to_add].merge(weather_data_inference, on='Time', how='left')

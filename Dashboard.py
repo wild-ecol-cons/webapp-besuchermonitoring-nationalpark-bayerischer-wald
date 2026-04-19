@@ -115,24 +115,26 @@ def run_training():
     # train the model
     train_regressor(feature_df, train_start_date, test_end_date)
 
-def run_pipeline_and_create_dashboard(should_run_training: bool = False):
+def run_pipeline_and_create_dashboard(should_run_training: bool = False, should_run_inference_and_dashboard: bool = True):
     if should_run_training:
         print("Running training pipeline...")
         run_training()
 
-    # Password-protect the page
-    if not check_password(
-        type_of_password="general_access"
-    ):
-        st.stop()  # Do not continue if check_password is not True.
+    if should_run_inference_and_dashboard:
+    
+        # Password-protect the page
+        if not check_password(
+            type_of_password="general_access"
+        ):
+            st.stop()  # Do not continue if check_password is not True.
 
-    preprocessed_hourly_visitor_center_data = source_preprocessed_hourly_visitor_center_data()
+        preprocessed_hourly_visitor_center_data = source_preprocessed_hourly_visitor_center_data()
 
-    # call the sourcing and processing pipeline
-    inference_predictions = run_inference(preprocessed_hourly_visitor_center_data)
+        # call the sourcing and processing pipeline
+        inference_predictions = run_inference(preprocessed_hourly_visitor_center_data)
 
-    # create the dashboard
-    create_dashboard_main_page(inference_predictions)
+        # create the dashboard
+        create_dashboard_main_page(inference_predictions)
 
 
 if __name__ == "__main__":

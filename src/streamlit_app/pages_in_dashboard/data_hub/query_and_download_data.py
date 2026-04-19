@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 import hashlib
+import re
+import io
+import zipfile
 import streamlit as st
 from datetime import datetime
 from src.config import data_upload_categories_to_azure_folders
@@ -155,3 +158,93 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
     overall_queried_data = overall_queried_data.sort_values(by="general_time_index", ascending=True)
 
     return overall_queried_data
+
+def normalize_excel_sheet_name(name: str) -> str:
+    """
+    Normalizes a string the same way Excel does when creating sheet names:
+    - Removes forbidden characters (: \\ / ? * [ ])
+    - Strips leading/trailing whitespace
+    - Truncates to 31 characters (Excel's sheet name limit)
+
+    Args:
+        name (str): The original sheet name.
+
+    Returns:
+        str: The normalized sheet name.
+    """
+    # Remove Excel-forbidden characters
+    name = re.sub(r'[:\\/?*\[\]]', '', name)
+    # Strip whitespace and truncate to 31 chars
+    return name.strip()[:31]
+
+def filter_sheets_by_name(
+    all_sheets: dict[str, pd.DataFrame],
+    desired_sheets: list[str],
+    match_chars: int = 15
+) -> dict[str, pd.DataFrame]:
+    """
+    Filters a dict of sheets by matching against desired sheet names,
+    accounting for Excel's sheet name transformations.
+
+    Args:
+        all_sheets (dict): All sheets loaded from Excel.
+        desired_sheets (list[str]): The sheet names you want to load.
+        match_chars (int): Number of leading characters to compare. Defaults to 15.
+
+    Returns:
+        dict[str, pd.DataFrame]: Filtered sheets that matched a desired name.
+    """
+    normalized_desired = [normalize_excel_sheet_name(s)[:match_chars] for s in desired_sheets]
+
+    return {
+        name: df for name, df in all_sheets.items()
+        if normalize_excel_sheet_name(name)[:match_chars] in normalized_desired
+    }
+
+def build_download_zip(df: pd.DataFrame, csv_filename: str, queried_data_categories: list) -> bytes:
+    """
+    Builds a ZIP file in memory containing:
+    - The queried data as a CSV
+    - The respective data dictionary as an Excel file
+
+    Args:
+        df (pd.DataFrame): The queried data to export.
+        csv_filename (str): The filename for the CSV inside the ZIP.
+
+    Returns:
+        bytes: The ZIP file as bytes.
+    """
+    zip_buffer = io.BytesIO()
+
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+
+        # --- 1. Add Queried Data as CSV ---
+        csv_bytes = df.to_csv(index=False).encode("utf-8")
+        zip_file.writestr(csv_filename, csv_bytes)
+
+        # --- 2. Add Excel data dictionary ---
+        # Load the Data Dictionary from Azure
+        overall_data_dictionary = read_dataframe_from_azure(
+            file_name="Data Dictionary für Data Hub.xlsx",
+            file_format="xlsx",
+            source_folder="data-hub",
+            read_options={
+                "sheet_name": None
+            }
+        )
+
+        # Filter the data dictionary only for needed sheets
+        selected_sheets_for_data_dictionary = filter_sheets_by_name(
+            all_sheets=overall_data_dictionary,
+            desired_sheets=queried_data_categories,
+            match_chars=15
+        )   
+        
+        excel_buffer = io.BytesIO()
+        with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
+            for sheet_name, sheet_df in selected_sheets_for_data_dictionary.items():
+                sheet_df.to_excel(writer, index=False, sheet_name=sheet_name)
+
+        zip_file.writestr("data_dictionary.xlsx", excel_buffer.getvalue())
+
+    return zip_buffer.getvalue()

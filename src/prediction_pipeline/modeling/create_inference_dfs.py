@@ -12,7 +12,7 @@ from azure.storage.blob import BlobClient
 
 
 # Folder where models are stored
-folder_prefix = 'models/models_trained/1483317c-343a-4424-88a6-bd57459901d1/'  # If you have a specific folder
+folder_prefix = 'models/models_trained/140a07f6-822b-4664-9b7f-0cd2f97475a4/'  # If you have a specific folder
 
 
 target_vars_et  = ['traffic_abs', 'sum_IN_abs', 'sum_OUT_abs', 

@@ -2,13 +2,13 @@ import pandas as pd
 import requests
 from datetime import datetime
 
-def get_open_holidays(year, country_code, subdivision=None, holiday_type="PublicHolidays"):
+def get_open_holidays(start_date, end_date, country_code, subdivision=None, holiday_type="PublicHolidays"):
     """Fetch data from OpenHolidays API."""
     base_url = f"https://openholidaysapi.org/{holiday_type}"
     params = {
         "countryIsoCode": country_code,
-        "validFrom": f"{year}-01-01",
-        "validTo": f"{year}-12-31",
+        "validFrom": start_date,
+        "validTo": end_date,
         "languageIsoCode": "EN"
     }
     if subdivision:
@@ -19,19 +19,25 @@ def get_open_holidays(year, country_code, subdivision=None, holiday_type="Public
         return response.json()
     return []
 
-def build_calendar_df(year):
-    # 1. Create the base range of dates
-    dates = pd.date_range(start=f"{year}-01-01", end=f"{year}-12-31", freq="D")
+def build_calendar_df(
+        start_date: datetime, end_date: datetime
+):
+    # Create the base range of dates
+    dates = pd.date_range(start=start_date, end=end_date, freq="D")
     df = pd.DataFrame({"Date": dates})
 
-    # 2. Fetch Data from API
+    # Convert dates to strings
+    start_date = start_date.strftime("%Y-%m-%d")  # → "2023-01-01"
+    end_date = end_date.strftime("%Y-%m-%d")  # → "2023-01-01"
+
+    # Fetch Data from API
     # Public Holidays
-    by_pub = get_open_holidays(year, "DE", "DE-BY", "PublicHolidays")
-    cz_pub = get_open_holidays(year, "CZ", None, "PublicHolidays")
+    by_pub = get_open_holidays(start_date, end_date, "DE", "DE-BY", "PublicHolidays")
+    cz_pub = get_open_holidays(start_date, end_date, "CZ", None, "PublicHolidays")
     
     # School Vacations
-    by_sch = get_open_holidays(year, "DE", "DE-BY", "SchoolHolidays")
-    cz_sch = get_open_holidays(year, "CZ", None, "SchoolHolidays")
+    by_sch = get_open_holidays(start_date, end_date, "DE", "DE-BY", "SchoolHolidays")
+    cz_sch = get_open_holidays(start_date, end_date, "CZ", None, "SchoolHolidays")
 
     # 3. Helper to extract sets of dates from API response
     def extract_dates(api_data):
@@ -51,15 +57,19 @@ def build_calendar_df(year):
     by_sch_dates = extract_dates(by_sch)
     cz_sch_dates = extract_dates(cz_sch)
 
-    df['Is holiday in Bavaria?'] = df['Date'].dt.date.isin(by_pub_dates)
-    df['Is holiday in Czech Republic?'] = df['Date'].dt.date.isin(cz_pub_dates)
-    df['Is school vacation in Bavaria?'] = df['Date'].dt.date.isin(by_sch_dates)
-    df['Is school vacation in Czech Republic?'] = df['Date'].dt.date.isin(cz_sch_dates)
+    # Assign boolean values 0 and 1 to rows
+    df['Feiertag_Bayern'] = df['Date'].dt.date.isin(by_pub_dates).astype(int)
+    df['Feiertag_CZ'] = df['Date'].dt.date.isin(cz_pub_dates).astype(int)
+    df['Schulferien_Bayern'] = df['Date'].dt.date.isin(by_sch_dates).astype(int)
+    df['Schulferien_CZ'] = df['Date'].dt.date.isin(cz_sch_dates).astype(int)
 
     return df
 
-# Generate for 2025
-df_2026 = build_calendar_df(2026)
+# Test function
+fetched_vacation_df = build_calendar_df(
+    start_date = datetime(2023, 1, 1),
+    end_date = datetime(2025, 12, 31)
+)
 
 # Example: Checking early January
-print(df_2026.head(50))
+print(fetched_vacation_df)

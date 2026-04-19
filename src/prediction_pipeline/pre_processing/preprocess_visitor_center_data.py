@@ -39,7 +39,6 @@ def change_to_numeric_types(df_visitcenters):
     # Convert specific columns to numeric type (float64)
     # Using 'errors="coerce"' will convert invalid parsing to NaN
     df_visitcenters['Parkpl_HEH_PKW'] = pd.to_numeric(df_visitcenters['Parkpl_HEH_PKW'], errors='coerce')
-    df_visitcenters['Waldschmidthaus_geoeffnet'] = pd.to_numeric(df_visitcenters['Waldschmidthaus_geoeffnet'], errors='coerce')
     return df_visitcenters
 
 def correct_and_convert_schulferien(df_visitcenters):
@@ -95,25 +94,6 @@ def correct_besuchszahlen_heh(df):
     
     return df
 
-def correct_and_convert_wgm_geoeffnet(df):
-    """
-    Corrects the 'WGM_geoeffnet' column by replacing the value 11 with 1.
-    Converts the column to boolean type.
-    
-    Parameters:
-    df (pandas.DataFrame): DataFrame containing the 'WGM_geoeffnet' column.
-    
-    Returns:
-    pandas.DataFrame: DataFrame with 'WGM_geoeffnet' corrected and converted to boolean type.
-    """
-    # Replace single value of 11 with 1 in 'WGM_geoeffnet' column
-    df['WGM_geoeffnet'] = df['WGM_geoeffnet'].replace(11, 1)
-    
-    # Convert 'WGM_geoeffnet' column to boolean type
-    df['WGM_geoeffnet'] = df['WGM_geoeffnet'].astype(bool)
-    
-    return df
-
 def remove_last_row_if_needed(df):
     """
     Removes the last row from the DataFrame if it has 2923 rows.
@@ -148,8 +128,6 @@ def clean_visitor_center_data(df_visitcenters):
     df_visitcenters=change_duplicate_date(df_visitcenters)
     # Correct Besuchszahlen counts to non-decimal (round up)
     df_visitcenters=correct_besuchszahlen_heh(df_visitcenters)
-    # Correct WGM_geoffnet - instance of 11 (should be 1)
-    df_visitcenters=correct_and_convert_wgm_geoeffnet(df_visitcenters)
     # Remove empty extra row
     df_visitcenters=remove_last_row_if_needed(df_visitcenters)
 
@@ -174,15 +152,17 @@ def add_date_variables(df):
     # Convert 'Datum' column to datetime format
     df['Datum'] = pd.to_datetime(df['Datum'])
     
-    # Add new columns for day, month, and year
+    # Add new columns for day, month, day of the year, and year
     df['Tag'] = df['Datum'].dt.day
     df['Monat'] = df['Datum'].dt.month
     df['Jahr'] = df['Datum'].dt.year
+    df['DayOfTheYear'] = df['Datum'].dt.dayofyear
     
     # Change data types for modeling purposes
     df['Tag'] = df['Tag'].astype('Int64')
     df['Monat'] = df['Monat'].astype('category')
     df['Jahr'] = df['Jahr'].astype('Int64')
+    df['DayOfTheYear'] = df['DayOfTheYear'].astype('Int64')
     
     return df
 
@@ -276,13 +256,10 @@ def reorder_columns(df):
     """
     # Define the desired order of columns
     column_order = [
-        'Datum', 'Tag', 'Monat', 'Jahr', 'Wochentag', 'Wochenende', 'Jahreszeit', 'Laubfärbung',
+        'Datum', 'Tag', 'Monat', 'Jahr', 'DayOfTheYear','Wochentag', 'Wochenende', 'Jahreszeit', 
         'Besuchszahlen_HEH', 'Besuchszahlen_HZW', 'Besuchszahlen_WGM', 
         'Parkpl_HEH_PKW', 'Parkpl_HEH_BUS', 'Parkpl_HZW_PKW', 'Parkpl_HZW_BUS', 
-        'Schulferien_Bayern', 'Schulferien_CZ', 'Feiertag_Bayern', 'Feiertag_CZ', 
-        'HEH_geoeffnet', 'HZW_geoeffnet', 'WGM_geoeffnet', 'Lusenschutzhaus_geoeffnet', 
-        'Racheldiensthuette_geoeffnet', 'Waldschmidthaus_geoeffnet', 
-        'Falkensteinschutzhaus_geoeffnet', 'Schwellhaeusl_geoeffnet', 'Temperatur', 
+        'Schulferien_Bayern', 'Schulferien_CZ', 'Feiertag_Bayern', 'Feiertag_CZ', 'Temperatur', 
         'Niederschlagsmenge', 'Schneehoehe', 'GS mit', 'GS max'
     ]
     
@@ -379,7 +356,7 @@ def handle_outliers(df, num_sd=7):
 
 def create_hourly_dataframe(df):
     """
-    Expands the daily data in the DataFrame to an hourly level by duplicating each day into 24 hourly rows.
+    Expands the daily data in the DataFrame to an hourly level using resampling.
     
     Parameters:
     df (pandas.DataFrame): DataFrame containing daily data with a 'Datum' column representing dates.
@@ -387,16 +364,17 @@ def create_hourly_dataframe(df):
     Returns:
     pandas.DataFrame: New DataFrame with an hourly level where each day is expanded into 24 hourly rows.
     """
-    # Generate a new DataFrame where each day is expanded into 24 rows (one per hour)
-    df_hourly = df.loc[df.index.repeat(24)].copy()
-    
-    # Create the hourly timestamps by adding hours to the 'Datum' column
-    df_hourly['Datum'] = df_hourly['Datum'] + pd.to_timedelta(df_hourly.groupby(df_hourly.index).cumcount(), unit='h')
-    
-    # Rename columns for clarity
-    df_hourly = df_hourly.rename(columns=lambda x: x.strip())
+    # Rename and set 'Datum' as the index to enable resampling
+    df_hourly = df.rename(columns=lambda x: x.strip())
     df_hourly = df_hourly.rename(columns={'Datum': 'Time'})
-    
+    df_hourly = df_hourly.set_index('Time')
+
+    # Resample to hourly and forward-fill missing hours
+    df_hourly = df_hourly.resample('H').ffill()
+
+    # Restore Time as a column
+    df_hourly = df_hourly.reset_index()
+
     return df_hourly
 
 def rename_and_set_time_as_index(df):

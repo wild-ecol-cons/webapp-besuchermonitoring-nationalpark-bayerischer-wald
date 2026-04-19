@@ -1,13 +1,11 @@
 import pandas as pd
-from src.utils import read_dataframe_from_azure
+from src.utils import read_dataframe_from_azure, query_azure_with_duck_db
 
 
 def source_visitor_center_data():
     # Source data - this is the preprocessed data
-    sourced_visitor_count_data = read_dataframe_from_azure(
-        file_name="04022026-daily-visitor-centers-huts-openings-historic-visitor-counts-vacation-holidays-weather-station-2017-2026.xlsx",
-        file_format="xlsx",
-        source_folder="raw-data",
+    sourced_visitor_count_data = query_azure_with_duck_db(
+        directory="data-hub/preprocessed-data/huts-counts-openings-weather-station-holidays"
     )
 
     return sourced_visitor_count_data

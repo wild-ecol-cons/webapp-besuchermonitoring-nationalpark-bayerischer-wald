@@ -8,6 +8,7 @@ import uuid
 from src.config import CONNECTION_STRING, CONTAINER_NAME
 from src.utils import upload_dataframe_to_azure, upload_file_to_azure
 from azure.storage.blob import BlobClient
+from datetime import datetime
 
 
 save_path_models = 'models/models_trained'
@@ -21,15 +22,13 @@ target_vars_et  = ['traffic_abs', 'sum_IN_abs', 'sum_OUT_abs', 'Lusen-Mauth-Fins
                'Scheuereck-Schachten-Trinkwassertalsperre IN', 'Scheuereck-Schachten-Trinkwassertalsperre OUT', 
                'Nationalparkzentrum Falkenstein IN', 'Nationalparkzentrum Falkenstein OUT']
 
-numeric_features = ['Temperature (°C)', 'Relative Humidity (%)', 'Wind Speed (km/h)', 'ZScore_Daily_Max_Temperature (°C)', 
-                    'ZScore_Daily_Max_Relative Humidity (%)','ZScore_Daily_Max_Wind Speed (km/h)',
+numeric_features = ['Temperature (°C)', 'Relative Humidity (%)', 'Wind Speed (km/h)', 'Precipitation (mm)', 'ZScore_Daily_Max_Precipitation (mm)', 'ZScore_Daily_Max_Temperature (°C)', 
+                    'ZScore_Daily_Max_Relative Humidity (%)','ZScore_Daily_Max_Wind Speed (km/h)', 'ZScore_Daily_Sum_Precipitation (mm)',
                     'Distance_to_Nearest_Holiday_Bayern','Distance_to_Nearest_Holiday_CZ','Tag_sin', 'Tag_cos', 'Monat_sin', 'Monat_cos',
-                    'Hour_sin', 'Hour_cos','Wochentag_sin', 'Wochentag_cos']
+                    'Hour_sin', 'Hour_cos','Wochentag_sin', 'Wochentag_cos', 'DayOfTheYear_sin', 'DayOfTheYear_cos']
 
-categorical_features = ['Wochenende','Laubfärbung', 'Schulferien_Bayern', 'Schulferien_CZ', 
-                        'Feiertag_Bayern', 'Feiertag_CZ', 'HEH_geoeffnet', 'HZW_geoeffnet', 'WGM_geoeffnet', 
-                        'Lusenschutzhaus_geoeffnet', 'Racheldiensthuette_geoeffnet', 'Falkensteinschutzhaus_geoeffnet', 
-                        'Schwellhaeusl_geoeffnet','sunny', 'cloudy', 'rainy', 'snowy', 'extreme','stormy','Frühling',
+categorical_features = ['Wochenende', 'Schulferien_Bayern', 'Schulferien_CZ', 
+                        'Feiertag_Bayern', 'Feiertag_CZ', 'sunny', 'cloudy', 'rainy', 'snowy', 'extreme','stormy','Frühling',
                         'Sommer', 'Herbst', 'Winter']
 
 def create_uuid() -> str:
@@ -60,26 +59,31 @@ def save_models_to_azure(model, save_path_models: str, model_name: str, local_pa
     if not os.path.exists(local_path):
         os.makedirs(local_path)
 
+    # Save model locally via PyCaret
     save_model_path = os.path.join(local_path, model_name)
     save_model(model, save_model_path, model_only=True)
 
+    # Construct the correct local path to the saved .pkl file
+    local_pkl_path = os.path.join(local_path, f"{model_name}.pkl")
     blob_name = f"{save_path_models}/{uuid}/{model_name}.pkl"
 
     try:
-        upload_file_to_azure(
-            file_obj="outputs/models_trained/extra_trees_traffic_abs.pkl",
-            target_folder=save_path_models,
-            filename=f"{uuid}/{model_name}.pkl"
-        )
-        
-        print(f"Successfully saved model {model_name} to Azure Blob Storage at: {CONTAINER_NAME}/{blob_name}")
-        
-    except Exception as e:
-        print(f"Error saving model to Azure Blob Storage: {e}")
-        
-    return
+        # ✅ Open the file and pass the handle, not the path string
+        with open(local_pkl_path, "rb") as f:
+            upload_file_to_azure(
+                file_obj=f,
+                target_folder=save_path_models,
+                filename=f"{uuid}/{model_name}.pkl"
+            )
+        print(f"✅ Successfully saved model {model_name} to Azure Blob Storage at: {CONTAINER_NAME}/{blob_name}")
 
-def train_regressor(feature_dataframe: pd.DataFrame) -> None:
+    except Exception as e:
+        print(f"❌ Error saving model to Azure Blob Storage: {e}")
+
+def train_regressor(
+        feature_dataframe: pd.DataFrame,
+        train_start_date: datetime,
+        test_end_date: datetime) -> None:
 
     uuid = create_uuid()
     print(f"Training Regressor with Run ID: {uuid}")
@@ -90,10 +94,10 @@ def train_regressor(feature_dataframe: pd.DataFrame) -> None:
         # Ensure the DataFrame has a date-time index
         if isinstance(feature_dataframe.index, pd.DatetimeIndex):
             # Define date ranges for training, testing, and unseen data
-            train_start = '2023-01-01'
-            train_end = '2024-04-30'
-            test_start = '2024-05-01'
-            test_end = '2024-07-21'
+            train_start = train_start_date
+            train_end = datetime(2024, 12, 31)
+            test_start = datetime(2025, 1, 1)
+            test_end = test_end_date
     
             # Split the data into train, test, and unseen sets based on date ranges
             df_train = feature_dataframe[numeric_features+categorical_features+[target]].loc[train_start:train_end]
@@ -105,13 +109,12 @@ def train_regressor(feature_dataframe: pd.DataFrame) -> None:
                             numeric_features=numeric_features, 
                             categorical_features=categorical_features,
                             fold=5,
-                            preprocess=False,
-                            data_split_shuffle=True,
+                            data_split_shuffle=False,
                             session_id=123,
-                            test_data=df_test)  # Use 90% of data for training 
+                            test_data=df_test)
                 
             # Train the Extra Trees Regressor model
-            extra_trees_model = create_model('et')
+            extra_trees_model = create_model('lightgbm')
                 
             # Predict on the unseen data
             predictions = predict_model(extra_trees_model) # predicts on hold-out data defined above

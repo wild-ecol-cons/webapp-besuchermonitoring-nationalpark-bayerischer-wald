@@ -278,7 +278,7 @@ def reorder_columns(df):
     """
     # Define the desired order of columns
     column_order = [
-        'Datum', 'Tag', 'Monat', 'Jahr', 'DayOfTheYear','Wochentag', 'Wochenende', 'Jahreszeit', 'Laubfärbung',
+        'Datum', 'Tag', 'Monat', 'Jahr', 'DayOfTheYear','Wochentag', 'Wochenende', 'Jahreszeit', 
         'Besuchszahlen_HEH', 'Besuchszahlen_HZW', 'Besuchszahlen_WGM', 
         'Parkpl_HEH_PKW', 'Parkpl_HEH_BUS', 'Parkpl_HZW_PKW', 'Parkpl_HZW_BUS', 
         'Schulferien_Bayern', 'Schulferien_CZ', 'Feiertag_Bayern', 'Feiertag_CZ', 

@@ -22,7 +22,7 @@ columns_to_use = [
 'Waldspielgelände_1 OUT (aus dem WSG)',  'Wistlberg IN',  'Wistlberg OUT',
 'traffic_abs',  'sum_IN_abs',  'sum_OUT_abs',  'Temperature (°C)',  'Relative Humidity (%)',  
 'Precipitation (mm)',  'Wind Speed (km/h)',  'Sunshine Duration (min)',  'Tag',  'Monat', 'DayOfTheYear', 
-'Wochentag',  'Wochenende',  'Jahreszeit',  'Laubfärbung',  'Schulferien_Bayern',  'Schulferien_CZ',  
+'Wochentag',  'Wochenende',  'Jahreszeit',  'Schulferien_Bayern',  'Schulferien_CZ',  
 'Feiertag_Bayern',  'Feiertag_CZ',  'HEH_geoeffnet',  'HZW_geoeffnet',  'WGM_geoeffnet',  
 'Lusenschutzhaus_geoeffnet',  'Racheldiensthuette_geoeffnet',  'Falkensteinschutzhaus_geoeffnet',  
 'Schwellhaeusl_geoeffnet'
@@ -149,7 +149,6 @@ dtype_dict = {
         'Wochenende',
         'DayOfTheYear',
         'Jahreszeit',
-        'Laubfärbung',
         'Feiertag_Bayern',
         'Feiertag_CZ',
         'HEH_geoeffnet',
@@ -170,7 +169,7 @@ numeric_features_for_modelling = ['Temperature (°C)', 'Relative Humidity (%)', 
                     'Distance_to_Nearest_Holiday_Bayern','Distance_to_Nearest_Holiday_CZ','Tag_sin', 'Tag_cos', 'Monat_sin', 'Monat_cos',
                     'Hour_sin', 'Hour_cos','Wochentag_sin', 'Wochentag_cos', 'DayOfTheYear_sin', 'DayOfTheYear_cos']
 
-categorical_features_for_modelling = ['Wochenende','Laubfärbung', 'Schulferien_Bayern', 'Schulferien_CZ', 
+categorical_features_for_modelling = ['Wochenende','Schulferien_Bayern', 'Schulferien_CZ', 
                         'Feiertag_Bayern', 'Feiertag_CZ', 'HEH_geoeffnet', 'HZW_geoeffnet', 'WGM_geoeffnet', 
                         'Lusenschutzhaus_geoeffnet', 'Racheldiensthuette_geoeffnet', 'Falkensteinschutzhaus_geoeffnet', 
                         'Schwellhaeusl_geoeffnet','sunny', 'cloudy', 'rainy', 'snowy', 'extreme','stormy','Frühling',

@@ -27,7 +27,7 @@ numeric_features = ['Temperature (°C)', 'Relative Humidity (%)', 'Wind Speed (k
                     'Distance_to_Nearest_Holiday_Bayern','Distance_to_Nearest_Holiday_CZ','Tag_sin', 'Tag_cos', 'Monat_sin', 'Monat_cos',
                     'Hour_sin', 'Hour_cos','Wochentag_sin', 'Wochentag_cos', 'DayOfTheYear_sin', 'DayOfTheYear_cos']
 
-categorical_features = ['Wochenende','Laubfärbung', 'Schulferien_Bayern', 'Schulferien_CZ', 
+categorical_features = ['Wochenende', 'Schulferien_Bayern', 'Schulferien_CZ', 
                         'Feiertag_Bayern', 'Feiertag_CZ', 'HEH_geoeffnet', 'HZW_geoeffnet', 'WGM_geoeffnet', 
                         'Lusenschutzhaus_geoeffnet', 'Racheldiensthuette_geoeffnet', 'Falkensteinschutzhaus_geoeffnet', 
                         'Schwellhaeusl_geoeffnet','sunny', 'cloudy', 'rainy', 'snowy', 'extreme','stormy','Frühling',

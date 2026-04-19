@@ -28,9 +28,7 @@ numeric_features = ['Temperature (°C)', 'Relative Humidity (%)', 'Wind Speed (k
                     'Hour_sin', 'Hour_cos','Wochentag_sin', 'Wochentag_cos', 'DayOfTheYear_sin', 'DayOfTheYear_cos']
 
 categorical_features = ['Wochenende', 'Schulferien_Bayern', 'Schulferien_CZ', 
-                        'Feiertag_Bayern', 'Feiertag_CZ', 'HEH_geoeffnet', 'HZW_geoeffnet', 'WGM_geoeffnet', 
-                        'Lusenschutzhaus_geoeffnet', 'Racheldiensthuette_geoeffnet', 'Falkensteinschutzhaus_geoeffnet', 
-                        'Schwellhaeusl_geoeffnet','sunny', 'cloudy', 'rainy', 'snowy', 'extreme','stormy','Frühling',
+                        'Feiertag_Bayern', 'Feiertag_CZ', 'sunny', 'cloudy', 'rainy', 'snowy', 'extreme','stormy','Frühling',
                         'Sommer', 'Herbst', 'Winter']
 
 def create_uuid() -> str:

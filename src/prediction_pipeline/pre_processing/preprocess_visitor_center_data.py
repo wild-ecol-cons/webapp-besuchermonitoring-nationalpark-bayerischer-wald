@@ -39,7 +39,6 @@ def change_to_numeric_types(df_visitcenters):
     # Convert specific columns to numeric type (float64)
     # Using 'errors="coerce"' will convert invalid parsing to NaN
     df_visitcenters['Parkpl_HEH_PKW'] = pd.to_numeric(df_visitcenters['Parkpl_HEH_PKW'], errors='coerce')
-    df_visitcenters['Waldschmidthaus_geoeffnet'] = pd.to_numeric(df_visitcenters['Waldschmidthaus_geoeffnet'], errors='coerce')
     return df_visitcenters
 
 def correct_and_convert_schulferien(df_visitcenters):
@@ -95,25 +94,6 @@ def correct_besuchszahlen_heh(df):
     
     return df
 
-def correct_and_convert_wgm_geoeffnet(df):
-    """
-    Corrects the 'WGM_geoeffnet' column by replacing the value 11 with 1.
-    Converts the column to boolean type.
-    
-    Parameters:
-    df (pandas.DataFrame): DataFrame containing the 'WGM_geoeffnet' column.
-    
-    Returns:
-    pandas.DataFrame: DataFrame with 'WGM_geoeffnet' corrected and converted to boolean type.
-    """
-    # Replace single value of 11 with 1 in 'WGM_geoeffnet' column
-    df['WGM_geoeffnet'] = df['WGM_geoeffnet'].replace(11, 1)
-    
-    # Convert 'WGM_geoeffnet' column to boolean type
-    df['WGM_geoeffnet'] = df['WGM_geoeffnet'].astype(bool)
-    
-    return df
-
 def remove_last_row_if_needed(df):
     """
     Removes the last row from the DataFrame if it has 2923 rows.
@@ -148,8 +128,6 @@ def clean_visitor_center_data(df_visitcenters):
     df_visitcenters=change_duplicate_date(df_visitcenters)
     # Correct Besuchszahlen counts to non-decimal (round up)
     df_visitcenters=correct_besuchszahlen_heh(df_visitcenters)
-    # Correct WGM_geoffnet - instance of 11 (should be 1)
-    df_visitcenters=correct_and_convert_wgm_geoeffnet(df_visitcenters)
     # Remove empty extra row
     df_visitcenters=remove_last_row_if_needed(df_visitcenters)
 
@@ -281,10 +259,7 @@ def reorder_columns(df):
         'Datum', 'Tag', 'Monat', 'Jahr', 'DayOfTheYear','Wochentag', 'Wochenende', 'Jahreszeit', 
         'Besuchszahlen_HEH', 'Besuchszahlen_HZW', 'Besuchszahlen_WGM', 
         'Parkpl_HEH_PKW', 'Parkpl_HEH_BUS', 'Parkpl_HZW_PKW', 'Parkpl_HZW_BUS', 
-        'Schulferien_Bayern', 'Schulferien_CZ', 'Feiertag_Bayern', 'Feiertag_CZ', 
-        'HEH_geoeffnet', 'HZW_geoeffnet', 'WGM_geoeffnet', 'Lusenschutzhaus_geoeffnet', 
-        'Racheldiensthuette_geoeffnet', 'Waldschmidthaus_geoeffnet', 
-        'Falkensteinschutzhaus_geoeffnet', 'Schwellhaeusl_geoeffnet', 'Temperatur', 
+        'Schulferien_Bayern', 'Schulferien_CZ', 'Feiertag_Bayern', 'Feiertag_CZ', 'Temperatur', 
         'Niederschlagsmenge', 'Schneehoehe', 'GS mit', 'GS max'
     ]
     

@@ -23,9 +23,7 @@ columns_to_use = [
 'traffic_abs',  'sum_IN_abs',  'sum_OUT_abs',  'Temperature (°C)',  'Relative Humidity (%)',  
 'Precipitation (mm)',  'Wind Speed (km/h)',  'Sunshine Duration (min)',  'Tag',  'Monat', 'DayOfTheYear', 
 'Wochentag',  'Wochenende',  'Jahreszeit',  'Schulferien_Bayern',  'Schulferien_CZ',  
-'Feiertag_Bayern',  'Feiertag_CZ',  'HEH_geoeffnet',  'HZW_geoeffnet',  'WGM_geoeffnet',  
-'Lusenschutzhaus_geoeffnet',  'Racheldiensthuette_geoeffnet',  'Falkensteinschutzhaus_geoeffnet',  
-'Schwellhaeusl_geoeffnet'
+'Feiertag_Bayern',  'Feiertag_CZ'
 ]
 
 
@@ -151,13 +149,6 @@ dtype_dict = {
         'Jahreszeit',
         'Feiertag_Bayern',
         'Feiertag_CZ',
-        'HEH_geoeffnet',
-        'HZW_geoeffnet',
-        'WGM_geoeffnet',
-        'Lusenschutzhaus_geoeffnet',
-        'Racheldiensthuette_geoeffnet',
-        'Falkensteinschutzhaus_geoeffnet',
-        'Schwellhaeusl_geoeffnet',
         'Schulferien_Bayern',
         'Schulferien_CZ',
         'coco_2'
@@ -170,9 +161,7 @@ numeric_features_for_modelling = ['Temperature (°C)', 'Relative Humidity (%)', 
                     'Hour_sin', 'Hour_cos','Wochentag_sin', 'Wochentag_cos', 'DayOfTheYear_sin', 'DayOfTheYear_cos']
 
 categorical_features_for_modelling = ['Wochenende','Schulferien_Bayern', 'Schulferien_CZ', 
-                        'Feiertag_Bayern', 'Feiertag_CZ', 'HEH_geoeffnet', 'HZW_geoeffnet', 'WGM_geoeffnet', 
-                        'Lusenschutzhaus_geoeffnet', 'Racheldiensthuette_geoeffnet', 'Falkensteinschutzhaus_geoeffnet', 
-                        'Schwellhaeusl_geoeffnet','sunny', 'cloudy', 'rainy', 'snowy', 'extreme','stormy','Frühling',
+                        'Feiertag_Bayern', 'Feiertag_CZ','sunny', 'cloudy', 'rainy', 'snowy', 'extreme','stormy','Frühling',
                         'Sommer', 'Herbst', 'Winter']
 
 target_vars_et = ['traffic_abs', 'sum_IN_abs', 'sum_OUT_abs', 'Lusen-Mauth-Finsterau IN', 'Lusen-Mauth-Finsterau OUT', 

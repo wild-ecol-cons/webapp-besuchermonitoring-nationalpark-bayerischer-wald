@@ -92,11 +92,11 @@ def run_training():
     sourced_vc_data_df = source_visitor_center_data()
     processed_vc_df_hourly,_ = process_visitor_center_data(sourced_vc_data_df)
 
-     # get the weather data for training and inference
-    # training data
+
+    # get the weather data for training and test timeframe
     train_start_date = datetime(2023, 1, 1)
-    train_end_date = datetime(2024, 7, 21)
-    weather_data = source_weather_data(start_time=train_start_date, end_time=train_end_date)
+    test_end_date = datetime(2025, 12, 31)
+    weather_data = source_weather_data(start_time=train_start_date, end_time=test_end_date)
     processed_weather_df = process_weather_data(weather_data)
 
     # join the dataframes
@@ -107,13 +107,13 @@ def run_training():
     with_zscores_and_nearest_holidays_df = get_zscores_and_nearest_holidays(joined_df, weather_columns_for_zscores)
 
     # get the features for training
-    feature_df = get_features(with_zscores_and_nearest_holidays_df,train_start_date, train_end_date)
+    feature_df = get_features(with_zscores_and_nearest_holidays_df,train_start_date, test_end_date)
 
     # Drop duplicated datetime indices (if only few occurrences)
     feature_df = drop_duplicated_datetimeindices(feature_df)
 
     # train the model
-    train_regressor(feature_df)
+    train_regressor(feature_df, train_start_date, test_end_date)
 
 def run_pipeline_and_create_dashboard(should_run_training: bool = False):
     if should_run_training:

@@ -8,6 +8,7 @@ import uuid
 from src.config import CONNECTION_STRING, CONTAINER_NAME
 from src.utils import upload_dataframe_to_azure, upload_file_to_azure
 from azure.storage.blob import BlobClient
+from datetime import datetime
 
 
 save_path_models = 'models/models_trained'
@@ -79,7 +80,10 @@ def save_models_to_azure(model, save_path_models: str, model_name: str, local_pa
         
     return
 
-def train_regressor(feature_dataframe: pd.DataFrame) -> None:
+def train_regressor(
+        feature_dataframe: pd.DataFrame,
+        train_start_date: datetime,
+        test_end_date: datetime) -> None:
 
     uuid = create_uuid()
     print(f"Training Regressor with Run ID: {uuid}")
@@ -90,10 +94,10 @@ def train_regressor(feature_dataframe: pd.DataFrame) -> None:
         # Ensure the DataFrame has a date-time index
         if isinstance(feature_dataframe.index, pd.DatetimeIndex):
             # Define date ranges for training, testing, and unseen data
-            train_start = '2023-01-01'
-            train_end = '2024-12-31'
-            test_start = '2025-01-01'
-            test_end = '2025-12-31'
+            train_start = train_start_date
+            train_end = datetime(2024, 12, 31)
+            test_start = datetime(2025, 1, 1)
+            test_end = test_end_date
     
             # Split the data into train, test, and unseen sets based on date ranges
             df_train = feature_dataframe[numeric_features+categorical_features+[target]].loc[train_start:train_end]

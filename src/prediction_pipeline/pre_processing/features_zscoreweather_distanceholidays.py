@@ -8,7 +8,7 @@ from src.utils import upload_dataframe_to_azure
 
 # GLOBAL VARIABLES
 
-output_file_name = "holidays_deltaweather_features_df.csv"
+output_file_name = "holidays_deltaweather_features_df"
 output_data_folder = "preprocessed_data"
 
 window_size = 5 # Define the window size in days that you wish to use to calculate z-scores
@@ -226,7 +226,7 @@ def get_zscores_and_nearest_holidays(df,columns_for_zscores):
         df=df_zscores_and_nearest_holidays,
         file_name=output_file_name,
         target_folder=output_data_folder,
-        file_format="csv"
+        file_format="parquet"
     )
 
     print("Dataset with new features (distance to holidays, weather z-scores) uploaded to the cloud succesfully!")

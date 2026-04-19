@@ -3,6 +3,7 @@
 import pandas as pd
 import numpy as np
 from src.utils import upload_dataframe_to_azure
+from src.prediction_pipeline.modeling.train_regressor import target_vars_et
 
 ##############################################################################################
 
@@ -220,7 +221,14 @@ def get_zscores_and_nearest_holidays(df,columns_for_zscores):
     df_zscores_and_nearest_holidays = add_moving_z_scores(df_daily_max_with_precip_sum, columns_for_zscores, window_size)
 
     # Remove NaN values (as there will be NaNs in the first rows of the dataframe due to zscore being NaN)
-    df_zscores_and_nearest_holidays = df_zscores_and_nearest_holidays.dropna()
+    df_zscores_and_nearest_holidays = df_zscores_and_nearest_holidays.dropna(
+        how='any',
+        subset=[
+            'ZScore_Daily_Max_Temperature (°C)',
+            'ZScore_Daily_Max_Relative Humidity (%)',
+            'ZScore_Daily_Max_Wind Speed (km/h)',
+            'ZScore_Daily_Max_Precipitation (mm)',
+            'ZScore_Daily_Sum_Precipitation (mm)',])
 
     upload_dataframe_to_azure(
         df=df_zscores_and_nearest_holidays,

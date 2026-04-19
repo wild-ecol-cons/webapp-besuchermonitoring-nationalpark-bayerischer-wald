@@ -127,11 +127,11 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
                 # Drop data_upload_time column, as it was only needed for duplicate removal
                 queried_single_category_data = queried_single_category_data.drop(columns=["data_upload_time"])
 
-        if category == "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage":
-            daily_value_cols_to_be_filled = queried_single_category_data.columns.difference(['general_time_index'])
-
         # Convert empty strings to NaN and drop empty columns (before merge or preview)
         queried_single_category_data = queried_single_category_data.replace("", np.nan).dropna(axis=1, how='all')
+        
+        if category == "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage":
+            daily_value_cols_to_be_filled = queried_single_category_data.columns.difference(['general_time_index'])
 
         # Do a full outer join between the current state of the overall queried data and the queried data of the current category, resulting again in the overall queried data
         if len(queried_single_category_data) > 0:

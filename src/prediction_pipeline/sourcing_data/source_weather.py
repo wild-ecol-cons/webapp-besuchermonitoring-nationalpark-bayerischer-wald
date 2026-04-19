@@ -137,6 +137,9 @@ def process_hourly_data(data):
     # Map weather condition codes to new codes
     data['coco_2'] = data['coco_2'].map(coco_to_coco_2_mapping)
 
+    # Convert the 'Time' column to datetime format again in Europe/Berlin time
+    data['Time'] = pd.to_datetime(data['Time'], utc=True).dt.tz_convert('Europe/Berlin').dt.tz_localize(None)
+
     return data
 
 @st.cache_data(max_entries=1)

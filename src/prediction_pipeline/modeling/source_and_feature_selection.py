@@ -393,5 +393,36 @@ def get_features(with_zscores_and_nearest_holidays_df, train_start_date, train_e
 
     return filtered_features_df
 
+def drop_duplicated_datetimeindices(df: pd.DataFrame, threshold: float = 0.0005) -> pd.DataFrame:
+    """
+    Drops rows with duplicated DatetimeIndex values if the total number of duplicates
+    is below a specified threshold relative to the DataFrame size.
 
+    If the proportion of duplicated index values exceeds the threshold, a ValueError
+    is raised to avoid silently discarding a significant amount of data.
 
+    Args:
+        df (pd.DataFrame): DataFrame with a DatetimeIndex.
+        threshold (float): Maximum acceptable proportion of duplicates (default: 0.0005 = 0.05%).
+
+    Returns:
+        pd.DataFrame: DataFrame with duplicated index rows removed.
+
+    Raises:
+        ValueError: If the proportion of duplicates exceeds the threshold.
+    """
+    n_duplicates = df.index.duplicated().sum()
+    proportion = n_duplicates / len(df)
+
+    if n_duplicates == 0:
+        print("No duplicated index values found ✅")
+        return df
+
+    if proportion > threshold:
+        raise ValueError(
+            f"❌ Too many duplicated index values: {n_duplicates} ({proportion:.4%} of rows). "
+            f"Exceeds threshold of {threshold:.4%}. Please investigate upstream."
+        )
+
+    print(f"⚠️ Dropping {n_duplicates} duplicated index rows ({proportion:.4%} of data).")
+    return df[~df.index.duplicated(keep='first')]

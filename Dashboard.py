@@ -27,7 +27,7 @@ from src.prediction_pipeline.pre_processing.join_sensor_weather_visitorcenter im
 from src.prediction_pipeline.pre_processing.features_zscoreweather_distanceholidays import get_zscores_and_nearest_holidays
 
 # imports for training pipeline
-from src.prediction_pipeline.modeling.source_and_feature_selection import get_features
+from src.prediction_pipeline.modeling.source_and_feature_selection import get_features, drop_duplicated_datetimeindices
 from src.prediction_pipeline.modeling.train_regressor import train_regressor
 
 # imports for inference pipeline
@@ -108,6 +108,9 @@ def run_training():
 
     # get the features for training
     feature_df = get_features(with_zscores_and_nearest_holidays_df,train_start_date, train_end_date)
+
+    # Drop duplicated datetime indices (if only few occurrences)
+    feature_df = drop_duplicated_datetimeindices(feature_df)
 
     # train the model
     train_regressor(feature_df)

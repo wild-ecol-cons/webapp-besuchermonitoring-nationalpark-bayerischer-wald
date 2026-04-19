@@ -61,24 +61,26 @@ def save_models_to_azure(model, save_path_models: str, model_name: str, local_pa
     if not os.path.exists(local_path):
         os.makedirs(local_path)
 
+    # Save model locally via PyCaret
     save_model_path = os.path.join(local_path, model_name)
     save_model(model, save_model_path, model_only=True)
 
+    # Construct the correct local path to the saved .pkl file
+    local_pkl_path = os.path.join(local_path, f"{model_name}.pkl")
     blob_name = f"{save_path_models}/{uuid}/{model_name}.pkl"
 
     try:
-        upload_file_to_azure(
-            file_obj="outputs/models_trained/extra_trees_traffic_abs.pkl",
-            target_folder=save_path_models,
-            filename=f"{uuid}/{model_name}.pkl"
-        )
-        
-        print(f"Successfully saved model {model_name} to Azure Blob Storage at: {CONTAINER_NAME}/{blob_name}")
-        
+        # ✅ Open the file and pass the handle, not the path string
+        with open(local_pkl_path, "rb") as f:
+            upload_file_to_azure(
+                file_obj=f,
+                target_folder=save_path_models,
+                filename=f"{uuid}/{model_name}.pkl"
+            )
+        print(f"✅ Successfully saved model {model_name} to Azure Blob Storage at: {CONTAINER_NAME}/{blob_name}")
+
     except Exception as e:
-        print(f"Error saving model to Azure Blob Storage: {e}")
-        
-    return
+        print(f"❌ Error saving model to Azure Blob Storage: {e}")
 
 def train_regressor(
         feature_dataframe: pd.DataFrame,

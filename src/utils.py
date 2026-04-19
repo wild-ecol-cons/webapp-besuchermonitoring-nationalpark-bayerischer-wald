@@ -96,8 +96,9 @@ def read_dataframe_from_azure(
                 df = pd.read_excel(full_azure_path, storage_options=storage_options, **read_options)
 
         print(f"✅ Successfully loaded DataFrame from **{file_format.upper()}**.")
-        print(f"DataFrame shape: {df.shape}")
-        print(df.head())
+        if type(df) == pd.DataFrame:
+            print(f"DataFrame shape: {df.shape}")
+            print(df.head())
         return df
 
     except Exception as e:

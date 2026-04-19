@@ -1,4 +1,4 @@
-from src.prediction_pipeline.pre_processing.features_zscoreweather_distanceholidays import add_nearest_holiday_distance, add_daily_max_values, add_moving_z_scores 
+from src.prediction_pipeline.pre_processing.features_zscoreweather_distanceholidays import add_nearest_holiday_distance, add_daily_max_values, add_moving_z_scores, add_daily_precipidation_sum_value 
 from src.prediction_pipeline.modeling.source_and_feature_selection import process_transformations
 
 from datetime import datetime, timedelta
@@ -54,7 +54,9 @@ def source_preprocess_inference_data(weather_data_inference, hourly_visitor_cent
 
     inference_data_with_daily_max = add_daily_max_values(inference_data_with_distances, weather_columns_for_zscores)
 
-    inference_data_with_new_features = add_moving_z_scores(inference_data_with_daily_max, 
+    inference_data_with_daily_max_with_precip_sum = add_daily_precipidation_sum_value(inference_data_with_daily_max)
+
+    inference_data_with_new_features = add_moving_z_scores(inference_data_with_daily_max_with_precip_sum, 
                                                            weather_columns_for_zscores, 
                                                            window_size_for_zscores)
 

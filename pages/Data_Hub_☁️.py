@@ -4,8 +4,7 @@ from datetime import datetime
 from src.config import data_upload_categories_to_azure_folders
 from src.streamlit_app.pages_in_dashboard.password import check_password
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
-from src.utils import upload_dataframe_to_azure
-from src.streamlit_app.pages_in_dashboard.data_hub.query_and_download_data import get_min_date_from_queried_data, query_and_preprocess_data, log_queried_data_to_azure
+from src.streamlit_app.pages_in_dashboard.data_hub.query_and_download_data import get_min_date_from_queried_data, query_and_preprocess_data, log_queried_data_to_azure, build_download_zip
 from src.streamlit_app.pages_in_dashboard.data_hub.upload_data import retrieve_already_existing_features, process_and_validate_upload, warning_for_new_columns, save_raw_data_to_cloud, save_preprocessed_data_to_cloud
 
 
@@ -95,11 +94,19 @@ with tab_query_download_data:
         st.dataframe(overall_queried_data.head())
 
         file_name_data_export = log_queried_data_to_azure(queried_data=overall_queried_data)
+        zip_filename = file_name_data_export.replace(".csv", ".zip")
+
+        zip_bytes = build_download_zip(
+            df=overall_queried_data,
+            csv_filename=file_name_data_export,
+            queried_data_categories=available_data_categories
+        )
 
         st.download_button(
             label=TRANSLATIONS[st.session_state.selected_language]['button_download_data'],
-            data=overall_queried_data.to_csv(index=False).encode('utf-8'),
-            file_name=file_name_data_export,
+            data=zip_bytes,
+            file_name=zip_filename,
+            mime="application/zip",
             icon=":material/download:",
         )
 

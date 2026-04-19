@@ -126,53 +126,70 @@ def fix_columns_names(df):
 
 # Fix problems with duplicated values in time column
 
-def correct_and_impute_times(df):
-    
+def correct_and_impute_times(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Corrects repeated timestamps caused by a 2-hour interval that is indicative of a daylight saving.
+    Corrects DST-related timestamp issues in a DataFrame with a 'Time' column.
 
-    The function operates under the following assumptions:
-    1. By default every interval should be of 1 hour
-    2. If any interval differ from this, particularly the repeated timestamp is corrected by subtracting one hour.
-    3. The data values for the corrected timestamp are then imputed from the next available row.
-    4. 2017 is an odd year where the null row is not the one with the 2 hours interval, but the one with 0. We fixed this manually for this specific rows.
+    Handles both DST transition cases that occur in the Europe/Berlin timezone:
+    - Spring-forward (March): One hour is skipped, creating a gap in the hourly series.
+    - Fall-back (October): One hour is repeated, creating duplicate timestamps at 02:00.
+
+    The function localizes timestamps to Europe/Berlin, reindexes to a clean continuous
+    hourly range, forward-fills any gaps, and returns a timezone-naive DatetimeIndex
+    in Europe/Berlin wall-clock time.
 
     Args:
-        df (pandas.DataFrame): A DataFrame containing a 'Time' column with datetime-like values and other associated data columns.
+        df (pd.DataFrame): DataFrame containing a 'Time' column with naive datetime values.
 
     Returns:
-        pandas.DataFrame: The corrected DataFrame with timestamps set as the index and sorted chronologically.
-
-    Raises:
-        ValueError: If the 'Time' column is missing from the DataFrame.
-        KeyError: If an index out of range occurs due to imputation attempts beyond the DataFrame bounds.
+        pd.DataFrame: Corrected DataFrame with a clean, continuous, timezone-naive hourly
+                      DatetimeIndex named 'Time', sorted chronologically.
     """
-    # Swap values of specific rows to correct data misalignment
-    df.iloc[[54603, 54602]] = df.iloc[[54602, 54603]].values
+    # Sort and set 'Time' as index
+    df = df.sort_values("Time").set_index("Time")
 
-    # Sort DataFrame by 'Time'
-    df.sort_values("Time", ascending=True, inplace=True)
+    # Remove any pre-existing duplicate timestamps before localization
+    df = df[~df.index.duplicated(keep='first')]
 
-    # Identify intervals where there is a 2 hours gap
-    intervals = df.Time.diff().dropna()
-    index_wrong_time = intervals[intervals == "0 days 02:00:00"].index
+    # Localize to Europe/Berlin:
+    # - ambiguous="NaT": unresolvable DST fall-back timestamps become NaT (dropped below)
+    # - nonexistent="shift_forward": DST spring-forward timestamps are shifted to next valid hour
+    df.index = df.index.tz_localize(
+        "Europe/Berlin",
+        ambiguous="NaT",
+        nonexistent="shift_forward"
+    )
 
-    # Impute values from the next row and adjust 'Time' column
-    for idx in index_wrong_time:
-        df.loc[idx, 'Time'] = df.loc[idx, 'Time'] - pd.Timedelta(hours=1)  # Adjust for daylight saving
-        df.loc[idx, df.columns != 'Time'] = df.loc[idx + 1, df.columns != 'Time']  # Impute values from the next row
+    # Drop any NaT index rows produced by ambiguous DST timestamps
+    df = df[df.index.notna()]
 
-        # Check for duplicates in visitor_counts.Time
-    if df['Time'].duplicated().sum() > 0:
-        print("⚠️ Duplicates found in 'Time' column of visitor_counts!")
-        print("The following duplicated timestamps were found:")
-        # Investigate duplicates
-        print(df[df['Time'].duplicated(keep=False)]["Time"].unique())
+    # Reindex to a clean, continuous hourly range in Europe/Berlin time
+    full_range = pd.date_range(
+        start=df.index.min(),
+        end=df.index.max(),
+        freq="H",
+        tz="Europe/Berlin"
+    )
+    df = df.reindex(full_range)
+
+    # Forward-fill gaps introduced by spring-forward or dropped NaT rows
+    df = df.ffill()
+
+    # Strip timezone info back to naive timestamps (Europe/Berlin wall-clock time preserved)
+    df.index = df.index.tz_localize(None)
+    df.index.name = "Time"
+
+    # Deduplicate once more — stripping timezone causes DST fall-back hours (02:00)
+    # to appear twice again as naive timestamps, so we keep the first occurrence
+    df = df[~df.index.duplicated(keep='first')]
+
+    # Validate final result
+    dupes = df.index.duplicated().sum()
+    if dupes > 0:
+        print(f"⚠️ {dupes} duplicate timestamps remain after correction:")
+        print(df.index[df.index.duplicated(keep=False)])
     else:
-        print("No duplicates found in 'Time' column of visitor_counts ✅")
-
-    # Set 'Time' as index and sort by index
-    df = df.set_index('Time').sort_index()
+        print("No duplicates found in 'Time' index ✅")
 
     return df
 

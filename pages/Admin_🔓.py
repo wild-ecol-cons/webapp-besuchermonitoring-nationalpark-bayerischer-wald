@@ -5,7 +5,6 @@ from src.streamlit_app.pages_in_dashboard.admin.visitor_count import visitor_pre
 from src.streamlit_app.pages_in_dashboard.admin.parking import get_parking_section
 from src.streamlit_app.source_data import source_and_preprocess_realtime_parking_data
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
-from src.prediction_pipeline.sourcing_data.source_visitor_center_data import source_preprocessed_hourly_visitor_center_data
 from src.prediction_pipeline.modeling.run_inference import run_inference
 from datetime import datetime
 import pytz

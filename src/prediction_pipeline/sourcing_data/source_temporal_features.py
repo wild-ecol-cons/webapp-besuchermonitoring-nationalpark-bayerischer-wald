@@ -1,4 +1,5 @@
 import pandas as pd
+import streamlit as st
 from src.utils import read_dataframe_from_azure, query_azure_with_duck_db
 import requests
 from datetime import datetime
@@ -74,6 +75,7 @@ def build_calendar_df(
 
     return df
 
+@st.cache_data(max_entries=1)
 def source_temporal_features(
     start_date: datetime,
     end_date: datetime

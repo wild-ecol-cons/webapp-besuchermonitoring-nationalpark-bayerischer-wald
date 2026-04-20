@@ -4,6 +4,7 @@
 import pandas as pd  # Provides data structures and data analysis tools.
 import numpy as np  # Supports large, multi-dimensional arrays and matrices.
 import logging
+import streamlit as st
 from src.utils import upload_dataframe_to_azure
 
 
@@ -262,6 +263,7 @@ def rename_and_set_time_as_index(df):
     
     return df
 
+@st.cache_data(max_entries=1)
 def process_temporal_features(sourced_df):
     cleaned_df = clean_temporal_features(sourced_df)
     transformed_df = add_additional_columns(cleaned_df)

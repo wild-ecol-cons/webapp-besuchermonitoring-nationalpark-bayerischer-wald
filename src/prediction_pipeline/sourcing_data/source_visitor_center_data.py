@@ -66,12 +66,15 @@ def build_calendar_df(
 
     return df
 
-def source_temporal_features():
+def source_temporal_features(
+    start_date: datetime,
+    end_date: datetime
+):
     
     # Fetch information from OpenHolidays API to build vacation calendar
     fetched_vacation_df = build_calendar_df(
-        start_date = datetime(2023, 1, 1),
-        end_date = datetime(2025, 12, 31)
+        start_date=start_date,
+        end_date=end_date
     )
 
     return fetched_vacation_df

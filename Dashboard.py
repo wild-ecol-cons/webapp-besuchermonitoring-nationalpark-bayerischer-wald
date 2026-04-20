@@ -77,7 +77,10 @@ def create_dashboard_main_page(inference_predictions):
         other_info.get_other_information()
 
 
-def run_training():
+def run_training(
+    train_start_date: datetime,
+    test_end_date: datetime
+):
 
     """
     Runs the training pipeline. This includes sourcing and preprocessing the data, training the model, and saving the model.
@@ -88,13 +91,15 @@ def run_training():
     processed_visitor_count_df = preprocess_visitor_count_data(sourced_visitor_count_df)
 
     # source and preprocess the visitor center data
-    sourced_vc_data_df = source_temporal_features()
+    sourced_vc_data_df = source_temporal_features(
+        start_date=train_start_date,
+        end_date=test_end_date
+    )
     processed_vc_df_hourly,_ = process_visitor_center_data(sourced_vc_data_df)
 
 
     # get the weather data for training and test timeframe
-    train_start_date = datetime(2023, 1, 1)
-    test_end_date = datetime(2025, 12, 31)
+
     weather_data = source_weather_data(start_time=train_start_date, end_time=test_end_date)
     processed_weather_df = process_weather_data(weather_data)
 
@@ -114,10 +119,18 @@ def run_training():
     # train the model
     train_regressor(feature_df, train_start_date, test_end_date)
 
-def run_pipeline_and_create_dashboard(should_run_training: bool = False, should_run_inference_and_dashboard: bool = True):
+def run_pipeline_and_create_dashboard(
+        should_run_training: bool = False,
+        should_run_inference_and_dashboard: bool = True,
+        train_start_date: datetime = datetime(2023, 1, 1),
+        test_end_date: datetime = datetime(2025, 12, 31)
+    ):
     if should_run_training:
         print("Running training pipeline...")
-        run_training()
+        run_training(
+            train_start_date=train_start_date,
+            test_end_date=test_end_date
+        )
 
     if should_run_inference_and_dashboard:
     

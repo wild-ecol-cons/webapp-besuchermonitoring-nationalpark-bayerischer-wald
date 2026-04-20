@@ -16,10 +16,9 @@ from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu impor
 from src.streamlit_app.pages_in_dashboard.password import check_password
 
 # imports for the sourcing and preprocessing pipeline
-from src.prediction_pipeline.sourcing_data.source_visitor_center_data import source_preprocessed_hourly_visitor_center_data
+from src.prediction_pipeline.sourcing_data.source_visitor_center_data import source_preprocessed_hourly_visitor_center_data, source_temporal_features
 from src.prediction_pipeline.sourcing_data.source_historic_visitor_count import source_historic_visitor_count 
 from src.prediction_pipeline.pre_processing.preprocess_historic_visitor_count_data import preprocess_visitor_count_data
-from src.prediction_pipeline.sourcing_data.source_visitor_center_data import source_visitor_center_data
 from src.prediction_pipeline.pre_processing.preprocess_visitor_center_data import process_visitor_center_data
 from src.prediction_pipeline.sourcing_data.source_weather import source_weather_data
 from src.prediction_pipeline.pre_processing.preprocess_weather_data import process_weather_data
@@ -89,7 +88,7 @@ def run_training():
     processed_visitor_count_df = preprocess_visitor_count_data(sourced_visitor_count_df)
 
     # source and preprocess the visitor center data
-    sourced_vc_data_df = source_visitor_center_data()
+    sourced_vc_data_df = source_temporal_features()
     processed_vc_df_hourly,_ = process_visitor_center_data(sourced_vc_data_df)
 
 

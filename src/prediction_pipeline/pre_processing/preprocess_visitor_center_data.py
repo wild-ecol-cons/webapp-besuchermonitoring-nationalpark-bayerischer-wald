@@ -27,109 +27,11 @@ def change_binary_variables(df_visitcenters):
 
     return df_visitcenters
 
-def change_object_variables(df_visitcenters):
-    # Convert columns with object data type to category type
-    # This is useful for categorical variables with more than 3 levels
-    for col in df_visitcenters.select_dtypes(include=['object']).columns:
-        df_visitcenters[col] = df_visitcenters[col].astype('category')
-
-    return df_visitcenters
-
-def change_to_numeric_types(df_visitcenters):
-    # Convert specific columns to numeric type (float64)
-    # Using 'errors="coerce"' will convert invalid parsing to NaN
-    df_visitcenters['Parkpl_HEH_PKW'] = pd.to_numeric(df_visitcenters['Parkpl_HEH_PKW'], errors='coerce')
-    return df_visitcenters
-
-def correct_and_convert_schulferien(df_visitcenters):
-    """
-    Corrects a typo in the 'Schulferien_Bayern' column and converts it to boolean type.
-    
-    Parameters:
-    df (pandas.DataFrame): DataFrame containing the 'Schulferien_Bayern' column.
-    
-    Returns:
-    pandas.DataFrame: DataFrame with corrected 'Schulferien_Bayern' values and converted to boolean type.
-    """
-    # Correct the typo in specific value for column 'Schulferien_Bayern' (from `10` to `0`)
-    df_visitcenters.loc[df_visitcenters['Datum'] == '2017-04-30', 'Schulferien_Bayern'] = 0
-    
-    # Change 'Schulferien_Bayern' to bool type
-    df_visitcenters['Schulferien_Bayern'] = df_visitcenters['Schulferien_Bayern'].astype(bool)
-    
-    return df_visitcenters
-
-def change_holidays_to_bool(df_visitcenters):
-    # Convert specific columns representing binary variables to boolean type
-    df_visitcenters['Schulferien_Bayern'] = df_visitcenters['Schulferien_Bayern'].astype(bool)
-    df_visitcenters['Schulferien_CZ'] = df_visitcenters['Schulferien_CZ'].astype(bool)
-    return df_visitcenters
-
-def change_duplicate_date(df_visitcenters):
-    # This changes the second instance of date 9-29-2021 to 9-29-2023
-    indices = df_visitcenters[df_visitcenters['Datum'] == '9/29/2021'].index
-    if len(indices) > 1:
-    # Replace the second instance with '9/29/2023'
-        df_visitcenters.at[indices[1], 'Datum'] = '9/29/2023'
-    return df_visitcenters
-
-def correct_besuchszahlen_heh(df):
-    """
-    Corrects the 'Besuchszahlen_HEH' column by rounding up values with non-zero fractional parts to the nearest whole number.
-    Converts the column to Int64 type to retain NaN values.
-    
-    Parameters:
-    df (pandas.DataFrame): DataFrame containing the 'Besuchszahlen_HEH' column.
-    
-    Returns:
-    pandas.DataFrame: DataFrame with 'Besuchszahlen_HEH' corrected and converted to Int64 type.
-    """
-    # Apply np.ceil() to round up values with non-zero fractional parts to nearest whole number
-    df['Besuchszahlen_HEH'] = df['Besuchszahlen_HEH'].apply(
-        lambda x: np.ceil(x) if pd.notna(x) and x % 1 != 0 else x
-    )
-    
-    # Convert 'Besuchszahlen_HEH' to Int64 to retain NaN values
-    df['Besuchszahlen_HEH'] = df['Besuchszahlen_HEH'].astype('Int64')
-    
-    return df
-
-def remove_last_row_if_needed(df):
-    """
-    Removes the last row from the DataFrame if it has 2923 rows.
-    
-    Parameters:
-    df (pandas.DataFrame): DataFrame to be checked and modified.
-    
-    Returns:
-    pandas.DataFrame: Updated DataFrame with the last row removed if the initial length was 2923.
-    """
-    # Check if the DataFrame has exactly 2923 rows
-    if len(df) == 2923:
-        # Drop the last row
-        df = df.iloc[:-1]
-    
-    return df
-
 def clean_visitor_center_data(df_visitcenters):
     # Remove white spaces as values in all columns
     df_visitcenters = df_visitcenters.replace(r'^\s*$', np.nan, regex=True)
     # Change boolean variables
     df_visitcenters=change_binary_variables(df_visitcenters)
-    # Change object variables
-    df_visitcenters=change_object_variables(df_visitcenters)
-    # Change numeric variables
-    df_visitcenters=change_to_numeric_types(df_visitcenters)
-    # Correct Czech holiday value
-    df_visitcenters=correct_and_convert_schulferien(df_visitcenters)
-    # Change holidays to bool type
-    df_visitcenters=change_holidays_to_bool(df_visitcenters)
-    # Change duplicated date
-    df_visitcenters=change_duplicate_date(df_visitcenters)
-    # Correct Besuchszahlen counts to non-decimal (round up)
-    df_visitcenters=correct_besuchszahlen_heh(df_visitcenters)
-    # Remove empty extra row
-    df_visitcenters=remove_last_row_if_needed(df_visitcenters)
 
     return df_visitcenters
 
@@ -257,10 +159,7 @@ def reorder_columns(df):
     # Define the desired order of columns
     column_order = [
         'Datum', 'Tag', 'Monat', 'Jahr', 'DayOfTheYear','Wochentag', 'Wochenende', 'Jahreszeit', 
-        'Besuchszahlen_HEH', 'Besuchszahlen_HZW', 'Besuchszahlen_WGM', 
-        'Parkpl_HEH_PKW', 'Parkpl_HEH_BUS', 'Parkpl_HZW_PKW', 'Parkpl_HZW_BUS', 
-        'Schulferien_Bayern', 'Schulferien_CZ', 'Feiertag_Bayern', 'Feiertag_CZ', 'Temperatur', 
-        'Niederschlagsmenge', 'Schneehoehe', 'GS mit', 'GS max'
+        'Schulferien_Bayern', 'Schulferien_CZ', 'Feiertag_Bayern', 'Feiertag_CZ',
     ]
     
     # Reorder columns in the DataFrame
@@ -309,42 +208,6 @@ def detect_outliers_std(df, column, num_sd=7):
     # Identify outliers
     outliers_mask = (df[column] < lower_bound) | (df[column] > upper_bound)
     return df[outliers_mask][['Datum', column]]
-
-def handle_outliers(df, num_sd=7):
-    """
-    Detect and handle outliers for a list of columns by replacing them with NaN.
-    
-    Parameters:
-    df (pandas.DataFrame): DataFrame containing the columns to check.
-    num_sd (int): Number of standard deviations to define the outlier bounds (default is 7).
-    
-    Returns:
-    pandas.DataFrame: DataFrame with outliers replaced by NaN in the specified columns.
-    """
-    columns = [
-    'Besuchszahlen_HEH',
-    'Besuchszahlen_HZW',
-    'Besuchszahlen_WGM',
-    'Parkpl_HEH_PKW',
-    'Parkpl_HEH_BUS',
-    'Parkpl_HZW_PKW',
-    'Parkpl_HZW_BUS']
-    
-    #outliers = {}
-    
-    # Detect outliers and store in dictionary
-    #for column in columns:
-        #outliers[column] = detect_outliers_std(df, column, num_sd)
-    
-    # Handle outliers by replacing with NaN
-    for column in columns:
-        mean = df[column].mean()
-        std_dev = df[column].std()
-        lower_bound = mean - num_sd * std_dev
-        upper_bound = mean + num_sd * std_dev
-        df.loc[(df[column] < lower_bound) | (df[column] > upper_bound), column] = np.nan
-    
-    return df
 
 ##########################################################################
 ##########################################################################
@@ -402,19 +265,18 @@ def rename_and_set_time_as_index(df):
 def process_visitor_center_data(sourced_df):
     cleaned_df = clean_visitor_center_data(sourced_df)
     transformed_df = add_additional_columns(cleaned_df)
-    daily_df = handle_outliers(transformed_df)
-    hourly_df = create_hourly_dataframe(daily_df)
+    hourly_df = create_hourly_dataframe(transformed_df)
     hourly_df = rename_and_set_time_as_index(hourly_df)
     # reset the index
     hourly_df.reset_index(drop=True, inplace=True)
-    daily_df.reset_index(drop=True, inplace=True)
+    transformed_df.reset_index(drop=True, inplace=True)
 
     # Before saving and returning hourly_df, we need to add the hour column
     hourly_df['Hour'] = hourly_df['Time'].dt.hour
 
     # Save daily data to the cloud for querying
     upload_dataframe_to_azure(
-        df=daily_df,
+        df=transformed_df,
         file_name="visitor_centers_daily_2017_to_2026.parquet",
         target_folder="preprocessed_data/bf_preprocessed_files/visitor_centers",
         file_format="parquet",
@@ -428,4 +290,4 @@ def process_visitor_center_data(sourced_df):
         file_format="parquet",
     )
 
-    return hourly_df, daily_df
+    return hourly_df, transformed_df

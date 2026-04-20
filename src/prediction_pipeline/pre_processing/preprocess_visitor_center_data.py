@@ -282,4 +282,4 @@ def process_visitor_center_data(sourced_df):
         file_format="parquet",
     )
 
-    return hourly_df, transformed_df
+    return hourly_df

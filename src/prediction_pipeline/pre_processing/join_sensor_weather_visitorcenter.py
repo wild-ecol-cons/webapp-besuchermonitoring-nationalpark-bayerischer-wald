@@ -49,16 +49,16 @@ def join_dataframes(df_list: list[pd.DataFrame]) -> pd.DataFrame:
     return normalised[0].join(normalised[1:], how="inner")
 
 
-def get_joined_dataframe(weather_data, visitor_count_data, visitorcenter_data) -> pd.DataFrame:
+def get_joined_dataframe(weather_data, visitor_count_data, temporal_features_data) -> pd.DataFrame:
     """
     Main function to run the data joining pipeline.
 
-    This function loads the visitor count, visitor center and weather data, preprocesses them and joins them into one dataframe.
+    This function loads the visitor counts, temporal features and weather data, preprocesses them and joins them into one dataframe.
 
     Returns:
         pd.DataFrame: The joined data.
     """
-    df_list = [weather_data, visitor_count_data, visitorcenter_data]
+    df_list = [weather_data, visitor_count_data, temporal_features_data]
     for df in df_list:
         create_datetimeindex(df)
 

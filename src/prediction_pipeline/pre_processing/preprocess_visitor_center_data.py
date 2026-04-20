@@ -13,27 +13,27 @@ from src.utils import upload_dataframe_to_azure
 ##########################################################################
 ##########################################################################
 
-def change_binary_variables(df_visitcenters):
+def change_binary_variables(df_temporal_features):
     # Documentation:
-    # - This code converts columns in the DataFrame `df_visitcenters` that contain only binary values (0 and 1) to a boolean type.
-    # - `df_visitcenters[column].isin([0, 1, np.nan]).all()` checks if all values in the column are either 0, 1, or NaN.
+    # - This code converts columns in the DataFrame `df_temporal_features` that contain only binary values (0 and 1) to a boolean type.
+    # - `df_temporal_features[column].isin([0, 1, np.nan]).all()` checks if all values in the column are either 0, 1, or NaN.
     # - `astype('bool')` converts the column from float64 type to boolean type, where 0 becomes False and 1 becomes True.
     # Iterate over each column in the DataFrame
-    for column in df_visitcenters.columns:
+    for column in df_temporal_features.columns:
         # Check if all values in the column are either 0, 1, or NaN
-        if df_visitcenters[column].isin([0, 1, np.nan]).all():
+        if df_temporal_features[column].isin([0, 1, np.nan]).all():
             # Convert the column to boolean type (binary values: True, False)
-            df_visitcenters[column] = df_visitcenters[column].astype('bool')
+            df_temporal_features[column] = df_temporal_features[column].astype('bool')
 
-    return df_visitcenters
+    return df_temporal_features
 
-def clean_visitor_center_data(df_visitcenters):
+def clean_temporal_features(df_temporal_features):
     # Remove white spaces as values in all columns
-    df_visitcenters = df_visitcenters.replace(r'^\s*$', np.nan, regex=True)
+    df_temporal_features = df_temporal_features.replace(r'^\s*$', np.nan, regex=True)
     # Change boolean variables
-    df_visitcenters=change_binary_variables(df_visitcenters)
+    df_temporal_features=change_binary_variables(df_temporal_features)
 
-    return df_visitcenters
+    return df_temporal_features
 
 ##########################################################################
 ##########################################################################
@@ -167,18 +167,18 @@ def reorder_columns(df):
     
     return df
 
-def add_additional_columns(df_visitcenters):
+def add_additional_columns(df_temporal_features):
     # Add date variables
-    df_visitcenters=add_date_variables(df_visitcenters)
+    df_temporal_features=add_date_variables(df_temporal_features)
     # Add season variable
-    df_visitcenters=add_season_variable(df_visitcenters)
+    df_temporal_features=add_season_variable(df_temporal_features)
     # Add day of week variable
-    df_visitcenters=add_and_translate_day_of_week(df_visitcenters)
+    df_temporal_features=add_and_translate_day_of_week(df_temporal_features)
     # Add weekend variable dummy code
-    df_visitcenters=add_weekend_variable(df_visitcenters)
+    df_temporal_features=add_weekend_variable(df_temporal_features)
     # Reorder columns to group similar variables
-    df_visitcenters=reorder_columns(df_visitcenters)
-    return df_visitcenters
+    df_temporal_features=reorder_columns(df_temporal_features)
+    return df_temporal_features
 
 ##########################################################################
 ##########################################################################
@@ -262,8 +262,8 @@ def rename_and_set_time_as_index(df):
     
     return df
 
-def process_visitor_center_data(sourced_df):
-    cleaned_df = clean_visitor_center_data(sourced_df)
+def process_temporal_features(sourced_df):
+    cleaned_df = clean_temporal_features(sourced_df)
     transformed_df = add_additional_columns(cleaned_df)
     hourly_df = create_hourly_dataframe(transformed_df)
     hourly_df = rename_and_set_time_as_index(hourly_df)
@@ -277,7 +277,7 @@ def process_visitor_center_data(sourced_df):
     # Save houly data to the cloud for joining/modeling
     upload_dataframe_to_azure(
         df=hourly_df,
-        file_name="visitor_centers_hourly_2017_to_2026.parquet",
+        file_name="temporal_features.parquet",
         target_folder="preprocessed_data",
         file_format="parquet",
     )

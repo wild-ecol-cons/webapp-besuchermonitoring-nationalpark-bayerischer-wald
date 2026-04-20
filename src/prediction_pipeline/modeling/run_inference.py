@@ -47,11 +47,7 @@ def run_inference():
         start_date=today,
         end_date=end_inference_time.date()
     )
-    print("Inference: This is how the temporal features look without preprocessing look like: ")
-    print(temporal_features_df)
     processed_temporal_features_df = process_temporal_features(temporal_features_df)
-    print("Inference: This is how the temporal features look with preprocessing look like: ")
-    print(processed_temporal_features_df)
 
     # Fetch the weather data
     weather_data_inference = source_weather_data(start_time=start_inference_time, end_time=end_inference_time)

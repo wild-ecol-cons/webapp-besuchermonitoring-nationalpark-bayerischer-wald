@@ -273,14 +273,6 @@ def process_visitor_center_data(sourced_df):
 
     # Before saving and returning hourly_df, we need to add the hour column
     hourly_df['Hour'] = hourly_df['Time'].dt.hour
-
-    # Save daily data to the cloud for querying
-    upload_dataframe_to_azure(
-        df=transformed_df,
-        file_name="visitor_centers_daily_2017_to_2026.parquet",
-        target_folder="preprocessed_data/bf_preprocessed_files/visitor_centers",
-        file_format="parquet",
-    )
     
     # Save houly data to the cloud for joining/modeling
     upload_dataframe_to_azure(

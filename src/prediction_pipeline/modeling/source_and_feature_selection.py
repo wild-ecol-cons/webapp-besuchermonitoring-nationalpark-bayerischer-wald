@@ -323,7 +323,7 @@ def get_dummy_encodings(df: pd.DataFrame, columns_to_use: list) -> pd.DataFrame:
     
     for col in ['Frühling', 'Sommer', 'Herbst', 'Winter']:
         if col not in season_dummies.columns:
-            dummies[col] = False
+            season_dummies[col] = False
     
     df_copy = pd.concat([df_copy, season_dummies], axis=1)
 

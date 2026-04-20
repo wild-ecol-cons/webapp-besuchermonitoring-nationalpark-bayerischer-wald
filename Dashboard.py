@@ -140,10 +140,9 @@ def run_pipeline_and_create_dashboard(
         ):
             st.stop()  # Do not continue if check_password is not True.
 
-        preprocessed_hourly_visitor_center_data = source_preprocessed_hourly_visitor_center_data()
 
         # call the sourcing and processing pipeline
-        inference_predictions = run_inference(preprocessed_hourly_visitor_center_data)
+        inference_predictions = run_inference()
 
         # create the dashboard
         create_dashboard_main_page(inference_predictions)

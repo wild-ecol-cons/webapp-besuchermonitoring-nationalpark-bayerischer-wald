@@ -7,8 +7,8 @@ from datetime import datetime
 from src.prediction_pipeline.modeling.preprocess_inference_features import source_preprocess_inference_data
 from src.prediction_pipeline.modeling.create_inference_dfs import visitor_predictions
 from src.prediction_pipeline.sourcing_data.source_weather import source_weather_data
-from src.prediction_pipeline.sourcing_data.source_visitor_center_data import source_temporal_features
-from src.prediction_pipeline.pre_processing.preprocess_visitor_center_data import process_temporal_features
+from src.prediction_pipeline.sourcing_data.source_temporal_features import source_temporal_features
+from src.prediction_pipeline.pre_processing.preprocess_temporal_features import process_temporal_features
 
 
 @st.fragment(run_every="3h")

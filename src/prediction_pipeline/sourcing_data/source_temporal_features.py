@@ -32,13 +32,21 @@ def build_calendar_df(
     end_date = end_date.strftime("%Y-%m-%d")  # → "2023-01-01"
 
     # Fetch Data from API
-    # Public Holidays
+    ## Public Holidays
+    ### From Bavaria - Germany
     by_pub = get_open_holidays(start_date, end_date, "DE", "DE-BY", "PublicHolidays")
-    cz_pub = get_open_holidays(start_date, end_date, "CZ", None, "PublicHolidays")
+    ### From Pilsen Region - Czech Republic
+    cz_pl_pub = get_open_holidays(start_date, end_date, "CZ", "CZ-PL", "PublicHolidays")
+    ### From South Bohemian Region - Czech Republic
+    cz_jc_pub = get_open_holidays(start_date, end_date, "CZ", "CZ-JC", "PublicHolidays")
     
-    # School Vacations
+    ## School Vacations
+    ### From Bavaria - Germany
     by_sch = get_open_holidays(start_date, end_date, "DE", "DE-BY", "SchoolHolidays")
-    cz_sch = get_open_holidays(start_date, end_date, "CZ", None, "SchoolHolidays")
+    ### From Pilsen Region - Czech Republic
+    cz_pl_sch = get_open_holidays(start_date, end_date, "CZ", "CZ-PL", "SchoolHolidays")
+    ### From South Bohemian Region - Czech Republic
+    cz_jc_sch = get_open_holidays(start_date, end_date, "CZ", "CZ-JC", "SchoolHolidays")
 
     # 3. Helper to extract sets of dates from API response
     def extract_dates(api_data):
@@ -54,9 +62,9 @@ def build_calendar_df(
     
     # 4. Map to Columns
     by_pub_dates = extract_dates(by_pub)
-    cz_pub_dates = extract_dates(cz_pub)
+    cz_pub_dates = extract_dates(cz_pl_pub) | extract_dates(cz_jc_pub)
     by_sch_dates = extract_dates(by_sch)
-    cz_sch_dates = extract_dates(cz_sch)
+    cz_sch_dates = extract_dates(cz_pl_sch) | extract_dates(cz_jc_sch)
 
     # Assign boolean values 0 and 1 to rows
     df['Feiertag_Bayern'] = df['Datum'].dt.date.isin(by_pub_dates).astype(int)

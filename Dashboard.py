@@ -16,10 +16,10 @@ from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu impor
 from src.streamlit_app.pages_in_dashboard.password import check_password
 
 # imports for the sourcing and preprocessing pipeline
-from src.prediction_pipeline.sourcing_data.source_visitor_center_data import source_preprocessed_hourly_visitor_center_data, source_temporal_features
+from src.prediction_pipeline.sourcing_data.source_visitor_center_data import source_temporal_features
 from src.prediction_pipeline.sourcing_data.source_historic_visitor_count import source_historic_visitor_count 
 from src.prediction_pipeline.pre_processing.preprocess_historic_visitor_count_data import preprocess_visitor_count_data
-from src.prediction_pipeline.pre_processing.preprocess_visitor_center_data import process_visitor_center_data
+from src.prediction_pipeline.pre_processing.preprocess_visitor_center_data import process_temporal_features
 from src.prediction_pipeline.sourcing_data.source_weather import source_weather_data
 from src.prediction_pipeline.pre_processing.preprocess_weather_data import process_weather_data
 from src.prediction_pipeline.pre_processing.join_sensor_weather_visitorcenter import get_joined_dataframe
@@ -90,13 +90,12 @@ def run_training(
     sourced_visitor_count_df = source_historic_visitor_count()
     processed_visitor_count_df = preprocess_visitor_count_data(sourced_visitor_count_df)
 
-    # source and preprocess the visitor center data
-    sourced_vc_data_df = source_temporal_features(
+    # Source and preprocess temporal features
+    temporal_features_df = source_temporal_features(
         start_date=train_start_date,
         end_date=test_end_date
     )
-    processed_vc_df_hourly,_ = process_visitor_center_data(sourced_vc_data_df)
-
+    processed_temporal_features_df = process_temporal_features(temporal_features_df)
 
     # get the weather data for training and test timeframe
 
@@ -104,7 +103,7 @@ def run_training(
     processed_weather_df = process_weather_data(weather_data)
 
     # join the dataframes
-    joined_df = get_joined_dataframe(processed_weather_df, processed_visitor_count_df, processed_vc_df_hourly)
+    joined_df = get_joined_dataframe(processed_weather_df, processed_visitor_count_df, processed_temporal_features_df)
 
     # Feature engineering: add features such as zscore weather features and nearest holidays
     weather_columns_for_zscores = ['Temperature (°C)', 'Relative Humidity (%)', 'Wind Speed (km/h)', 'Precipitation (mm)']

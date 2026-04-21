@@ -1,11 +1,48 @@
 import pandas as pd
+import numpy as np
+import hashlib
+import re
+import io
+import zipfile
 import streamlit as st
 from datetime import datetime
 from src.config import data_upload_categories_to_azure_folders
-from src.utils import query_azure_with_duck_db
+from src.utils import query_azure_with_duck_db, upload_dataframe_to_azure, read_dataframe_from_azure
 from src.prediction_pipeline.sourcing_data.source_historic_parking_data import process_all_locations
 from src.prediction_pipeline.sourcing_data.source_weather import source_weather_data
+from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
 
+
+def log_queried_data_to_azure(queried_data: pd.DataFrame) -> str:
+    """
+    If not already done before for the same data, log the queried data to Azure.
+
+    Args:
+        queried_data (pd.DataFrame): The data to log to Azure.
+
+    Returns:
+        str: The file name of the exported data
+    """
+    with st.spinner(TRANSLATIONS[st.session_state.selected_language]['spinner_msg_logging_data_to_azure'], show_time=True):
+        # Create a unique key for this specific dataset preview
+        data_hash = hashlib.md5(queried_data.to_csv().encode()).hexdigest()
+
+        data_download_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        file_name_data_export = f"{data_download_time}_Data_Hub_Datenexport.csv"
+
+        # Check if we have already logged this specific version of the data
+        if st.session_state.get("last_uploaded_hash") != data_hash:
+            upload_dataframe_to_azure(
+                df=queried_data,
+                file_name=file_name_data_export,
+                target_folder="data-hub/exported-data",
+                file_format="csv",
+            )
+    # Mark this hash as uploaded so it doesn't repeat on every rerun
+    st.session_state.last_uploaded_hash = data_hash
+    st.toast(TRANSLATIONS[st.session_state.selected_language]['toast_msg_data_logged_to_azure'], icon="☁️")
+
+    return file_name_data_export
 
 def get_min_date_from_queried_data(data_categories: list[str]) -> datetime:
     """
@@ -68,7 +105,7 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
                 queried_single_category_data = source_weather_data(
                 start_time=start_time,
                 end_time=end_time)
-                queried_single_category_data.rename(columns={"Time": "general_time_index"}, inplace=True)
+                queried_single_category_data = queried_single_category_data.rename(columns={"Time": "general_time_index"})
         elif category == "Parkplatzzählungen":
             queried_single_category_data = process_all_locations(
                 specify_timerange=specify_timerange,
@@ -86,13 +123,16 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
             # Drop duplicate rows if not empty query
             if len(queried_single_category_data) > 0:
                 ## First, order by data_upload_time
-                queried_single_category_data.sort_values(by="data_upload_time", ascending=True, inplace=True)
+                queried_single_category_data = queried_single_category_data.sort_values(by="data_upload_time", ascending=True)
                 ## Then, drop duplicates when the same general_time_index is encountered (keep the last, so the latest uploaded version is kept)
-                queried_single_category_data.drop_duplicates(subset="general_time_index", keep="last", inplace=True)
+                queried_single_category_data = queried_single_category_data.drop_duplicates(subset="general_time_index", keep="last")
 
                 # Drop data_upload_time column, as it was only needed for duplicate removal
                 queried_single_category_data = queried_single_category_data.drop(columns=["data_upload_time"])
 
+        # Convert empty strings to NaN and drop empty columns (before merge or preview)
+        queried_single_category_data = queried_single_category_data.replace("", np.nan).dropna(axis=1, how='all')
+        
         if category == "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage":
             daily_value_cols_to_be_filled = queried_single_category_data.columns.difference(['general_time_index'])
 
@@ -115,6 +155,96 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
         overall_queried_data[daily_value_cols_to_be_filled] = overall_queried_data.groupby(overall_queried_data['general_time_index'].dt.date)[daily_value_cols_to_be_filled].ffill()
     
     # Order queried data by time
-    overall_queried_data.sort_values(by="general_time_index", ascending=True, inplace=True)
+    overall_queried_data = overall_queried_data.sort_values(by="general_time_index", ascending=True)
 
     return overall_queried_data
+
+def normalize_excel_sheet_name(name: str) -> str:
+    """
+    Normalizes a string the same way Excel does when creating sheet names:
+    - Removes forbidden characters (: \\ / ? * [ ])
+    - Strips leading/trailing whitespace
+    - Truncates to 31 characters (Excel's sheet name limit)
+
+    Args:
+        name (str): The original sheet name.
+
+    Returns:
+        str: The normalized sheet name.
+    """
+    # Remove Excel-forbidden characters
+    name = re.sub(r'[:\\/?*\[\]]', '', name)
+    # Strip whitespace and truncate to 31 chars
+    return name.strip()[:31]
+
+def filter_sheets_by_name(
+    all_sheets: dict[str, pd.DataFrame],
+    desired_sheets: list[str],
+    match_chars: int = 15
+) -> dict[str, pd.DataFrame]:
+    """
+    Filters a dict of sheets by matching against desired sheet names,
+    accounting for Excel's sheet name transformations.
+
+    Args:
+        all_sheets (dict): All sheets loaded from Excel.
+        desired_sheets (list[str]): The sheet names you want to load.
+        match_chars (int): Number of leading characters to compare. Defaults to 15.
+
+    Returns:
+        dict[str, pd.DataFrame]: Filtered sheets that matched a desired name.
+    """
+    normalized_desired = [normalize_excel_sheet_name(s)[:match_chars] for s in desired_sheets]
+
+    return {
+        name: df for name, df in all_sheets.items()
+        if normalize_excel_sheet_name(name)[:match_chars] in normalized_desired
+    }
+
+def build_download_zip(df: pd.DataFrame, csv_filename: str, queried_data_categories: list) -> bytes:
+    """
+    Builds a ZIP file in memory containing:
+    - The queried data as a CSV
+    - The respective data dictionary as an Excel file
+
+    Args:
+        df (pd.DataFrame): The queried data to export.
+        csv_filename (str): The filename for the CSV inside the ZIP.
+
+    Returns:
+        bytes: The ZIP file as bytes.
+    """
+    zip_buffer = io.BytesIO()
+
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+
+        # --- 1. Add Queried Data as CSV ---
+        csv_bytes = df.to_csv(index=False).encode("utf-8")
+        zip_file.writestr(csv_filename, csv_bytes)
+
+        # --- 2. Add Excel data dictionary ---
+        # Load the Data Dictionary from Azure
+        overall_data_dictionary = read_dataframe_from_azure(
+            file_name="Data Dictionary für Data Hub.xlsx",
+            file_format="xlsx",
+            source_folder="data-hub",
+            read_options={
+                "sheet_name": None
+            }
+        )
+
+        # Filter the data dictionary only for needed sheets
+        selected_sheets_for_data_dictionary = filter_sheets_by_name(
+            all_sheets=overall_data_dictionary,
+            desired_sheets=queried_data_categories,
+            match_chars=15
+        )   
+        
+        excel_buffer = io.BytesIO()
+        with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
+            for sheet_name, sheet_df in selected_sheets_for_data_dictionary.items():
+                sheet_df.to_excel(writer, index=False, sheet_name=sheet_name)
+
+        zip_file.writestr("data_dictionary.xlsx", excel_buffer.getvalue())
+
+    return zip_buffer.getvalue()

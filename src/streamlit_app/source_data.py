@@ -194,6 +194,8 @@ def source_weather_data(start_time: datetime):
 
     # Create a Point object for the Bavarian Forest National Park entry
     bavarian_forest = Point(lat=LATITUDE, lon=LONGITUDE)
+    # Include the 10 nearest weather stations
+    bavarian_forest.max_count = 10
 
     # Convert start_time to datetime format in utc
     start_time = start_time.astimezone(pytz.UTC).replace(tzinfo=None)
@@ -205,7 +207,7 @@ def source_weather_data(start_time: datetime):
     weather_hourly = get_hourly_data(bavarian_forest, start_time, end_time)
 
     # Drop unnecessary columns
-    weather_hourly = weather_hourly.drop(columns=['dwpt', 'snow', 'wdir', 'wpgt', 'pres', 'coco','prcp', 'tsun'])
+    weather_hourly = weather_hourly.drop(columns=['dwpt', 'snow', 'wdir', 'wpgt', 'pres', 'tsun'])
 
     # Convert the 'Time' column to datetime format again in Europe/Berlin time
     weather_hourly['time'] = pd.to_datetime(weather_hourly['time'], utc=True).dt.tz_convert('Europe/Berlin')

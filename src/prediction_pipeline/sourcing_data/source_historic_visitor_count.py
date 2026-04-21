@@ -1,4 +1,4 @@
-from src.utils import read_dataframe_from_azure
+from src.utils import query_azure_with_duck_db
 
 raw_data_folder = "raw-data"
 visitor_counts_folder = "hourly-historic-visitor-counts-all-sensors"
@@ -15,8 +15,8 @@ common_columns = ['Time',
  'Brechhäuslau OUT',
  'Brechhäuslau Fußgänger IN',
  'Brechhäuslau Fußgänger OUT',
- 'Bucina IN',
- 'Bucina OUT',
+ 'Bucina_Multi IN',
+ 'Bucina_Multi OUT',
  'Bucina_Multi OUT',
  'Bucina_Multi Fußgänger IN',
  'Bucina_Multi Fahrräder IN',
@@ -40,8 +40,8 @@ common_columns = ['Time',
  'Gfäll Fußgänger OUT',
  'Gsenget IN',
  'Gsenget OUT',
- 'Gsenget IN.1',
- 'Gsenget OUT.1',
+ 'Gsenget IN',
+ 'Gsenget OUT',
  'Gsenget Fahrräder IN',
  'Gsenget Fahrräder OUT',
  'Klingenbrunner Wald IN',
@@ -82,10 +82,10 @@ common_columns = ['Time',
  'TFG_Lusen_1 Fußgänger Richtung Parkplatz',
  'TFG_Lusen_2 Fußgänger Richtung Vögel am Waldrand',
  'TFG_Lusen_2 Fußgänger Richtung Parkplatz',
- 'TFG_Lusen_3 TFG Lusen 3 IN',
- 'TFG_Lusen_3 TFG Lusen 3 OUT',
- 'Trinkwassertalsperre IN',
- 'Trinkwassertalsperre OUT',
+ 'TFG_Lusen_3 In Richtung TFG',
+ 'TFG_Lusen_3 In Richtung Parkplatz',
+ 'Trinkwassertalsperre_MULTI IN',
+ 'Trinkwassertalsperre_MULTI OUT',
  'Trinkwassertalsperre_MULTI IN',
  'Trinkwassertalsperre_MULTI OUT',
  'Trinkwassertalsperre_MULTI Fußgänger IN',
@@ -96,24 +96,15 @@ common_columns = ['Time',
  'Waldhausreibe OUT',
  'Waldhausreibe Channel 1 IN',
  'Waldhausreibe Channel 2 OUT',
- 'Waldspielgelände_1 IN',
- 'Waldspielgelände_1 OUT',
+ 'Waldspielgelände_1 IN (Ins WSG)',
+ 'Waldspielgelände_1 OUT (aus dem WSG)',
  'Wistlberg Fußgänger IN',
  'Wistlberg Fußgänger OUT']
 
 
 def source_historic_visitor_count():
-    """Source historic visitor count data from the cloud."""
+    """Source historic visitor count data from the Data Hub."""
 
-    # Load visitor count data from the cloud
-    visitor_counts = read_dataframe_from_azure(
-        file_name="*.csv",
-        file_format="csv",
-        source_folder=raw_data_folder + "/" + visitor_counts_folder,
-        read_options={
-            "skiprows": 2,
-            "usecols": common_columns
-        }
-    )
+    visitor_counts = query_azure_with_duck_db(directory=f"data-hub/preprocessed-data/visitor-counts-eco-counter")
 
     return visitor_counts

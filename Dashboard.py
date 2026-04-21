@@ -16,18 +16,17 @@ from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu impor
 from src.streamlit_app.pages_in_dashboard.password import check_password
 
 # imports for the sourcing and preprocessing pipeline
-from src.prediction_pipeline.sourcing_data.source_visitor_center_data import source_preprocessed_hourly_visitor_center_data
+from src.prediction_pipeline.sourcing_data.source_temporal_features import source_temporal_features
 from src.prediction_pipeline.sourcing_data.source_historic_visitor_count import source_historic_visitor_count 
 from src.prediction_pipeline.pre_processing.preprocess_historic_visitor_count_data import preprocess_visitor_count_data
-from src.prediction_pipeline.sourcing_data.source_visitor_center_data import source_visitor_center_data
-from src.prediction_pipeline.pre_processing.preprocess_visitor_center_data import process_visitor_center_data
+from src.prediction_pipeline.pre_processing.preprocess_temporal_features import process_temporal_features
 from src.prediction_pipeline.sourcing_data.source_weather import source_weather_data
 from src.prediction_pipeline.pre_processing.preprocess_weather_data import process_weather_data
-from src.prediction_pipeline.pre_processing.join_sensor_weather_visitorcenter import get_joined_dataframe
+from src.prediction_pipeline.pre_processing.join_visitorcounts_weather_temporaldata import get_joined_dataframe
 from src.prediction_pipeline.pre_processing.features_zscoreweather_distanceholidays import get_zscores_and_nearest_holidays
 
 # imports for training pipeline
-from src.prediction_pipeline.modeling.source_and_feature_selection import get_features
+from src.prediction_pipeline.modeling.source_and_feature_selection import get_features, drop_duplicated_datetimeindices
 from src.prediction_pipeline.modeling.train_regressor import train_regressor
 
 # imports for inference pipeline
@@ -78,7 +77,10 @@ def create_dashboard_main_page(inference_predictions):
         other_info.get_other_information()
 
 
-def run_training():
+def run_training(
+    train_start_date: datetime,
+    test_end_date: datetime
+):
 
     """
     Runs the training pipeline. This includes sourcing and preprocessing the data, training the model, and saving the model.
@@ -88,43 +90,62 @@ def run_training():
     sourced_visitor_count_df = source_historic_visitor_count()
     processed_visitor_count_df = preprocess_visitor_count_data(sourced_visitor_count_df)
 
-    # source and preprocess the visitor center data
-    sourced_vc_data_df = source_visitor_center_data()
-    processed_vc_df_hourly,_ = process_visitor_center_data(sourced_vc_data_df)
+    # Source and preprocess temporal features
+    temporal_features_df = source_temporal_features(
+        start_date=train_start_date,
+        end_date=test_end_date
+    )
+    processed_temporal_features_df = process_temporal_features(temporal_features_df)
 
-     # get the weather data for training and inference
-    # training data
-    train_start_date = datetime(2023, 1, 1)
-    train_end_date = datetime(2024, 7, 21)
-    weather_data = source_weather_data(start_time=train_start_date, end_time=train_end_date)
+    # get the weather data for training and test timeframe
+
+    weather_data = source_weather_data(start_time=train_start_date, end_time=test_end_date)
     processed_weather_df = process_weather_data(weather_data)
 
     # join the dataframes
-    joined_df = get_joined_dataframe(processed_weather_df, processed_visitor_count_df, processed_vc_df_hourly)
+    joined_df = get_joined_dataframe(processed_weather_df, processed_visitor_count_df, processed_temporal_features_df)
 
     # Feature engineering: add features such as zscore weather features and nearest holidays
-    weather_columns_for_zscores = [ 'Temperature (°C)','Relative Humidity (%)','Wind Speed (km/h)']
+    weather_columns_for_zscores = ['Temperature (°C)', 'Relative Humidity (%)', 'Wind Speed (km/h)', 'Precipitation (mm)']
     with_zscores_and_nearest_holidays_df = get_zscores_and_nearest_holidays(joined_df, weather_columns_for_zscores)
 
     # get the features for training
-    feature_df = get_features(with_zscores_and_nearest_holidays_df,train_start_date, train_end_date)
+    feature_df = get_features(with_zscores_and_nearest_holidays_df,train_start_date, test_end_date)
+
+    # Drop duplicated datetime indices (if only few occurrences)
+    feature_df = drop_duplicated_datetimeindices(feature_df)
 
     # train the model
-    train_regressor(feature_df)
+    train_regressor(feature_df, train_start_date, test_end_date)
+
+def run_pipeline_and_create_dashboard(
+        should_run_training: bool = False,
+        should_run_inference_and_dashboard: bool = True,
+        train_start_date: datetime = datetime(2023, 1, 1),
+        test_end_date: datetime = datetime(2025, 12, 31)
+    ):
+    if should_run_training:
+        print("Running training pipeline...")
+        run_training(
+            train_start_date=train_start_date,
+            test_end_date=test_end_date
+        )
+
+    if should_run_inference_and_dashboard:
+    
+        # Password-protect the page
+        if not check_password(
+            type_of_password="general_access"
+        ):
+            st.stop()  # Do not continue if check_password is not True.
+
+
+        # call the sourcing and processing pipeline
+        inference_predictions = run_inference()
+
+        # create the dashboard
+        create_dashboard_main_page(inference_predictions)
 
 
 if __name__ == "__main__":
-
-    # Password-protect the page
-    if not check_password(
-        type_of_password="general_access"
-    ):
-        st.stop()  # Do not continue if check_password is not True.
-
-    preprocessed_hourly_visitor_center_data = source_preprocessed_hourly_visitor_center_data()
-
-    # call the sourcing and processing pipeline
-    inference_predictions = run_inference(preprocessed_hourly_visitor_center_data)
-
-    # create the dashboard
-    create_dashboard_main_page(inference_predictions)
+    run_pipeline_and_create_dashboard()

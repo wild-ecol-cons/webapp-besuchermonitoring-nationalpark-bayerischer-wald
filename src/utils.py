@@ -1,7 +1,8 @@
 import duckdb
 import pandas as pd
 import streamlit as st
-
+import fsspec
+import fnmatch
 from src.config import CONTAINER_NAME, storage_options, CONNECTION_STRING
 from typing import Dict, Any, Optional, List
 from azure.storage.blob import BlobServiceClient
@@ -49,7 +50,7 @@ def read_dataframe_from_azure(
     # 2. --- Construct Full Azure URL ---
     # Ensure file_name has the correct extension, or append it
     file_extension = f".{file_format}"
-    if not file_name.endswith(file_extension):
+    if not file_name.endswith(file_extension) and "*" not in file_name:
         file_name_with_ext = file_name + file_extension
     else:
         file_name_with_ext = file_name
@@ -61,28 +62,43 @@ def read_dataframe_from_azure(
 
     # 3. --- Read based on format ---
     try:
-        if file_format == "csv":
-            df = pd.read_csv(
-                full_azure_path,
-                storage_options=storage_options,
-                **read_options
-            )
-        elif file_format == "parquet":
-            df = pd.read_parquet(
-                full_azure_path,
-                storage_options=storage_options,
-                **read_options
-            )
-        elif file_format == "xlsx":
-            df = pd.read_excel(
-                full_azure_path,
-                storage_options=storage_options,
-                **read_options
-            )
-        
+        # --- Handle glob patterns ---
+        if "*" in file_name_with_ext or "?" in file_name_with_ext:
+            fs = fsspec.filesystem("az", **storage_options)
+            glob_path = f"{container_name}/{source_folder}{file_name_with_ext}"
+            matched_paths = fs.glob(glob_path)
+            
+            if not matched_paths:
+                raise FileNotFoundError(f"No files matched the pattern: {full_azure_path}")
+            
+            print(f"📂 Found {len(matched_paths)} file(s) matching pattern.")
+            
+            dfs = []
+            for path in matched_paths:
+                azure_path = f"az://{path}"
+                print(f"   Reading: {azure_path}")
+                if file_format == "csv":
+                    dfs.append(pd.read_csv(azure_path, storage_options=storage_options, **read_options))
+                elif file_format == "parquet":
+                    dfs.append(pd.read_parquet(azure_path, storage_options=storage_options, **read_options))
+                elif file_format == "xlsx":
+                    dfs.append(pd.read_excel(azure_path, storage_options=storage_options, **read_options))
+            
+            df = pd.concat(dfs, ignore_index=True)
+
+        # --- Single file read (original behaviour) ---
+        else:
+            if file_format == "csv":
+                df = pd.read_csv(full_azure_path, storage_options=storage_options, **read_options)
+            elif file_format == "parquet":
+                df = pd.read_parquet(full_azure_path, storage_options=storage_options, **read_options)
+            elif file_format == "xlsx":
+                df = pd.read_excel(full_azure_path, storage_options=storage_options, **read_options)
+
         print(f"✅ Successfully loaded DataFrame from **{file_format.upper()}**.")
-        print(f"DataFrame shape: {df.shape}")
-        print(df.head())
+        if type(df) == pd.DataFrame:
+            print(f"DataFrame shape: {df.shape}")
+            print(df.head())
         return df
 
     except Exception as e:

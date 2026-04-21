@@ -12,14 +12,14 @@ from azure.storage.blob import BlobClient
 
 
 # Folder where models are stored
-folder_prefix = 'models/models_trained/1483317c-343a-4424-88a6-bd57459901d1/'  # If you have a specific folder
+folder_prefix = 'models/models_trained/520593b1-6a90-4f50-8fbe-a5e82d37ee74/'  # If you have a specific folder
 
 
 target_vars_et  = ['traffic_abs', 'sum_IN_abs', 'sum_OUT_abs', 
                     'Lusen-Mauth-Finsterau IN', 'Lusen-Mauth-Finsterau OUT', 
                     'Nationalparkzentrum Lusen IN', 'Nationalparkzentrum Lusen OUT',
                     'Rachel-Spiegelau IN', 'Rachel-Spiegelau OUT', 
-                    'Falkenstein-Schwellhausl IN', 'Falkenstein-Schwellhausl OUT',
+                    'Falkenstein-Schwellhäusl IN', 'Falkenstein-Schwellhäusl OUT',
                     'Scheuereck-Schachten-Trinkwassertalsperre IN', 'Scheuereck-Schachten-Trinkwassertalsperre OUT', 
                     'Nationalparkzentrum Falkenstein IN', 'Nationalparkzentrum Falkenstein OUT']
 

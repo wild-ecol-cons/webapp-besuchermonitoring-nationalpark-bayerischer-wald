@@ -15,6 +15,7 @@ Output:
 import pandas as pd
 import re
 import numpy as np
+from src.config import sensor_mapping_to_traffic_metrics
 
 pd.options.mode.chained_assignment = None  
 
@@ -101,43 +102,9 @@ def fix_columns_names(df):
 
     drop = ['Brechhäuslau Fußgänger IN', 'Brechhäuslau Fußgänger OUT', 'Waldhausreibe Channel 1 IN', 'Waldhausreibe Channel 2 OUT'] #Waldhausreibe Channel 1 (IN and OUT) had a total sum of values of 10 and 13. Brechhäuslau columns were duplicated.
 
-    rename = {'Bucina IN': 'Bucina PYRO IN',
-          'Bucina OUT': 'Bucina PYRO OUT',
-          'Gsenget IN.1': 'Gsenget Fußgänger IN',
-          'Gsenget OUT.1': 'Gsenget Fußgänger OUT',
-          'Gfäll Fußgänger IN' : 'Gfäll IN',
-          'Gfäll Fußgänger OUT': 'Gfäll OUT',
-          'Fredenbrücke Fußgänger IN' : 'Fredenbrücke IN',
-          'Fredenbrücke Fußgänger OUT': 'Fredenbrücke OUT',
-          'Diensthüttenstraße Fußgänger IN': 'Diensthüttenstraße IN' ,
-          'Diensthüttenstraße Fußgänger OUT': 'Diensthüttenstraße OUT',
-          'Racheldiensthütte Cyclist OUT' : 'Racheldiensthütte Fahrräder OUT',
-          'Racheldiensthütte Pedestrian IN' : 'Racheldiensthütte Fußgänger IN',
-          'Racheldiensthütte Pedestrian OUT' : 'Racheldiensthütte Fußgänger OUT',
-          'Sagwassersäge Fußgänger IN' : 'Sagwassersäge IN',
-          'Sagwassersäge Fußgänger OUT': 'Sagwassersäge OUT',
-          'Schwarzbachbrücke Fußgänger IN' : 'Schwarzbachbrücke IN',
-          'Schwarzbachbrücke Fußgänger OUT' : 'Schwarzbachbrücke OUT',
-          'NPZ_Falkenstein IN' : 'Falkenstein 1 PYRO IN',
-          'NPZ_Falkenstein OUT' : 'Falkenstein 1 PYRO OUT',
-          'TFG_Falkenstein_1 Fußgänger zum Parkplatz' : 'Falkenstein 1 OUT',
-          'TFG_Falkenstein_1 Fußgänger zum HZW' : 'Falkenstein 1 IN',
-          'TFG_Falkenstein_2 Fußgänger In Richtung Parkplatz' : 'Falkenstein 2 OUT',
-          'TFG_Falkenstein_2 Fußgänger In Richtung TFG' : 'Falkenstein 2 IN',
-          'TFG_Lusen IN' : 'Lusen 1 PYRO IN',
-          'TFG_Lusen OUT' : 'Lusen 1 PYRO OUT',
+    rename = {
           'TFG_Lusen_1 Fußgänger Richtung TFG': 'Lusen 1 EVO IN',
           'TFG_Lusen_1 Fußgänger Richtung Parkplatz' : 'Lusen 1 EVO OUT',
-          'TFG_Lusen_2 Fußgänger Richtung Vögel am Waldrand': 'Lusen 2 IN',
-          'TFG_Lusen_2 Fußgänger Richtung Parkplatz' : 'Lusen 2 OUT',
-          'TFG_Lusen_3 TFG Lusen 3 IN': 'Lusen 3 IN',
-          'TFG_Lusen_3 TFG Lusen 3 OUT': 'Lusen 3 OUT',
-          'Waldspielgelände_1 IN': 'Waldspielgelände IN',
-          'Waldspielgelände_1 OUT': 'Waldspielgelände OUT',
-          'Wistlberg Fußgänger IN' : 'Wistlberg IN',
-          'Wistlberg Fußgänger OUT' : 'Wistlberg OUT',
-          'Trinkwassertalsperre IN' : 'Trinkwassertalsperre PYRO IN', 
-          'Trinkwassertalsperre OUT' : 'Trinkwassertalsperre PYRO OUT'
           }
 
 
@@ -147,7 +114,7 @@ def fix_columns_names(df):
     print(len(rename), ' columns were renamed')
 
     # Remove the specified columns from the DataFrame
-    df.drop(columns=drop, inplace=True)
+    df.drop(columns=drop, inplace=True, errors='ignore')
     print(len(drop), ' repeated columns were dropped')
 
     # Add Bucina_Multi IN column by summing Fahrraeder and Fussgaenger columns
@@ -159,44 +126,70 @@ def fix_columns_names(df):
 
 # Fix problems with duplicated values in time column
 
-def correct_and_impute_times(df):
-    
+def correct_and_impute_times(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Corrects repeated timestamps caused by a 2-hour interval that is indicative of a daylight saving.
+    Corrects DST-related timestamp issues in a DataFrame with a 'Time' column.
 
-    The function operates under the following assumptions:
-    1. By default every interval should be of 1 hour
-    2. If any interval differ from this, particularly the repeated timestamp is corrected by subtracting one hour.
-    3. The data values for the corrected timestamp are then imputed from the next available row.
-    4. 2017 is an odd year where the null row is not the one with the 2 hours interval, but the one with 0. We fixed this manually for this specific rows.
+    Handles both DST transition cases that occur in the Europe/Berlin timezone:
+    - Spring-forward (March): One hour is skipped, creating a gap in the hourly series.
+    - Fall-back (October): One hour is repeated, creating duplicate timestamps at 02:00.
+
+    The function localizes timestamps to Europe/Berlin, reindexes to a clean continuous
+    hourly range, forward-fills any gaps, and returns a timezone-naive DatetimeIndex
+    in Europe/Berlin wall-clock time.
 
     Args:
-        df (pandas.DataFrame): A DataFrame containing a 'Time' column with datetime-like values and other associated data columns.
+        df (pd.DataFrame): DataFrame containing a 'Time' column with naive datetime values.
 
     Returns:
-        pandas.DataFrame: The corrected DataFrame with timestamps set as the index and sorted chronologically.
-
-    Raises:
-        ValueError: If the 'Time' column is missing from the DataFrame.
-        KeyError: If an index out of range occurs due to imputation attempts beyond the DataFrame bounds.
+        pd.DataFrame: Corrected DataFrame with a clean, continuous, timezone-naive hourly
+                      DatetimeIndex named 'Time', sorted chronologically.
     """
-    # Swap values of specific rows to correct data misalignment
-    df.iloc[[54603, 54602]] = df.iloc[[54602, 54603]].values
+    # Sort and set 'Time' as index
+    df = df.sort_values("Time").set_index("Time")
 
-    # Sort DataFrame by 'Time'
-    df.sort_values("Time", ascending=True, inplace=True)
+    # Remove any pre-existing duplicate timestamps before localization
+    df = df[~df.index.duplicated(keep='first')]
 
-    # Identify intervals where there is a 2 hours gap
-    intervals = df.Time.diff().dropna()
-    index_wrong_time = intervals[intervals == "0 days 02:00:00"].index
+    # Localize to Europe/Berlin:
+    # - ambiguous="NaT": unresolvable DST fall-back timestamps become NaT (dropped below)
+    # - nonexistent="shift_forward": DST spring-forward timestamps are shifted to next valid hour
+    df.index = df.index.tz_localize(
+        "Europe/Berlin",
+        ambiguous="NaT",
+        nonexistent="shift_forward"
+    )
 
-    # Impute values from the next row and adjust 'Time' column
-    for idx in index_wrong_time:
-        df.loc[idx, 'Time'] = df.loc[idx, 'Time'] - pd.Timedelta(hours=1)  # Adjust for daylight saving
-        df.loc[idx, df.columns != 'Time'] = df.loc[idx + 1, df.columns != 'Time']  # Impute values from the next row
+    # Drop any NaT index rows produced by ambiguous DST timestamps
+    df = df[df.index.notna()]
 
-    # Set 'Time' as index and sort by index
-    df = df.set_index('Time').sort_index()
+    # Reindex to a clean, continuous hourly range in Europe/Berlin time
+    full_range = pd.date_range(
+        start=df.index.min(),
+        end=df.index.max(),
+        freq="H",
+        tz="Europe/Berlin"
+    )
+    df = df.reindex(full_range)
+
+    # Forward-fill gaps introduced by spring-forward or dropped NaT rows
+    df = df.ffill()
+
+    # Strip timezone info back to naive timestamps (Europe/Berlin wall-clock time preserved)
+    df.index = df.index.tz_localize(None)
+    df.index.name = "Time"
+
+    # Deduplicate once more — stripping timezone causes DST fall-back hours (02:00)
+    # to appear twice again as naive timestamps, so we keep the first occurrence
+    df = df[~df.index.duplicated(keep='first')]
+
+    # Validate final result
+    dupes = df.index.duplicated().sum()
+    if dupes > 0:
+        print(f"⚠️ {dupes} duplicate timestamps remain after correction:")
+        print(df.index[df.index.duplicated(keep=False)])
+    else:
+        print("No duplicates found in 'Time' index ✅")
 
     return df
 
@@ -212,7 +205,7 @@ def correct_non_replaced_sensors(df):
     """
 
     dict_non_replaced = {'2020-07-30 00:00:00' : ['Lusen 1 PYRO IN', 'Lusen 1 PYRO OUT'],
-                     '2022-12-20 00:00:00' : ['Lusen 3 IN', 'Lusen 3 OUT'],
+                     '2022-12-20 00:00:00' : ['TFG_Lusen_3 In Richtung TFG', 'TFG_Lusen_3 In Richtung Parkplatz'],
                      '2022-10-12 00:00:00' : ['Gsenget IN', 'Gsenget OUT']}
 
 
@@ -266,8 +259,8 @@ def correct_overlapping_sensor_data(df):
             'Bucina_Multi IN'
         ],
         'falkenstein 1': [
-            'Falkenstein 1 OUT',
-            'Falkenstein 1 IN'
+            'TFG_Falkenstein_1 zum Parkplatz',
+            'TFG_Falkenstein_1 zum HZW'
         ]
     }
 
@@ -308,45 +301,9 @@ def correct_overlapping_sensor_data(df):
     return df
 
 
-def merge_columns(df):
-    """
-    Merges columns from replaced sensors in the DataFrame into new combined columns based on a predefined mapping and drops the original columns after merging.
-
-    The function merges multiple related columns into single combined columns using a predefined dictionary (`merge_dict`). 
-    For each key-value pair in the dictionary, values from the first column are used, and missing values are filled 
-    from the second column. After merging, the original columns used for merging are dropped from the DataFrame.
-
-    Args:
-        df (pandas.DataFrame): A DataFrame containing columns to be merged.
-
-    Returns:
-        pandas.DataFrame: The modified DataFrame with the new merged columns and original columns removed.
-    """
-    merge_dict = {
-        'Bucina MERGED IN': ['Bucina PYRO IN', 'Bucina_Multi IN'],
-        'Bucina MERGED OUT': ['Bucina PYRO OUT', 'Bucina_Multi OUT'],
-        'Falkenstein 1 MERGED IN': ['Falkenstein 1 PYRO IN', 'Falkenstein 1 IN'],
-        'Falkenstein 1 MERGED OUT': ['Falkenstein 1 PYRO OUT', 'Falkenstein 1 OUT'],
-        'Lusen 1 MERGED IN': ['Lusen 1 PYRO IN', 'Lusen 1 EVO IN'],
-        'Lusen 1 MERGED OUT': ['Lusen 1 PYRO OUT', 'Lusen 1 EVO OUT'],
-        'Trinkwassertalsperre MERGED IN': ['Trinkwassertalsperre PYRO IN', 'Trinkwassertalsperre_MULTI IN'],
-        'Trinkwassertalsperre MERGED OUT': ['Trinkwassertalsperre PYRO OUT', 'Trinkwassertalsperre_MULTI OUT']
-    }
-
-    # Iterate over each item in the dictionary to merge columns
-    for new_col, cols in merge_dict.items():
-        # Combine the two columns into one using the first non-null value
-        df[new_col] = df[cols[0]].combine_first(df[cols[1]])
-
-    # Drop the original columns used for merging
-    cols_to_drop = [col for cols in merge_dict.values() for col in cols]
-    df = df.drop(columns=cols_to_drop)
-
-    return df
-
 def handle_outliers(df):
     """
-    Transform to NaN every value higher than 800. During exploration we found that values over that are outliers. There were only 6 rows with any count over 800
+    Transform to NaN every value of a numeric column higher than 800. During exploration we found that values over that are outliers. There were only 6 rows with any count over 800
 
     Args:
         df (pandas.DataFrame): DataFrame with values to be turned to NaN.
@@ -354,79 +311,62 @@ def handle_outliers(df):
     Returns:
         pandas.DataFrame: The modified DataFrame with values over 800 turned to NaN
     """
-
-    df[df > 800] = np.nan
+    numeric_cols = df.select_dtypes(include='number').columns
+    df[numeric_cols] = df[numeric_cols].where(df[numeric_cols] <= 800, other=np.nan)
 
     return df
 
-def merge_columns(df):
+def remove_certain_unnecessary_cols(df):
     """
-    Merges columns from replaced sensors in the DataFrame into new combined columns based on a predefined mapping
-    and drops the original columns after merging. Additionally, drops columns with names containing "Fahrräder" or "Fußgänger" as we will not use that distinction.
+    Drops columns with names containing "Fahrräder" or "Fußgänger" as we will not use that distinction.
 
     Args:
-        df (pandas.DataFrame): A DataFrame containing columns to be merged.
+        df (pandas.DataFrame): A DataFrame.
 
     Returns:
-        pandas.DataFrame: The modified DataFrame with the new merged columns, original columns removed, and Fahrräder or Fußgänger columns dropped.
+        pandas.DataFrame: The modified DataFrame.
     """
-    merge_dict = {
-        'Bucina MERGED IN': ['Bucina PYRO IN', 'Bucina_Multi IN'],
-        'Bucina MERGED OUT': ['Bucina PYRO OUT', 'Bucina_Multi OUT'],
-        'Falkenstein 1 MERGED IN': ['Falkenstein 1 PYRO IN', 'Falkenstein 1 IN'],
-        'Falkenstein 1 MERGED OUT': ['Falkenstein 1 PYRO OUT', 'Falkenstein 1 OUT'],
-        'Lusen 1 MERGED IN': ['Lusen 1 PYRO IN', 'Lusen 1 EVO IN'],
-        'Lusen 1 MERGED OUT': ['Lusen 1 PYRO OUT', 'Lusen 1 EVO OUT'],
-        'Trinkwassertalsperre MERGED IN': ['Trinkwassertalsperre PYRO IN', 'Trinkwassertalsperre_MULTI IN'],
-        'Trinkwassertalsperre MERGED OUT': ['Trinkwassertalsperre PYRO OUT', 'Trinkwassertalsperre_MULTI OUT']
-    }
-
-    # Iterate over each item in the dictionary to merge columns
-    for new_col, cols in merge_dict.items():
-        # Combine the two columns into one using the first non-null value
-        df[new_col] = df[cols[0]].combine_first(df[cols[1]])
-
-    # Drop the original columns used for merging
-    cols_to_drop = [col for cols in merge_dict.values() for col in cols]
-    df = df.drop(columns=cols_to_drop)
 
     # Drop columns with names containing "Fahrräder" or "Fußgänger"
     df = df.loc[:, ~df.columns.str.contains("Fahrräder|Fußgänger")]
 
     return df
 
-def calculate_traffic_metrics_abs(df):
+def calculate_traffic_metrics_abs(df: pd.DataFrame, columns_for_sums: dict = sensor_mapping_to_traffic_metrics) -> pd.DataFrame:
     """
       This function calculates several traffic metrics and adds them to the DataFrame:
     - `traffic_abs`: The sum of all INs and OUTs for every sensor
     - `sum_IN_abs`: The sum of all columns containing 'IN' in their names.
     - `sum_OUT_abs`: The sum of all columns containing 'OUT' in their names.
-    - `diff_abs`: The difference between `sum_IN_abs` and `sum_OUT_abs`.
-    - `occupancy_abs`: The cumulative sum of `diff_abs`, representing the occupancy over time.
 
     Args:
         df (pandas.DataFrame): DataFrame containing traffic data.
+        columns_for_sums (dict): A dictionary with keys 'abs_col', 'in_col', and 'out_col'
+                                 containing lists of column names to sum for each traffic type.
 
     Returns:
-        pandas.DataFrame: The DataFrame with additional columns for absolute traffic metrics.
+        pandas.DataFrame: The DataFrame with additional columns for absolute traffic metrics.   
     """
-    # Calculate total traffic
-    df["traffic_abs"] = df.filter(regex='IN|OUT').sum(axis=1)
 
-    # Calculate sum of 'IN' columns
-    df["sum_IN_abs"] = df.filter(like='IN').sum(axis=1)
-
-    # Calculate sum of 'OUT' columns
-    df["sum_OUT_abs"] = df.filter(like='OUT').sum(axis=1)
-    
+    df['traffic_abs'] = df[columns_for_sums['abs_col']].sum(axis=1)
+    df['sum_IN_abs'] = df[columns_for_sums['in_col']].sum(axis=1)
+    df['sum_OUT_abs'] = df[columns_for_sums['out_col']].sum(axis=1)
     return df
 
 
 def preprocess_visitor_count_data(visitor_counts: pd.DataFrame) -> pd.DataFrame:
 
-    visitor_counts_parsed_dates = parse_german_dates(df=visitor_counts, date_column_name="Time")
+    # Check for duplicates in visitor_counts.Time
+    if visitor_counts['Time'].duplicated().sum() > 0:
+        print("⚠️ Duplicates found in 'Time' column of visitor_counts!")
+        print("The following duplicated timestamps were found:")
+        # Investigate duplicates
+        print(visitor_counts[visitor_counts['Time'].duplicated(keep=False)]["Time"].unique())
+    else:
+        print("No duplicates found in 'Time' column of visitor_counts ✅")
+
     # Remove data before 2016-05-10 03:00:00 as there were no sensors installed
-    df = visitor_counts_parsed_dates[visitor_counts_parsed_dates['Time'] >= "2016-05-10 03:00:00"].reset_index(drop=True)
+    df = visitor_counts[visitor_counts['Time'] >= "2016-05-10 03:00:00"].reset_index(drop=True)
    
     df_mapped = fix_columns_names(df)
     
@@ -436,9 +376,12 @@ def preprocess_visitor_count_data(visitor_counts: pd.DataFrame) -> pd.DataFrame:
 
     df_corrected_sensors = correct_overlapping_sensor_data(df_corrected_sensors)
 
-    df_merged_columns = merge_columns(df_corrected_sensors)
+    df_removed_columns = remove_certain_unnecessary_cols(df_corrected_sensors)
 
-    df_no_outliers = handle_outliers(df_merged_columns)
+    # Remove columns that are entirely empty
+    df_removed_columns = df_removed_columns.dropna(axis=1, how='all')
+
+    df_no_outliers = handle_outliers(df_removed_columns)
    
     df_traffic_metrics = calculate_traffic_metrics_abs(df_no_outliers)
 

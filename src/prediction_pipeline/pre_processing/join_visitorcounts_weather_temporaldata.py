@@ -29,9 +29,9 @@ def create_datetimeindex(df):
     
     return df
 
-def join_dataframes(df_list) -> pd.DataFrame:
+def join_dataframes(df_list: list[pd.DataFrame]) -> pd.DataFrame:
     """
-    Joins a list of DataFrames using an outer join along the columns.
+    Joins a list of DataFrames using an inner join along the columns. All dataframes are at this point already displaying the Europe/Berlin timezone, however some have the timezone information in the datetimeindex, some not. So a step is needed to remove the timezone information.
 
     Args:
         df_list (list of pd.DataFrame): A list of pandas DataFrames to join.
@@ -39,19 +39,26 @@ def join_dataframes(df_list) -> pd.DataFrame:
     Returns:
         pd.DataFrame: A single DataFrame resulting from concatenating all input DataFrames along columns.
     """
-    return reduce(lambda left, right: pd.concat([left, right], axis=1, join='outer'), df_list)
+
+    normalised = []
+    for df in df_list:
+        df = df.copy()
+        df.index = df.index.tz_localize(None)
+        normalised.append(df)
+
+    return normalised[0].join(normalised[1:], how="inner")
 
 
-def get_joined_dataframe(weather_data, visitor_count_data, visitorcenter_data) -> pd.DataFrame:
+def get_joined_dataframe(weather_data, visitor_count_data, temporal_features_data) -> pd.DataFrame:
     """
     Main function to run the data joining pipeline.
 
-    This function loads the visitor count, visitor center and weather data, preprocesses them and joins them into one dataframe.
+    This function loads the visitor counts, temporal features and weather data, preprocesses them and joins them into one dataframe.
 
     Returns:
         pd.DataFrame: The joined data.
     """
-    df_list = [weather_data, visitor_count_data, visitorcenter_data]
+    df_list = [weather_data, visitor_count_data, temporal_features_data]
     for df in df_list:
         create_datetimeindex(df)
 

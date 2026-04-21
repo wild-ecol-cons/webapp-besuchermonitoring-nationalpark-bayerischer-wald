@@ -4,8 +4,7 @@ from datetime import datetime
 from src.config import data_upload_categories_to_azure_folders
 from src.streamlit_app.pages_in_dashboard.password import check_password
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
-from src.utils import upload_dataframe_to_azure
-from src.streamlit_app.pages_in_dashboard.data_hub.query_and_download_data import get_min_date_from_queried_data, query_and_preprocess_data
+from src.streamlit_app.pages_in_dashboard.data_hub.query_and_download_data import get_min_date_from_queried_data, query_and_preprocess_data, log_queried_data_to_azure, build_download_zip
 from src.streamlit_app.pages_in_dashboard.data_hub.upload_data import retrieve_already_existing_features, process_and_validate_upload, warning_for_new_columns, save_raw_data_to_cloud, save_preprocessed_data_to_cloud
 
 
@@ -82,35 +81,34 @@ with tab_query_download_data:
         help=TRANSLATIONS[st.session_state.selected_language]['query_button_hover_text'],
         type="primary"
     ):
-
-        overall_queried_data = query_and_preprocess_data(
-            data_categories_to_query=available_data_categories,
-            specify_timerange=specify_timerange,
-            start_time=start_time,
-            end_time=end_time
-        )
-        
+        with st.spinner(TRANSLATIONS[st.session_state.selected_language]['spinner_msg_querying_data'], show_time=True):
+            overall_queried_data = query_and_preprocess_data(
+                data_categories_to_query=available_data_categories,
+                specify_timerange=specify_timerange,
+                start_time=start_time,
+                end_time=end_time
+            )
+            
         # Preview queried data before download
         st.markdown(f"#### {TRANSLATIONS[st.session_state.selected_language]['preview_data_title']}")
         st.dataframe(overall_queried_data.head())
 
-        data_download_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        file_name_data_export = f"{data_download_time}_Data_Hub_Datenexport.csv"
+        file_name_data_export = log_queried_data_to_azure(queried_data=overall_queried_data)
+        zip_filename = file_name_data_export.replace(".csv", ".zip")
 
-        # Button to download data
-        if st.download_button(
+        zip_bytes = build_download_zip(
+            df=overall_queried_data,
+            csv_filename=file_name_data_export,
+            queried_data_categories=available_data_categories
+        )
+
+        st.download_button(
             label=TRANSLATIONS[st.session_state.selected_language]['button_download_data'],
-            data=overall_queried_data.to_csv(index=False).encode('utf-8'),
-            file_name=file_name_data_export,
+            data=zip_bytes,
+            file_name=zip_filename,
+            mime="application/zip",
             icon=":material/download:",
-        ):
-
-            upload_dataframe_to_azure(
-                df=overall_queried_data,
-                file_name=file_name_data_export,
-                target_folder="data-hub/exported-data",
-                file_format="csv",
-            )
+        )
 
 with tab_upload_data:
 
@@ -157,4 +155,4 @@ with tab_upload_data:
         ):
             save_raw_data_to_cloud(uploaded_file, category_to_upload_data_to)
 
-            save_preprocessed_data_to_cloud(df, category_to_upload_data_to)
+            save_preprocessed_data_to_cloud(df, category_to_upload_data_to, uploaded_file)

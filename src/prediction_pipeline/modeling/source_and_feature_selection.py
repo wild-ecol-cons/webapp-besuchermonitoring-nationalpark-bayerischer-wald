@@ -17,17 +17,13 @@ columns_to_use = [
 'Gfäll IN',  'Gfäll OUT',  'Gsenget IN',  'Gsenget OUT',  'Klingenbrunner Wald IN',  'Klingenbrunner Wald OUT',  
 'Klosterfilz IN',  'Klosterfilz OUT',  'Racheldiensthütte IN',  'Racheldiensthütte OUT',  'Sagwassersäge IN',  
 'Sagwassersäge OUT',  'Scheuereck IN',  'Scheuereck OUT',  'Schillerstraße IN',  'Schillerstraße OUT',  
-'Schwarzbachbrücke IN',  'Schwarzbachbrücke OUT',  'Falkenstein 2 OUT',  'Falkenstein 2 IN',  'Lusen 2 IN',  
-'Lusen 2 OUT',  'Lusen 3 IN',  'Lusen 3 OUT',  'Waldhausreibe IN',  'Waldhausreibe OUT',  'Waldspielgelände IN',  
-'Waldspielgelände OUT',  'Wistlberg IN',  'Wistlberg OUT',  'Bucina MERGED IN',  'Bucina MERGED OUT',  
-'Falkenstein 1 MERGED IN',  'Falkenstein 1 MERGED OUT',  'Lusen 1 MERGED IN',  'Lusen 1 MERGED OUT',  
-'Trinkwassertalsperre MERGED IN',  'Trinkwassertalsperre MERGED OUT',  
+'Schwarzbachbrücke IN',  'Schwarzbachbrücke OUT',  'TFG_Falkenstein_2 zum Parkplatz',  'TFG_Falkenstein_2 In Richtung TFG',  'TFG_Lusen_2 Richtung Vögel am Waldrand',  
+'TFG_Lusen_2 Richtung Parkplatz',  'TFG_Lusen_3 In Richtung TFG',  'TFG_Lusen_3 In Richtung Parkplatz',  'Waldhausreibe IN',  'Waldhausreibe OUT',  'Waldspielgelände_1 IN (Ins WSG)',  
+'Waldspielgelände_1 OUT (aus dem WSG)',  'Wistlberg IN',  'Wistlberg OUT',
 'traffic_abs',  'sum_IN_abs',  'sum_OUT_abs',  'Temperature (°C)',  'Relative Humidity (%)',  
-'Precipitation (mm)',  'Wind Speed (km/h)',  'Sunshine Duration (min)',  'Tag',  'Monat',  
-'Wochentag',  'Wochenende',  'Jahreszeit',  'Laubfärbung',  'Schulferien_Bayern',  'Schulferien_CZ',  
-'Feiertag_Bayern',  'Feiertag_CZ',  'HEH_geoeffnet',  'HZW_geoeffnet',  'WGM_geoeffnet',  
-'Lusenschutzhaus_geoeffnet',  'Racheldiensthuette_geoeffnet',  'Falkensteinschutzhaus_geoeffnet',  
-'Schwellhaeusl_geoeffnet'
+'Precipitation (mm)',  'Wind Speed (km/h)',  'Sunshine Duration (min)',  'Tag',  'Monat', 'DayOfTheYear', 
+'Wochentag',  'Wochenende',  'Jahreszeit',  'Schulferien_Bayern',  'Schulferien_CZ',  
+'Feiertag_Bayern',  'Feiertag_CZ'
 ]
 
 
@@ -44,36 +40,36 @@ regionwise_sensor_mapping = {
         ]
     },
     'Nationalparkzentrum Falkenstein': {
-        'IN': ['Falkenstein 1 IN', 'Falkenstein 2 IN'],
-        'OUT': ['Falkenstein 1 OUT', 'Falkenstein 2 OUT']
+        'IN': ['TFG_Falkenstein_1 zum HZW', 'TFG_Falkenstein_2 In Richtung TFG'],
+        'OUT': ['TFG_Falkenstein_1 zum Parkplatz', 'TFG_Falkenstein_2 zum Parkplatz']
     },
     'Scheuereck-Schachten-Trinkwassertalsperre': {
-        'IN': ['Gsenget IN', 'Scheuereck IN', 'Trinkwassertalsperre IN'],
-        'OUT': ['Gsenget OUT', 'Scheuereck OUT', 'Trinkwassertalsperre OUT']
+        'IN': ['Gsenget IN', 'Scheuereck IN', 'Trinkwassertalsperre_MULTI IN'],
+        'OUT': ['Gsenget OUT', 'Scheuereck OUT', 'Trinkwassertalsperre_MULTI OUT']
     },
     'Lusen-Mauth-Finsterau': {
         'IN': [
-            'Bucina IN', 'Felswandergebiet IN', 'Fredenbrücke IN', 
+            'Bucina_Multi IN', 'Felswandergebiet IN', 'Fredenbrücke IN', 
             'Schwarzbachbrücke IN', 'Waldhausreibe IN', 'Wistlberg IN', 'Sagwassersäge IN'
         ],
         'OUT': [
-            'Bucina OUT', 'Felswandergebiet OUT', 'Fredenbrücke OUT', 
+            'Bucina_Multi OUT', 'Felswandergebiet OUT', 'Fredenbrücke OUT', 
             'Schwarzbachbrücke OUT', 'Waldhausreibe OUT', 'Wistlberg OUT', 'Sagwassersäge OUT'
         ]
     },
     'Rachel-Spiegelau': {
         'IN': [
             'Diensthüttenstraße IN', 'Gfäll IN', 'Klingenbrunner Wald IN', 
-            'Klosterfilz IN', 'Racheldiensthütte IN', 'Waldspielgelände IN'
+            'Klosterfilz IN', 'Racheldiensthütte IN', 'Waldspielgelände_1 IN (Ins WSG)'
         ],
         'OUT': [
             'Diensthüttenstraße OUT', 'Gfäll OUT', 'Klingenbrunner Wald OUT', 
-            'Klosterfilz OUT', 'Racheldiensthütte OUT', 'Waldspielgelände OUT'
+            'Klosterfilz OUT', 'Racheldiensthütte OUT', 'Waldspielgelände_1 OUT (aus dem WSG)'
         ]
     },
     'Nationalparkzentrum Lusen': {
-        'IN': ['Lusen 1 IN', 'Lusen 2 IN', 'Lusen 3 IN'],
-        'OUT': ['Lusen 1 OUT', 'Lusen 2 OUT', 'Lusen 3 OUT']
+        'IN': ['TFG_Lusen_1 IN', 'TFG_Lusen_2 Richtung Vögel am Waldrand', 'TFG_Lusen_3 In Richtung TFG'],
+        'OUT': ['TFG_Lusen_1 Richtung Parkplatz', 'TFG_Lusen_2 Richtung Parkplatz', 'TFG_Lusen_3 In Richtung Parkplatz']
     }
 }
 
@@ -89,6 +85,7 @@ dtype_dict = {
         'Temperature (°C)',
         'Relative Humidity (%)',
         'Wind Speed (km/h)',
+        'Precipitation (mm)',
         'Monat',
         'sum_IN_abs',
         'sum_OUT_abs',
@@ -122,21 +119,23 @@ dtype_dict = {
         'Scheuereck IN', 'Scheuereck OUT',
         'Schillerstraße IN', 'Schillerstraße OUT',
         'Schwarzbachbrücke IN', 'Schwarzbachbrücke OUT',
-        'Falkenstein 1 IN', 'Falkenstein 1 OUT',
-        'Falkenstein 2 IN', 'Falkenstein 2 OUT',
-        'Lusen 1 IN', 'Lusen 1 OUT',
-        'Lusen 2 IN', 'Lusen 2 OUT',
-        'Lusen 3 IN', 'Lusen 3 OUT',
+        'TFG_Falkenstein_1 zum HZW', 'TFG_Falkenstein_1 zum Parkplatz',
+        'TFG_Falkenstein_2 In Richtung TFG', 'TFG_Falkenstein_2 zum Parkplatz',
+        'TFG_Lusen_1 IN', 'TFG_Lusen_1 Richtung Parkplatz',
+        'TFG_Lusen_2 Richtung Vögel am Waldrand', 'TFG_Lusen_2 Richtung Parkplatz',
+        'TFG_Lusen_3 In Richtung TFG', 'TFG_Lusen_3 In Richtung Parkplatz',
         'Waldhausreibe IN', 'Waldhausreibe OUT',
-        'Waldspielgelände IN', 'Waldspielgelände OUT',
+        'Waldspielgelände_1 IN (Ins WSG)', 'Waldspielgelände_1 OUT (aus dem WSG)',
         'Wistlberg IN', 'Wistlberg OUT',
-        'Bucina IN', 'Bucina OUT',
-        'Trinkwassertalsperre IN', 'Trinkwassertalsperre OUT',
+        'Bucina_Multi IN', 'Bucina_Multi OUT',
+        'Trinkwassertalsperre_MULTI IN', 'Trinkwassertalsperre_MULTI OUT',
         
         # Z-Score data
         'ZScore_Daily_Max_Temperature (°C)',
         'ZScore_Daily_Max_Relative Humidity (%)',
         'ZScore_Daily_Max_Wind Speed (km/h)',
+        'ZScore_Daily_Max_Precipitation (mm)',
+        'ZScore_Daily_Sum_Precipitation (mm)',
         
         # Distance to nearest holidays
         'Distance_to_Nearest_Holiday_Bayern',
@@ -146,32 +145,23 @@ dtype_dict = {
     'category': [
         'Wochentag',
         'Wochenende',
+        'DayOfTheYear',
         'Jahreszeit',
-        'Laubfärbung',
         'Feiertag_Bayern',
         'Feiertag_CZ',
-        'HEH_geoeffnet',
-        'HZW_geoeffnet',
-        'WGM_geoeffnet',
-        'Lusenschutzhaus_geoeffnet',
-        'Racheldiensthuette_geoeffnet',
-        'Falkensteinschutzhaus_geoeffnet',
-        'Schwellhaeusl_geoeffnet',
         'Schulferien_Bayern',
         'Schulferien_CZ',
         'coco_2'
     ]
 }
 
-numeric_features_for_modelling = ['Temperature (°C)', 'Relative Humidity (%)', 'Wind Speed (km/h)', 'ZScore_Daily_Max_Temperature (°C)', 
+numeric_features_for_modelling = ['Temperature (°C)', 'Relative Humidity (%)', 'Wind Speed (km/h)', 'Precipitation (mm)', 'ZScore_Daily_Max_Precipitation (mm)', 'ZScore_Daily_Sum_Precipitation (mm)', 'ZScore_Daily_Max_Temperature (°C)', 
                     'ZScore_Daily_Max_Relative Humidity (%)','ZScore_Daily_Max_Wind Speed (km/h)',
                     'Distance_to_Nearest_Holiday_Bayern','Distance_to_Nearest_Holiday_CZ','Tag_sin', 'Tag_cos', 'Monat_sin', 'Monat_cos',
-                    'Hour_sin', 'Hour_cos','Wochentag_sin', 'Wochentag_cos']
+                    'Hour_sin', 'Hour_cos','Wochentag_sin', 'Wochentag_cos', 'DayOfTheYear_sin', 'DayOfTheYear_cos']
 
-categorical_features_for_modelling = ['Wochenende','Laubfärbung', 'Schulferien_Bayern', 'Schulferien_CZ', 
-                        'Feiertag_Bayern', 'Feiertag_CZ', 'HEH_geoeffnet', 'HZW_geoeffnet', 'WGM_geoeffnet', 
-                        'Lusenschutzhaus_geoeffnet', 'Racheldiensthuette_geoeffnet', 'Falkensteinschutzhaus_geoeffnet', 
-                        'Schwellhaeusl_geoeffnet','sunny', 'cloudy', 'rainy', 'snowy', 'extreme','stormy','Frühling',
+categorical_features_for_modelling = ['Wochenende','Schulferien_Bayern', 'Schulferien_CZ', 
+                        'Feiertag_Bayern', 'Feiertag_CZ','sunny', 'cloudy', 'rainy', 'snowy', 'extreme','stormy','Frühling',
                         'Sommer', 'Herbst', 'Winter']
 
 target_vars_et = ['traffic_abs', 'sum_IN_abs', 'sum_OUT_abs', 'Lusen-Mauth-Finsterau IN', 'Lusen-Mauth-Finsterau OUT', 
@@ -236,6 +226,8 @@ def merge_new_features(df: pd.DataFrame, df_newfeatures: pd.DataFrame) -> pd.Dat
         'ZScore_Daily_Max_Temperature (°C)',
         'ZScore_Daily_Max_Relative Humidity (%)',
         'ZScore_Daily_Max_Wind Speed (km/h)',
+        'ZScore_Daily_Max_Precipitation (mm)',
+        'ZScore_Daily_Sum_Precipitation (mm)',
         'Distance_to_Nearest_Holiday_Bayern',
         'Distance_to_Nearest_Holiday_CZ'
     ]
@@ -277,7 +269,7 @@ def apply_cliclic_tranformations(df: pd.DataFrame,cyclic_features: list) -> pd.D
         else:
             print(f"Warning: Feature '{feature}' not found in DataFrame")
     # Drop the original columns
-    columns_to_drop = ['Tag', 'Monat', 'Wochentag', 'Hour']
+    columns_to_drop = ['Tag', 'Monat', 'Wochentag', 'Hour', 'DayOfTheYear']
     df = df.drop(columns=columns_to_drop)
 
     return df
@@ -331,7 +323,7 @@ def get_dummy_encodings(df: pd.DataFrame, columns_to_use: list) -> pd.DataFrame:
     
     for col in ['Frühling', 'Sommer', 'Herbst', 'Winter']:
         if col not in season_dummies.columns:
-            dummies[col] = False
+            season_dummies[col] = False
     
     df_copy = pd.concat([df_copy, season_dummies], axis=1)
 
@@ -355,19 +347,10 @@ def handle_binary_values(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-def remove_merge_from_columns(df: pd.DataFrame) -> pd.DataFrame:
-
-    # remove the MERGED from the column names and remove the extra gap
-    if df.columns.str.contains('MERGED').any():
-        df.columns = df.columns.str.replace('MERGED', '')
-        df.columns = df.columns.str.replace('  ', ' ')
-    
-    return df
-
 def process_transformations(df: pd.DataFrame) -> pd.DataFrame:
     """Process the transformations on the DataFrame."""
-    df = apply_cliclic_tranformations(df, cyclic_features = ['Tag','Hour', 'Monat', 'Wochentag'])
-    df = standardize_numeric_features(df, standardize_features = ['Temperature (°C)', 'Relative Humidity (%)', 'Wind Speed (km/h)',
+    df = apply_cliclic_tranformations(df, cyclic_features = ['Tag','Hour', 'Monat', 'Wochentag', 'DayOfTheYear'])
+    df = standardize_numeric_features(df, standardize_features = ['Temperature (°C)', 'Relative Humidity (%)', 'Wind Speed (km/h)', 'Precipitation (mm)',
                                                                   'Distance_to_Nearest_Holiday_Bayern','Distance_to_Nearest_Holiday_CZ'])
     df = get_dummy_encodings(df, columns_to_use = ['Jahreszeit', 'coco_2'])
     df = handle_binary_values(df)
@@ -389,8 +372,7 @@ def get_features(with_zscores_and_nearest_holidays_df, train_start_date, train_e
     sliced_df = with_zscores_and_nearest_holidays_df[(with_zscores_and_nearest_holidays_df['Time'] >= train_start_date) & (with_zscores_and_nearest_holidays_df['Time'] <= train_end_date)]
 
     # Further feature engineering
-    removed_merged_df = remove_merge_from_columns(sliced_df)
-    regionwise_df = get_regionwise_IN_and_OUT_columns(removed_merged_df)
+    regionwise_df = get_regionwise_IN_and_OUT_columns(sliced_df)
     changed_datatypes_df = change_datatypes(regionwise_df, dtype_dict)
     processed_features_df = process_transformations(changed_datatypes_df)
 
@@ -399,5 +381,36 @@ def get_features(with_zscores_and_nearest_holidays_df, train_start_date, train_e
 
     return filtered_features_df
 
+def drop_duplicated_datetimeindices(df: pd.DataFrame, threshold: float = 0.0005) -> pd.DataFrame:
+    """
+    Drops rows with duplicated DatetimeIndex values if the total number of duplicates
+    is below a specified threshold relative to the DataFrame size.
 
+    If the proportion of duplicated index values exceeds the threshold, a ValueError
+    is raised to avoid silently discarding a significant amount of data.
 
+    Args:
+        df (pd.DataFrame): DataFrame with a DatetimeIndex.
+        threshold (float): Maximum acceptable proportion of duplicates (default: 0.0005 = 0.05%).
+
+    Returns:
+        pd.DataFrame: DataFrame with duplicated index rows removed.
+
+    Raises:
+        ValueError: If the proportion of duplicates exceeds the threshold.
+    """
+    n_duplicates = df.index.duplicated().sum()
+    proportion = n_duplicates / len(df)
+
+    if n_duplicates == 0:
+        print("No duplicated index values found ✅")
+        return df
+
+    if proportion > threshold:
+        raise ValueError(
+            f"❌ Too many duplicated index values: {n_duplicates} ({proportion:.4%} of rows). "
+            f"Exceeds threshold of {threshold:.4%}. Please investigate upstream."
+        )
+
+    print(f"⚠️ Dropping {n_duplicates} duplicated index rows ({proportion:.4%} of data).")
+    return df[~df.index.duplicated(keep='first')]

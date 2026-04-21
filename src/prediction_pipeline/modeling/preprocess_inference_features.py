@@ -1,4 +1,4 @@
-from src.prediction_pipeline.pre_processing.features_zscoreweather_distanceholidays import add_nearest_holiday_distance, add_daily_max_values, add_moving_z_scores 
+from src.prediction_pipeline.pre_processing.features_zscoreweather_distanceholidays import add_nearest_holiday_distance, add_daily_max_values, add_moving_z_scores, add_daily_precipidation_sum_value 
 from src.prediction_pipeline.modeling.source_and_feature_selection import process_transformations
 
 from datetime import datetime, timedelta
@@ -7,37 +7,41 @@ import streamlit as st
 
 
 
-weather_columns_for_zscores = ['Temperature (°C)', 'Relative Humidity (%)', 'Wind Speed (km/h)']
+weather_columns_for_zscores = ['Temperature (°C)', 'Relative Humidity (%)', 'Wind Speed (km/h)', 'Precipitation (mm)']
 window_size_for_zscores = 5
 
-def join_inference_data(weather_data_inference, visitor_centers_data):
+def join_inference_data(weather_data_inference, temporal_features):
 
-    """Merge weather data with visitor centers data.
+    """Merge weather data with temporal features.
 
     Args:
         weather_data_inference (pd.DataFrame): DataFrame containing weather data.
-        visitor_centers_data (pd.DataFrame): DataFrame containing visitor centers data.
+        temporal_features (pd.DataFrame): DataFrame containing temporal features.
 
     Returns:
-        pd.DataFrame: Merged DataFrame with selected columns from visitor centers data.
+        pd.DataFrame: Merged DataFrame with selected columns from temporal features.
     """
 
-    # Define the columns you want to bring from visitor_centers_data
-    columns_to_add = ['Time','Tag', 'Hour', 'Monat','Wochentag',  'Wochenende',  'Jahreszeit',  'Laubfärbung',
-                    'Schulferien_Bayern', 'Schulferien_CZ','Feiertag_Bayern',  'Feiertag_CZ',
-                    'HEH_geoeffnet',  'HZW_geoeffnet',  'WGM_geoeffnet', 'Lusenschutzhaus_geoeffnet',  'Racheldiensthuette_geoeffnet', 'Falkensteinschutzhaus_geoeffnet', 'Schwellhaeusl_geoeffnet']  
+    # Define the columns you want to bring from temporal_features
+    columns_to_add = ['Time','Tag', 'Hour', 'Monat', 'DayOfTheYear','Wochentag',  'Wochenende',  'Jahreszeit',
+                    'Schulferien_Bayern', 'Schulferien_CZ','Feiertag_Bayern',  'Feiertag_CZ']  
+    
+    # Normalise both Time columns to naive timestamps before merging
+    datasets = [temporal_features, weather_data_inference]
+    for dataset in datasets:
+        dataset['Time'] = dataset['Time'].dt.tz_localize(None) if dataset['Time'].dt.tz is None else dataset['Time'].dt.tz_convert(None)
 
-    # Perform the merge, keep the min and max values of the visitor center data
-    merged_data = visitor_centers_data[columns_to_add].merge(weather_data_inference, on='Time', how='left')
+    # Perform the merge
+    merged_data = temporal_features[columns_to_add].merge(weather_data_inference, on='Time', how='left')
     
     return merged_data
 
 @st.cache_data(max_entries=1)
-def source_preprocess_inference_data(weather_data_inference, hourly_visitor_center_data, start_time, end_time):
+def source_preprocess_inference_data(weather_data_inference, hourly_temporal_features, start_time, end_time):
 
-    """Source and preprocess inference data from weather and visitor center sources.
+    """Source and preprocess inference data from weather and holiday sources.
 
-    This function fetches weather and visitor center data, merges them, and computes additional features
+    This function fetches weather data and temporal features, merges them, and computes additional features
     such as nearest holiday distance, daily max values, and moving z-scores.
 
     Returns:
@@ -45,7 +49,7 @@ def source_preprocess_inference_data(weather_data_inference, hourly_visitor_cent
     """
     print(f"Sourcing and preprocessing inference data at {datetime.now()}...")    
 
-    join_df = join_inference_data(weather_data_inference, hourly_visitor_center_data)
+    join_df = join_inference_data(weather_data_inference, hourly_temporal_features)
 
 
     # Get z scores for the weather columns
@@ -54,7 +58,9 @@ def source_preprocess_inference_data(weather_data_inference, hourly_visitor_cent
 
     inference_data_with_daily_max = add_daily_max_values(inference_data_with_distances, weather_columns_for_zscores)
 
-    inference_data_with_new_features = add_moving_z_scores(inference_data_with_daily_max, 
+    inference_data_with_daily_max_with_precip_sum = add_daily_precipidation_sum_value(inference_data_with_daily_max)
+
+    inference_data_with_new_features = add_moving_z_scores(inference_data_with_daily_max_with_precip_sum, 
                                                            weather_columns_for_zscores, 
                                                            window_size_for_zscores)
 

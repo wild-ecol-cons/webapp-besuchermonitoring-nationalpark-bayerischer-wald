@@ -75,7 +75,42 @@ def get_min_date_from_queried_data(data_categories: list[str]) -> datetime:
         min_date = dataset_min_times.min().iloc[0]
         return min_date
 
-def query_and_preprocess_data(data_categories_to_query: list[str], specify_timerange: bool = False, start_time: datetime = None, end_time: datetime = None) -> pd.DataFrame:
+def aggregate_to_daily(df: pd.DataFrame, daily_value_cols: list[str]) -> pd.DataFrame:
+    """
+    Aggregate hourly data to daily data.
+
+    - Columns in daily_value_cols (already daily, e.g. from Hütten category): take first value per day
+    - All other numeric columns: sum per day
+    - Non-numeric columns: take first value per day
+
+    Args:
+        df (pd.DataFrame): Hourly data with 'general_time_index' column.
+        daily_value_cols (list[str]): Column names that are already on a daily frequency and must not be summed.
+
+    Returns:
+        pd.DataFrame: Daily aggregated data.
+    """
+    df = df.copy()
+    df['general_time_index'] = pd.to_datetime(df['general_time_index'])
+    df['_date'] = df['general_time_index'].dt.normalize()
+
+    existing_daily_cols = [c for c in daily_value_cols if c in df.columns]
+    numeric_cols = df.select_dtypes(include='number').columns.tolist()
+    non_numeric_cols = [c for c in df.columns if c not in numeric_cols and c not in ['general_time_index', '_date']]
+
+    agg_dict = {}
+    for col in numeric_cols:
+        agg_dict[col] = 'first' if col in existing_daily_cols else 'sum'
+    for col in non_numeric_cols:
+        agg_dict[col] = 'first'
+
+    daily_df = df.groupby('_date').agg(agg_dict).reset_index()
+    daily_df = daily_df.rename(columns={'_date': 'general_time_index'})
+
+    return daily_df.sort_values(by='general_time_index').reset_index(drop=True)
+
+
+def query_and_preprocess_data(data_categories_to_query: list[str], specify_timerange: bool = False, start_time: datetime = None, end_time: datetime = None, time_frequency: str = "hourly") -> pd.DataFrame:
     """
     Query and preprocess data based on the selected data categories and timeframe.
 
@@ -84,12 +119,15 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
         specify_timerange (bool, optional): Whether to specify a specific timeframe. Defaults to False.
         start_time (datetime, optional): Start time for the timeframe. Defaults to None.
         end_time (datetime, optional): End time for the timeframe. Defaults to None.
+        time_frequency (str, optional): Output time frequency – "hourly" or "daily". Defaults to "hourly".
 
     Returns:
         pd.DataFrame: Preprocessed data.
     """
 
     overall_queried_data = pd.DataFrame(columns=["general_time_index"])
+    # Tracks columns from the Hütten category (already daily – must not be summed during daily aggregation)
+    daily_value_cols: list[str] = []
     
     # Query the selected data with Duck DB
     for category in data_categories_to_query:
@@ -135,6 +173,7 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
         
         if category == "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage":
             daily_value_cols_to_be_filled = queried_single_category_data.columns.difference(['general_time_index'])
+            daily_value_cols = list(daily_value_cols_to_be_filled)
 
         # Do a full outer join between the current state of the overall queried data and the queried data of the current category, resulting again in the overall queried data
         if len(queried_single_category_data) > 0:
@@ -156,6 +195,9 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
     
     # Order queried data by time
     overall_queried_data = overall_queried_data.sort_values(by="general_time_index", ascending=True)
+
+    if time_frequency == "daily":
+        overall_queried_data = aggregate_to_daily(overall_queried_data, daily_value_cols)
 
     return overall_queried_data
 

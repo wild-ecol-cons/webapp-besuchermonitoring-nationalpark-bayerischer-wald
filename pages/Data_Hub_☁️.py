@@ -43,6 +43,17 @@ with tab_query_download_data:
         placeholder=TRANSLATIONS[st.session_state.selected_language]['choose_data_categories']
     )
 
+    # Select time frequency
+    time_frequency_options = {
+        TRANSLATIONS[st.session_state.selected_language]['time_frequency_hourly']: "hourly",
+        TRANSLATIONS[st.session_state.selected_language]['time_frequency_daily']: "daily",
+    }
+    selected_time_frequency_label = st.selectbox(
+        TRANSLATIONS[st.session_state.selected_language]['time_frequency_label'],
+        options=list(time_frequency_options.keys()),
+    )
+    selected_time_frequency = time_frequency_options[selected_time_frequency_label]
+
     # Select entire timeframe or a specific start and end date
     ## Checkbox: All data?
     specify_timerange = st.toggle(TRANSLATIONS[st.session_state.selected_language]['specify_time_range'])
@@ -86,7 +97,8 @@ with tab_query_download_data:
                 data_categories_to_query=available_data_categories,
                 specify_timerange=specify_timerange,
                 start_time=start_time,
-                end_time=end_time
+                end_time=end_time,
+                time_frequency=selected_time_frequency
             )
             
         # Preview queried data before download

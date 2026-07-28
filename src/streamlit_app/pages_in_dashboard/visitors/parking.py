@@ -267,6 +267,19 @@ def get_parking_section():
     # Map occupancy rate to status (High, Medium, Low)
     processed_parking_data['occupancy_status'] = processed_parking_data['current_occupancy_rate'].apply(get_occupancy_status)
 
+    # Rename parking locations to be more user-friendly
+    processed_parking_data['location'] = processed_parking_data['location'].replace({
+        "parkplatz-graupsaege-1": "P+R Graupsäge",
+        "p-r-spiegelau-1": "P+R Spiegelau",
+        "parkplatz-zwieslerwaldhaus-1": "Parkplatz Zwieslerwaldhaus",
+        "parkplatz-nationalparkzentrum-falkenstein-2": "Parkplatz Nationalparkzentrum Falkenstein",
+        "scheidt-bachmann-parkplatz-1": "Scheidt-Bachmann-Parkplatz",
+        "parkplatz-nationalparkzentrum-lusen-p2": "Parkplatz Nationalparkzentrum Lusen",
+        "parkplatz-waldhaeuser-kirche-1": "Parkplatz Waldhäuser Kirche",
+        "parkplatz-waldhaeuser-ausblick-1": "Parkplatz Waldhäuser Ausblick",
+        "parkplatz-skisportzentrum-finsterau-1": "Parkplatz Finsterau Ski- und Sportstadion",
+    })
+
     # Compute parking place tooltip message
     processed_parking_data['tooltip_line1_name'] = processed_parking_data['location']
     processed_parking_data['tooltip_line2_occupancy'] = "Belegungsstatus: " + processed_parking_data['occupancy_status']

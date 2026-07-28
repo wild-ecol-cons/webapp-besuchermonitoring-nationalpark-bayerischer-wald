@@ -108,6 +108,11 @@ def style_regions_for_display(regions: gpd.GeoDataFrame, highlighted_names: list
     regions["fill_color"] = regions.apply(fill_color, axis=1)
     regions["line_color"] = regions.apply(line_color, axis=1)
     regions["line_width"] = regions.apply(line_width, axis=1)
+
+    # Compute region-wise tooltip message
+    regions['tooltip_line1_name'] = "Region: " + regions['Name']
+    regions['tooltip_line2_occupancy'] = ""  # TODO: Later add here the real-time occupancy rates of that entire region
+
     return regions
 
 
@@ -264,6 +269,10 @@ def get_parking_section():
     # Map occupancy rate to status (High, Medium, Low)
     processed_parking_data['occupancy_status'] = processed_parking_data['current_occupancy_rate'].apply(get_occupancy_status)
 
+    # Compute parking place tooltip message
+    processed_parking_data['tooltip_line1_name'] = processed_parking_data['location']
+    processed_parking_data['tooltip_line2_occupancy'] = "Belegungsstatus: " + processed_parking_data['occupancy_status']
+
     # --- Regions: load + legend (drives highlight state) -----------------
     regions = load_regions(REGIONS_GEOJSON_PATH)
     highlighted_regions = render_regions_legend(regions)
@@ -314,16 +323,12 @@ def get_parking_section():
     )
 
     deck = pdk.Deck(
-        layers=[tile_layer, parking_layer, regions_layer],
+        layers=[tile_layer, regions_layer, parking_layer],
         initial_view_state=view_state,
         map_style=None,        # basemap comes from tile_layer, not a Mapbox/MapLibre style
         map_provider=None,     # no basemap provider needed — avoids any API-key/token requirement
         tooltip={
-            "html": (
-                "{location}<br/>"
-                f"{TRANSLATIONS[st.session_state.selected_language]['occupancy_status']}: "
-                "{occupancy_status}"
-            )
+        "html": "{tooltip_line1_name}<br/>{tooltip_line2_occupancy}"
         },
     )
     st.pydeck_chart(deck)

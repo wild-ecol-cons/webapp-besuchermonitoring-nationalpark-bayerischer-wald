@@ -138,8 +138,9 @@ def get_parking_section():
     view_state = pdk.ViewState(
         latitude=avg_latitude,  # Center map at the average latitude
         longitude=avg_longitude,  # Center map at the average longitude
-        zoom=10,  # Zoom level increased for a closer view
-        pitch=50
+        zoom=9.5,  # Zoom level increased for a closer view
+        pitch=0,  # Set the pitch to 0 for a top-down view
+        bearing=0,  # To set the initial bearing to 0 (0 being aligned to true north)
     )
 
     layer = pdk.Layer(

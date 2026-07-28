@@ -7,6 +7,18 @@ from src.streamlit_app.source_data import source_and_preprocess_realtime_parking
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
 from datetime import datetime
 
+# BKG WMTS endpoint for TopPlusOpen, addressed like a standard XYZ tile
+# source. "web_light_grau" is the "TopPlusOpen Light Grau" variant.
+#
+# NOTE: this is loaded as a pydeck TileLayer (a normal layer, in the
+# `layers` array) rather than as a `map_style` dict. A TileLayer is just
+# another layer, serialized the same way as the ScatterplotLayer below.
+TOPPLUS_LAYER = "web_light_grau"
+TOPPLUS_TILE_URL = (
+    f"https://sgx.geodatenzentrum.de/wmts_topplus_open/tile/1.0.0/"
+    f"{TOPPLUS_LAYER}/default/WEBMERCATOR/{{z}}/{{y}}/{{x}}.png"
+)
+
 def get_fixed_size():
     """
     Get a fixed size value for the map markers.
@@ -83,14 +95,10 @@ def render_occupancy_bar(occupancy_rate):
 @st.fragment(run_every="15min")
 def get_parking_section():
     """
-    Display the parking section of the dashboard with a map showing the real-time parking occupancy 
-    and interactive metrics.
-
-    Args:
-        processed_parking_data (pd.DataFrame): Processed parking data.
-
-    Returns:
-        None
+    Display the parking section of the dashboard with a map showing:
+      - the BKG TopPlusOpen Light Grau basemap
+      - real-time parking occupancy markers
+    in a fixed bird's-eye view fit to the data, still pannable/zoomable.
     """
 
     print("Rendering parking section for the visitor dashboard...")
@@ -143,7 +151,15 @@ def get_parking_section():
         bearing=0,  # To set the initial bearing to 0 (0 being aligned to true north)
     )
 
-    layer = pdk.Layer(
+    tile_layer = pdk.Layer(
+        "TileLayer",
+        data=TOPPLUS_TILE_URL,
+        min_zoom=0,
+        max_zoom=19,
+        tile_size=256,
+    )
+ 
+    parking_layer = pdk.Layer(
         "ScatterplotLayer",
         data=processed_parking_data,
         get_position=["longitude", "latitude"],
@@ -153,12 +169,13 @@ def get_parking_section():
     )
 
     deck = pdk.Deck(
-        layers=[layer],
+        layers=[tile_layer, parking_layer],
         initial_view_state=view_state,
+        map_style=None,        # basemap comes from tile_layer, not a Mapbox/MapLibre style
+        map_provider=None,     # no basemap provider needed — avoids any API-key/token requirement
         tooltip={
             "text": "{location}\n" + f"{TRANSLATIONS[st.session_state.selected_language]['occupancy_status']}: " + "{occupancy_status}"
         },
-        map_style="road"
     )
     st.pydeck_chart(deck)
 

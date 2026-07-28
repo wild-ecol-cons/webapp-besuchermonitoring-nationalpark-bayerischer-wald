@@ -326,8 +326,14 @@ def get_parking_section():
         "ScatterplotLayer",
         data=processed_parking_data,
         get_position=["longitude", "latitude"],
-        get_radius="size",
+        get_radius=12,
+        radius_units="'pixels'", # for dynamic scaling relative to zoom
+        radius_min_pixels=8,
+        radius_max_pixels=25,
         get_fill_color="color",
+        get_line_color=[0,0,0],
+        get_line_width=10,
+        stroked=True,
         pickable=True,
     )
 

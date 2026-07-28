@@ -212,26 +212,3 @@ def source_weather_data(start_time: datetime):
     # Convert the 'Time' column to datetime format again in Europe/Berlin time
     weather_hourly['time'] = pd.to_datetime(weather_hourly['time'], utc=True).dt.tz_convert('Europe/Berlin')
     return weather_hourly
-
-@st.cache_data(max_entries=1)
-def source_and_preprocess_forecasted_weather_data(timestamp_latest_weather_data_fetch: datetime):
-
-    """
-    Source and preprocess the forecasted weather data for the Bavarian Forest National Park.
-
-    Args:
-        timestamp_latest_weather_data_fetch (datetime): The timestamp of the latest weather data fetch.
-
-    Returns:
-        sourced_and_preprocessed_weather_data (pd.DataFrame): Processed forecasted weather dataframe
-    """
-
-    print(f"Sourcing and preprocessing weather data from Meteostat API at {timestamp_latest_weather_data_fetch}...")
-
-    # Source the weather data
-    weather_data_df = source_weather_data(timestamp_latest_weather_data_fetch)
-
-    # Preprocess the weather data
-    sourced_and_preprocessed_weather_data = prfwd.process_weather_data(weather_data_df)
-
-    return sourced_and_preprocessed_weather_data

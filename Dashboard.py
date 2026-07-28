@@ -7,7 +7,6 @@ import pytz
 # get the streamlit app modules
 import src.streamlit_app.pages_in_dashboard.visitors.page_layout_config as page_layout_config
 import src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu as lang_sel_menu
-import src.streamlit_app.pages_in_dashboard.visitors.weather as weather
 import src.streamlit_app.pages_in_dashboard.visitors.parking as parking 
 import src.streamlit_app.pages_in_dashboard.visitors.visitor_count as visitor_count
 import src.streamlit_app.pages_in_dashboard.visitors.recreational_activities as recreation
@@ -65,10 +64,6 @@ def create_dashboard_main_page(inference_predictions):
     with col2:
         # get the language selection menu
         lang_sel_menu.get_language_selection_menu()
-        
-        # get the weather section
-        weather.get_weather_section()
-        
 
         # create recreational section
         recreation.get_recreation_section()

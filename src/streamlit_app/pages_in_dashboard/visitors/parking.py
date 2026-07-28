@@ -28,11 +28,13 @@ REGIONS_GEOJSON_AZURE_PATH = 'raw-data/geodata/ecocounter_regionen_v2.geojson'
 
 # Qualitative palette for regions (RGB)
 REGION_COLOR_PALETTE = [
-    [230, 25, 75], [60, 180, 75], [255, 225, 25], [0, 130, 200], [245, 130, 48],
-    [145, 30, 180], [70, 240, 240], [240, 50, 230], [210, 245, 60], [250, 190, 212],
-    [0, 128, 128], [220, 190, 255], [170, 110, 40], [255, 250, 200],
+    [158, 29, 201],   # Purple#
+    [29, 143, 201],   # Sky blue
+    [29, 72, 201],    # Blue
+    [72, 29, 201],    # Indigo/violet
+    [29, 201, 186],   # Teal/cyan
+    [201, 29, 158],   # Magenta/pink
 ]
-
 @st.cache_data
 def load_regions(path: str) -> gpd.GeoDataFrame:
     """
@@ -169,13 +171,13 @@ def calculate_color_based_on_occupancy_rate(occupancy_rate) -> dict:
     occupancy_rate = float(occupancy_rate)
 
     if occupancy_rate >= 80:
-        return {"color_markers_map_visualization": [230, 39, 39],
+        return {"color_markers_map_visualization": [211, 47, 47],
                 "color_bar_occupancy_rate": "red"} # red
     elif occupancy_rate >= 60:
-        return {"color_markers_map_visualization": [250, 232, 8],
+        return {"color_markers_map_visualization": [255, 160, 0],
                 "color_bar_occupancy_rate": "yellow"} # yellow
     else:
-        return {"color_markers_map_visualization": [109, 249, 2],
+        return {"color_markers_map_visualization": [56, 142, 60],
                 "color_bar_occupancy_rate": "green"} # green
 
 

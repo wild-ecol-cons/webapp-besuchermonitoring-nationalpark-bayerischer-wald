@@ -155,6 +155,39 @@ def get_fixed_size():
     """
     return 450  
 
+def render_map_symbology_legend():
+    """
+    Renders a clean visual legend explaining the map layers (polygons vs markers).
+    """
+    st.markdown("""
+    <div style="background-color: #f8f9fa; border: 1px solid #e9ecef; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
+        <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; color: #333;">Symbol-Legende</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center; font-size: 0.85rem;">
+            <!-- Regions -->
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 18px; height: 18px; background-color: rgba(158, 29, 201, 0.4); border: 2px solid rgb(158, 29, 201); border-radius: 3px;"></div>
+                <span><strong>Farbige Flächen:</strong> Nationalpark-Regionen</span>
+            </div>
+            <!-- Markers -->
+            <div style="display: flex; align-items: center; gap: 12px; border-left: 1px solid #ccc; padding-left: 16px;">
+                <span style="margin-right: -4px;"><strong>Kreise:</strong> Parkplatz-Standorte </span>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <div style="width: 12px; height: 12px; background-color: rgb(56, 142, 60); border-radius: 50%; border: 1px solid #fff;"></div>
+                    <span style="color: #555;">Freie Plätze</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <div style="width: 12px; height: 12px; background-color: rgb(255, 160, 0); border-radius: 50%; border: 1px solid #fff;"></div>
+                    <span style="color: #555;">Gut besucht</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <div style="width: 12px; height: 12px; background-color: rgb(211, 47, 47); border-radius: 50%; border: 1px solid #fff;"></div>
+                    <span style="color: #555;">Überfüllt</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
 def calculate_color_based_on_occupancy_rate(occupancy_rate) -> dict:
     """
     Calculate the color of the marker based on the occupancy rate.
@@ -258,6 +291,9 @@ def get_parking_section():
     processed_parking_data = source_and_preprocess_realtime_parking_data(timestamp_latest_parking_data_fetch)
 
     st.markdown(f"### {TRANSLATIONS[st.session_state.selected_language]['real_time_parking_occupancy']}")
+
+    # Display the clear map symbology legend above the map
+    render_map_symbology_legend()
     
     # Set a fixed size for all markers
     processed_parking_data['size'] = get_fixed_size()

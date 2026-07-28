@@ -1,10 +1,13 @@
 # Define your environmental variables here; TODO: Update them if needed
-BAYERN_CLOUD_API_KEY := $(shell echo $(BAYERN_CLOUD_API_KEY))
-AZURE_STORAGE_ACCOUNT_NAME := $(shell echo $(AZURE_STORAGE_ACCOUNT_NAME))
-AZURE_STORAGE_ACCOUNT_KEY := $(shell echo $(AZURE_STORAGE_ACCOUNT_KEY))
 REPO_PATH := $(shell pwd)
-PATH_TO_STREAMLIT_SECRETS := $(shell pwd)/.streamlit/secrets.toml
+SECRETS_FILE := $(shell pwd)/.streamlit/secrets.toml
 IMAGE_NAME := bavarian-forest
+
+# Construct necessary environment variables from the secrets file
+BAYERN_CLOUD_API_KEY := $(shell grep '^BAYERN_CLOUD_API_KEY' $(SECRETS_FILE) | sed 's/.*= *"\(.*\)"/\1/')
+AZURE_STORAGE_ACCOUNT_NAME := $(shell grep '^AZURE_STORAGE_ACCOUNT_NAME' $(SECRETS_FILE) | sed 's/.*= *"\(.*\)"/\1/')
+AZURE_STORAGE_ACCOUNT_KEY := $(shell grep '^AZURE_STORAGE_ACCOUNT_KEY' $(SECRETS_FILE) | sed 's/.*= *"\(.*\)"/\1/')
+
 
 # Build the Docker image
 build:
@@ -14,7 +17,7 @@ build:
 run:
 	docker run \
 		-v $(REPO_PATH):/app \
-		-v $(PATH_TO_STREAMLIT_SECRETS):/app/.streamlit/secrets.toml \
+		-v $(SECRETS_FILE):/app/.streamlit/secrets.toml \
 		-e BAYERN_CLOUD_API_KEY=$(BAYERN_CLOUD_API_KEY) \
 		-e AZURE_STORAGE_ACCOUNT_NAME=$(AZURE_STORAGE_ACCOUNT_NAME) \
 		-e AZURE_STORAGE_ACCOUNT_KEY=$(AZURE_STORAGE_ACCOUNT_KEY) \
@@ -25,7 +28,7 @@ run:
 bash:
 	docker run \
 		-v $(REPO_PATH):/app \
-		-v $(PATH_TO_STREAMLIT_SECRETS):/app/.streamlit/secrets.toml \
+		-v $(SECRETS_FILE):/app/.streamlit/secrets.toml \
 		-e BAYERN_CLOUD_API_KEY=$(BAYERN_CLOUD_API_KEY) \
 		-e AZURE_STORAGE_ACCOUNT_NAME=$(AZURE_STORAGE_ACCOUNT_NAME) \
 		-e AZURE_STORAGE_ACCOUNT_KEY=$(AZURE_STORAGE_ACCOUNT_KEY) \

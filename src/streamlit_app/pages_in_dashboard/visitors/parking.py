@@ -276,15 +276,11 @@ def get_parking_section():
     highlighted_regions = render_regions_legend(regions)
     styled_regions = style_regions_for_display(regions, highlighted_regions)
 
-    # Calculate center of the map based on the average of latitudes and longitudes
-    avg_latitude = processed_parking_data['latitude'].mean()
-    avg_longitude = processed_parking_data['longitude'].mean()
-
     # PyDeck Map Configuration with adjusted view_state
     view_state = pdk.ViewState(
-        latitude=avg_latitude,  # Center map at the average latitude
-        longitude=avg_longitude,  # Center map at the average longitude
-        zoom=9.5,  # Zoom level increased for a closer view
+        latitude=48.98788792657768,  # Center map at the average latitude
+        longitude=13.388472800551007,  # Center map at the average longitude
+        zoom=9.6,  # Zoom level increased for a closer view
         pitch=0,  # Set the pitch to 0 for a top-down view
         bearing=0,  # To set the initial bearing to 0 (0 being aligned to true north)
     )

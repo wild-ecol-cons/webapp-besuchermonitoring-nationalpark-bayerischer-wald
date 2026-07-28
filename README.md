@@ -35,7 +35,7 @@ _A glimpse of the final dashboard ✨_
    ```bash
    git clone https://github.com/DSSGxMunich/bavarian-forest-visitor-monitoring-dssgx-24.git
     ```
-2. Download Docker Desktop from [here](https://www.docker.com/products/docker-desktop/) and install it.
+2. Download Docker Desktop from [here](https://www.docker.com/products/docker-desktop/) and install it. After installation, make sure to start Docker Desktop, so the Docker daemon is running.
 
 3. **Run the container via make:**
 

@@ -174,7 +174,11 @@ def get_parking_section():
         map_style=None,        # basemap comes from tile_layer, not a Mapbox/MapLibre style
         map_provider=None,     # no basemap provider needed — avoids any API-key/token requirement
         tooltip={
-            "text": "{location}\n" + f"{TRANSLATIONS[st.session_state.selected_language]['occupancy_status']}: " + "{occupancy_status}"
+            "html": (
+                "{location}<br/>"
+                f"{TRANSLATIONS[st.session_state.selected_language]['occupancy_status']}: "
+                "{occupancy_status}"
+            )
         },
     )
     st.pydeck_chart(deck)

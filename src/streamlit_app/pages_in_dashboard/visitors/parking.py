@@ -103,7 +103,7 @@ def style_regions_for_display(regions: gpd.GeoDataFrame, highlighted_names: list
         return [160, 160, 160, 120]
 
     def line_width(row):
-        return 3 if (row["Name"] in highlighted_names) else 1
+        return 100 if (row["Name"] in highlighted_names) else 1
 
     regions["fill_color"] = regions.apply(fill_color, axis=1)
     regions["line_color"] = regions.apply(line_color, axis=1)

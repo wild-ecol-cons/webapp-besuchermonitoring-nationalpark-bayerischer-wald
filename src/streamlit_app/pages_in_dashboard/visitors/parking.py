@@ -122,17 +122,18 @@ def render_regions_legend(regions: gpd.GeoDataFrame) -> list:
     which regions are highlighted on the map. Returns the list of selected
     region names.
     """
-    lang = st.session_state.selected_language
-    legend_title = TRANSLATIONS[lang].get("visitor_forecast_regions", "Visitor Forecast Regions")
+    legend_title = TRANSLATIONS[st.session_state.selected_language]['select_regions_to_visualize']
 
     with st.expander(legend_title, expanded=False):
         options = regions.sort_values("Name")[["Name", "fill_color_base"]].drop_duplicates("Name")
 
         selected = st.multiselect(
-            TRANSLATIONS[lang].get("highlight_regions", "Highlight region(s)"),
+            label="select_regions_to_highlight",
+            label_visibility="collapsed",
             options=options["Name"].tolist(),
             default=[],
             key="selected_regions_multiselect",
+            placeholder=TRANSLATIONS[st.session_state.selected_language]['choose_regions'],
         )
 
         for _, row in options.iterrows():
@@ -159,29 +160,29 @@ def render_map_symbology_legend():
     """
     Renders a clean visual legend explaining the map layers (polygons vs markers).
     """
-    st.markdown("""
+    st.markdown(f"""
     <div style="background-color: #f8f9fa; border: 1px solid #e9ecef; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
-        <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; color: #333;">Symbol-Legende</div>
+        <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; color: #333;">{TRANSLATIONS[st.session_state.selected_language]["symbol_legend"]}</div>
         <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center; font-size: 0.85rem;">
             <!-- Regions -->
             <div style="display: flex; align-items: center; gap: 8px;">
                 <div style="width: 18px; height: 18px; background-color: rgba(158, 29, 201, 0.4); border: 2px solid rgb(158, 29, 201); border-radius: 3px;"></div>
-                <span><strong>Farbige Flächen:</strong> Nationalpark-Regionen</span>
+                <span><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_area_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["legend_area_explained"]}</span>
             </div>
             <!-- Markers -->
             <div style="display: flex; align-items: center; gap: 12px; border-left: 1px solid #ccc; padding-left: 16px;">
-                <span style="margin-right: -4px;"><strong>Kreise:</strong> Parkplatz-Standorte </span>
+                <span style="margin-right: -4px;"><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_circles_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["legend_circles_explained"]} </span>
                 <div style="display: flex; align-items: center; gap: 4px;">
                     <div style="width: 12px; height: 12px; background-color: rgb(56, 142, 60); border-radius: 50%; border: 1px solid #fff;"></div>
-                    <span style="color: #555;">Freie Plätze</span>
+                    <span style="color: #555;">{TRANSLATIONS[st.session_state.selected_language]["parking_status_low"]}</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 4px;">
                     <div style="width: 12px; height: 12px; background-color: rgb(255, 160, 0); border-radius: 50%; border: 1px solid #fff;"></div>
-                    <span style="color: #555;">Gut besucht</span>
+                    <span style="color: #555;">{TRANSLATIONS[st.session_state.selected_language]["parking_status_moderate"]}</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 4px;">
                     <div style="width: 12px; height: 12px; background-color: rgb(211, 47, 47); border-radius: 50%; border: 1px solid #fff;"></div>
-                    <span style="color: #555;">Überfüllt</span>
+                    <span style="color: #555;">{TRANSLATIONS[st.session_state.selected_language]["parking_status_high"]}</span>
                 </div>
             </div>
         </div>
@@ -320,7 +321,7 @@ def get_parking_section():
 
     # Compute parking place tooltip message
     processed_parking_data['tooltip_line1_name'] = processed_parking_data['location']
-    processed_parking_data['tooltip_line2_occupancy'] = "Belegungsstatus: " + processed_parking_data['occupancy_status']
+    processed_parking_data['tooltip_line2_occupancy'] = f"{TRANSLATIONS[st.session_state.selected_language]['occupancy_status']}: " + processed_parking_data['occupancy_status']
 
     # --- Regions: load + legend (drives highlight state) -----------------
     regions = load_regions(path=REGIONS_GEOJSON_AZURE_PATH)

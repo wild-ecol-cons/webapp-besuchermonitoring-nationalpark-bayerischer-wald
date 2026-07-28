@@ -2,9 +2,14 @@
 import streamlit as st
 import pydeck as pdk
 import pandas as pd
+import geopandas as gpd
+import joblib
+import io
 import pytz
 from src.streamlit_app.source_data import source_and_preprocess_realtime_parking_data
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
+from src.config import CONTAINER_NAME, CONNECTION_STRING
+from azure.storage.blob import BlobClient
 from datetime import datetime
 
 # BKG WMTS endpoint for TopPlusOpen, addressed like a standard XYZ tile
@@ -18,6 +23,126 @@ TOPPLUS_TILE_URL = (
     f"https://sgx.geodatenzentrum.de/wmts_topplus_open/tile/1.0.0/"
     f"{TOPPLUS_LAYER}/default/WEBMERCATOR/{{z}}/{{y}}/{{x}}.png"
 )
+
+# Path to the full regions GeoJSON (client-provided, EPSG:25832)
+REGIONS_GEOJSON_PATH = "ecocounter_regions.geojson"
+ 
+# Qualitative palette for regions (RGB)
+REGION_COLOR_PALETTE = [
+    [230, 25, 75], [60, 180, 75], [255, 225, 25], [0, 130, 200], [245, 130, 48],
+    [145, 30, 180], [70, 240, 240], [240, 50, 230], [210, 245, 60], [250, 190, 212],
+    [0, 128, 128], [220, 190, 255], [170, 110, 40], [255, 250, 200],
+]
+
+@st.cache_data
+def load_regions(geojson_path: str) -> gpd.GeoDataFrame:
+    """
+    Load the visitor forecast regions GeoJSON and reproject it from
+    EPSG:25832 (as provided) to EPSG:4326 (lat/lon, what pydeck expects).
+    """
+            
+    # Construct the full blob name (key)
+    blob_name = 'raw-data/geodata/ecocounter_regionen.geojson'
+    print(f"Retrieving the region GeoJSON saved in Azure with blob name {blob_name}")
+    
+    # 1. Create a BlobClient
+    blob_client = BlobClient.from_connection_string(
+        conn_str=CONNECTION_STRING, 
+        container_name=CONTAINER_NAME, 
+        blob_name=blob_name
+    )
+    
+    # 2. Download the blob content
+    download_stream = blob_client.download_blob()
+    
+    # Read all data into a byte stream
+    geojson_bytes = download_stream.readall()
+    
+    # Convert the byte stream to a GeoDataFrame
+    buffer = io.BytesIO(geojson_bytes)
+    regions = gpd.read_file(buffer)
+ 
+    if regions.crs is None:
+        # Fall back to the CRS declared in the file's "crs" block if GeoPandas
+        # didn't pick it up automatically.
+        regions = regions.set_crs(epsg=25832, allow_override=True)
+
+    regions = regions.to_crs(epsg=4326)
+
+    # Stable per-region color assignment, keyed by Region_ID so colors don't
+    # shuffle between reruns.
+    region_ids = sorted(regions["Region_ID"].unique())
+    color_map = {
+        region_id: REGION_COLOR_PALETTE[i % len(REGION_COLOR_PALETTE)]
+        for i, region_id in enumerate(region_ids)
+    }
+    regions["fill_color_base"] = regions["Region_ID"].map(color_map)
+
+    return regions
+
+
+def style_regions_for_display(regions: gpd.GeoDataFrame, highlighted_names: list) -> gpd.GeoDataFrame:
+    """
+    Set fill/line color + opacity per region based on which region names are
+    currently highlighted via the legend. If nothing is selected, show all
+    regions at full color (default state).
+    """
+    regions = regions.copy()
+    show_all = len(highlighted_names) == 0
+
+    def fill_color(row):
+        r, g, b = row["fill_color_base"]
+        if show_all or row["Name"] in highlighted_names:
+            return [r, g, b, 130]
+        return [190, 190, 190, 40]  # dimmed grey for non-selected regions
+
+    def line_color(row):
+        r, g, b = row["fill_color_base"]
+        if show_all or row["Name"] in highlighted_names:
+            return [r, g, b, 255]
+        return [160, 160, 160, 120]
+
+    def line_width(row):
+        return 3 if (row["Name"] in highlighted_names) else 1
+
+    regions["fill_color"] = regions.apply(fill_color, axis=1)
+    regions["line_color"] = regions.apply(line_color, axis=1)
+    regions["line_width"] = regions.apply(line_width, axis=1)
+    return regions
+
+
+def render_regions_legend(regions: gpd.GeoDataFrame) -> list:
+    """
+    Interactive legend: one swatch + region name per row. Selection drives
+    which regions are highlighted on the map. Returns the list of selected
+    region names.
+    """
+    lang = st.session_state.selected_language
+    legend_title = TRANSLATIONS[lang].get("visitor_forecast_regions", "Visitor Forecast Regions")
+
+    with st.expander(legend_title, expanded=False):
+        options = regions.sort_values("Name")[["Name", "fill_color_base"]].drop_duplicates("Name")
+
+        selected = st.multiselect(
+            TRANSLATIONS[lang].get("highlight_regions", "Highlight region(s)"),
+            options=options["Name"].tolist(),
+            default=[],
+            key="selected_regions_multiselect",
+        )
+
+        for _, row in options.iterrows():
+            r, g, b = row["fill_color_base"]
+            swatch_col, label_col = st.columns([0.08, 0.92])
+            with swatch_col:
+                st.markdown(
+                    f'<div style="width:16px;height:16px;border-radius:3px;'
+                    f'background-color:rgb({r},{g},{b});margin-top:4px;"></div>',
+                    unsafe_allow_html=True,
+                )
+            with label_col:
+                st.markdown(row["Name"])
+
+    return selected
 
 def get_fixed_size():
     """
@@ -97,6 +222,7 @@ def get_parking_section():
     """
     Display the parking section of the dashboard with a map showing:
       - the BKG TopPlusOpen Light Grau basemap
+      - visitor forecast regions (with an interactive legend)
       - real-time parking occupancy markers
     in a fixed bird's-eye view fit to the data, still pannable/zoomable.
     """
@@ -138,6 +264,11 @@ def get_parking_section():
     # Map occupancy rate to status (High, Medium, Low)
     processed_parking_data['occupancy_status'] = processed_parking_data['current_occupancy_rate'].apply(get_occupancy_status)
 
+    # --- Regions: load + legend (drives highlight state) -----------------
+    regions = load_regions(REGIONS_GEOJSON_PATH)
+    highlighted_regions = render_regions_legend(regions)
+    styled_regions = style_regions_for_display(regions, highlighted_regions)
+
     # Calculate center of the map based on the average of latitudes and longitudes
     avg_latitude = processed_parking_data['latitude'].mean()
     avg_longitude = processed_parking_data['longitude'].mean()
@@ -149,6 +280,20 @@ def get_parking_section():
         zoom=9.5,  # Zoom level increased for a closer view
         pitch=0,  # Set the pitch to 0 for a top-down view
         bearing=0,  # To set the initial bearing to 0 (0 being aligned to true north)
+    )
+
+    # --- Layers ------------------------------------------------------------
+    regions_layer = pdk.Layer(
+        "GeoJsonLayer",
+        data=styled_regions.__geo_interface__,
+        stroked=True,
+        filled=True,
+        get_fill_color="properties.fill_color",
+        get_line_color="properties.line_color",
+        get_line_width="properties.line_width",
+        line_width_min_pixels=1,
+        pickable=True,
+        auto_highlight=True,
     )
 
     tile_layer = pdk.Layer(
@@ -169,7 +314,7 @@ def get_parking_section():
     )
 
     deck = pdk.Deck(
-        layers=[tile_layer, parking_layer],
+        layers=[tile_layer, parking_layer, regions_layer],
         initial_view_state=view_state,
         map_style=None,        # basemap comes from tile_layer, not a Mapbox/MapLibre style
         map_provider=None,     # no basemap provider needed — avoids any API-key/token requirement

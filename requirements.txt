@@ -11,3 +11,4 @@ pycaret
 openpyxl
 adlfs
 duckdb
+geopandas

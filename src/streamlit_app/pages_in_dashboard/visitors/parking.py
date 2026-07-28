@@ -24,9 +24,8 @@ TOPPLUS_TILE_URL = (
     f"{TOPPLUS_LAYER}/default/WEBMERCATOR/{{z}}/{{y}}/{{x}}.png"
 )
 
-# Path to the full regions GeoJSON (client-provided, EPSG:25832)
-REGIONS_GEOJSON_PATH = "ecocounter_regions.geojson"
- 
+REGIONS_GEOJSON_AZURE_PATH = 'raw-data/geodata/ecocounter_regionen_v2.geojson'
+
 # Qualitative palette for regions (RGB)
 REGION_COLOR_PALETTE = [
     [230, 25, 75], [60, 180, 75], [255, 225, 25], [0, 130, 200], [245, 130, 48],
@@ -35,21 +34,20 @@ REGION_COLOR_PALETTE = [
 ]
 
 @st.cache_data
-def load_regions(geojson_path: str) -> gpd.GeoDataFrame:
+def load_regions(path: str) -> gpd.GeoDataFrame:
     """
     Load the visitor forecast regions GeoJSON and reproject it from
     EPSG:25832 (as provided) to EPSG:4326 (lat/lon, what pydeck expects).
     """
             
     # Construct the full blob name (key)
-    blob_name = 'raw-data/geodata/ecocounter_regionen.geojson'
-    print(f"Retrieving the region GeoJSON saved in Azure with blob name {blob_name}")
+    print(f"Retrieving the region GeoJSON saved in Azure with blob name {path}")
     
     # 1. Create a BlobClient
     blob_client = BlobClient.from_connection_string(
         conn_str=CONNECTION_STRING, 
         container_name=CONTAINER_NAME, 
-        blob_name=blob_name
+        blob_name=path
     )
     
     # 2. Download the blob content
@@ -274,7 +272,7 @@ def get_parking_section():
     processed_parking_data['tooltip_line2_occupancy'] = "Belegungsstatus: " + processed_parking_data['occupancy_status']
 
     # --- Regions: load + legend (drives highlight state) -----------------
-    regions = load_regions(REGIONS_GEOJSON_PATH)
+    regions = load_regions(path=REGIONS_GEOJSON_AZURE_PATH)
     highlighted_regions = render_regions_legend(regions)
     styled_regions = style_regions_for_display(regions, highlighted_regions)
 

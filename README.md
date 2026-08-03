@@ -183,7 +183,7 @@ As mentioned, the web app is hosted via Azure App Service in form of a container
 
 ## Technical Documentation 📚
 
-The technical documentation website is available [here](https://dssgxmunich.github.io/bavarian-forest-visitor-monitoring-dssgx-24/). 
+The technical documentation website is available [here](https://wild-ecol-cons.github.io/webapp-besuchermonitoring-nationalpark-bayerischer-wald/). 
 
 ### Update the Docs & Build the Docs Locally
 

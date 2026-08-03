@@ -23,7 +23,15 @@ TOPPLUS_TILE_URL = (
     f"https://sgx.geodatenzentrum.de/wmts_topplus_open/tile/1.0.0/"
     f"{TOPPLUS_LAYER}/default/WEBMERCATOR/{{z}}/{{y}}/{{x}}.png"
 )
-TOPPLUS_ATTRIBUTION = "© Bundesamt für Kartographie und Geodäsie (BKG), 2026"
+
+year_of_today = datetime.now().year
+TOPPLUS_ATTRIBUTION = (
+    'Kartendarstellung: &copy; '
+    '<a href="https://www.bkg.bund.de/" target="_blank" rel="noopener noreferrer">BKG</a> '
+    f'({year_of_today}), '
+    '<a href="https://www.govdata.de/dl-de/by-2-0" target="_blank" rel="noopener noreferrer">dl-de/by-2-0</a>, '
+    '<a href="https://sgx.geodatenzentrum.de/web_public/gdz/datenquellen/datenquellen_topplusopen.html" target="_blank" rel="noopener noreferrer">Datenquelle</a> '
+)
 
 REGIONS_GEOJSON_AZURE_PATH = 'raw-data/geodata/ecocounter_regionen_v2.geojson'
 

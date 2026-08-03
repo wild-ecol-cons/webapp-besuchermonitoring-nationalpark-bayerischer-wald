@@ -1,6 +1,7 @@
 # Import necessary libraries
 import streamlit as st
-import pydeck as pdk
+import folium
+from streamlit_folium import st_folium
 import pandas as pd
 import geopandas as gpd
 import joblib
@@ -15,14 +16,14 @@ from datetime import datetime
 # BKG WMTS endpoint for TopPlusOpen, addressed like a standard XYZ tile
 # source. "web_light_grau" is the "TopPlusOpen Light Grau" variant.
 #
-# NOTE: this is loaded as a pydeck TileLayer (a normal layer, in the
-# `layers` array) rather than as a `map_style` dict. A TileLayer is just
-# another layer, serialized the same way as the ScatterplotLayer below.
+# NOTE: this is consumed by a folium.TileLayer (Leaflet), which natively
+# supports arbitrary XYZ tile URL templates.
 TOPPLUS_LAYER = "web_light_grau"
 TOPPLUS_TILE_URL = (
     f"https://sgx.geodatenzentrum.de/wmts_topplus_open/tile/1.0.0/"
     f"{TOPPLUS_LAYER}/default/WEBMERCATOR/{{z}}/{{y}}/{{x}}.png"
 )
+TOPPLUS_ATTRIBUTION = "© Bundesamt für Kartographie und Geodäsie (BKG), 2026"
 
 REGIONS_GEOJSON_AZURE_PATH = 'raw-data/geodata/ecocounter_regionen_v2.geojson'
 
@@ -39,7 +40,7 @@ REGION_COLOR_PALETTE = [
 def load_regions(path: str) -> gpd.GeoDataFrame:
     """
     Load the visitor forecast regions GeoJSON and reproject it from
-    EPSG:25832 (as provided) to EPSG:4326 (lat/lon, what pydeck expects).
+    EPSG:25832 (as provided) to EPSG:4326 (lat/lon, what folium/Leaflet expects).
     """
             
     # Construct the full blob name (key)
@@ -103,7 +104,7 @@ def style_regions_for_display(regions: gpd.GeoDataFrame, highlighted_names: list
         return [160, 160, 160, 120]
 
     def line_width(row):
-        return 100 if (row["Name"] in highlighted_names) else 1
+        return 4 if (row["Name"] in highlighted_names) else 1
 
     regions["fill_color"] = regions.apply(fill_color, axis=1)
     regions["line_color"] = regions.apply(line_color, axis=1)
@@ -256,6 +257,77 @@ def render_occupancy_bar(occupancy_rate):
     </div>
     """, unsafe_allow_html=True)
 
+
+def build_folium_map(processed_parking_data: pd.DataFrame, styled_regions: gpd.GeoDataFrame) -> folium.Map:
+    """
+    Build the interactive Leaflet map (via folium) with:
+      - the BKG TopPlusOpen Light Grau basemap, loaded as a custom XYZ TileLayer
+      - visitor forecast regions as a styled GeoJson layer
+      - real-time parking occupancy markers as CircleMarkers
+
+    Unlike pydeck's TileLayer, folium/Leaflet's TileLayer natively supports
+    arbitrary custom tile URL templates, so this actually renders the BKG
+    basemap instead of silently falling back to a default provider basemap.
+    """
+
+    view_center = [48.98788792657768, 13.388472800551007]
+
+    m = folium.Map(
+        location=view_center,
+        zoom_start=11,
+        tiles=None,  # IMPORTANT: don't let folium add its own default basemap
+        control_scale=True,
+    )
+
+    # --- Basemap: BKG TopPlusOpen Light Grau -------------------------------
+    folium.TileLayer(
+        tiles=TOPPLUS_TILE_URL,
+        attr=TOPPLUS_ATTRIBUTION,
+        name="TopPlusOpen Light Grau",
+        min_zoom=0,
+        max_zoom=19,
+        overlay=False,
+        control=False,
+    ).add_to(m)
+
+    # --- Regions polygons ---------------------------------------------------
+    def region_style(feature):
+        r, g, b, a = feature["properties"]["fill_color"]
+        lr, lg, lb, la = feature["properties"]["line_color"]
+        line_width_px = feature["properties"]["line_width"]
+        return {
+            "fillColor": f"rgb({r},{g},{b})",
+            "color": f"rgb({lr},{lg},{lb})",
+            "weight": line_width_px,
+            "fillOpacity": a / 255,
+            "opacity": la / 255,
+        }
+
+    folium.GeoJson(
+        styled_regions.__geo_interface__,
+        style_function=region_style,
+        tooltip=folium.GeoJsonTooltip(fields=["Name"], aliases=["Region:"]),
+        name="Visitor forecast regions",
+    ).add_to(m)
+
+    # --- Parking markers ------------------------------------------------------
+    for _, row in processed_parking_data.iterrows():
+        r, g, b = row["color"]
+        tooltip_html = f"{row['tooltip_line1_name']}<br/>{row['tooltip_line2_occupancy']}"
+        folium.CircleMarker(
+            location=[row["latitude"], row["longitude"]],
+            radius=8,
+            color="black",
+            weight=1,
+            fill=True,
+            fill_color=f"rgb({r},{g},{b})",
+            fill_opacity=0.9,
+            tooltip=tooltip_html,
+        ).add_to(m)
+
+    return m
+
+
 @st.fragment(run_every="15min")
 def get_parking_section():
     """
@@ -263,7 +335,7 @@ def get_parking_section():
       - the BKG TopPlusOpen Light Grau basemap
       - visitor forecast regions (with an interactive legend)
       - real-time parking occupancy markers
-    in a fixed bird's-eye view fit to the data, still pannable/zoomable.
+    Fully pannable and zoomable via Leaflet (through folium/streamlit-folium).
     """
 
     print("Rendering parking section for the visitor dashboard...")
@@ -328,62 +400,9 @@ def get_parking_section():
     highlighted_regions = render_regions_legend(regions)
     styled_regions = style_regions_for_display(regions, highlighted_regions)
 
-    # PyDeck Map Configuration with adjusted view_state
-    view_state = pdk.ViewState(
-        latitude=48.98788792657768,  # Center map at the average latitude
-        longitude=13.388472800551007,  # Center map at the average longitude
-        zoom=9.6,  # Zoom level increased for a closer view
-        pitch=0,  # Set the pitch to 0 for a top-down view
-        bearing=0,  # To set the initial bearing to 0 (0 being aligned to true north)
-    )
-
-    # --- Layers ------------------------------------------------------------
-    regions_layer = pdk.Layer(
-        "GeoJsonLayer",
-        data=styled_regions.__geo_interface__,
-        stroked=True,
-        filled=True,
-        get_fill_color="properties.fill_color",
-        get_line_color="properties.line_color",
-        get_line_width="properties.line_width",
-        line_width_min_pixels=1,
-        pickable=True,
-        auto_highlight=True,
-    )
-
-    tile_layer = pdk.Layer(
-        "TileLayer",
-        data=TOPPLUS_TILE_URL,
-        min_zoom=0,
-        max_zoom=19,
-        tile_size=256,
-    )
- 
-    parking_layer = pdk.Layer(
-        "ScatterplotLayer",
-        data=processed_parking_data,
-        get_position=["longitude", "latitude"],
-        get_radius=12,
-        radius_units="'pixels'", # for dynamic scaling relative to zoom
-        radius_min_pixels=8,
-        radius_max_pixels=25,
-        get_fill_color="color",
-        get_line_color=[0,0,0],
-        get_line_width=10,
-        stroked=True,
-        pickable=True,
-    )
-
-    deck = pdk.Deck(
-        layers=[tile_layer, regions_layer, parking_layer],
-        initial_view_state=view_state,
-        map_style=None,        # basemap comes from tile_layer, not a Mapbox/MapLibre style
-        map_provider=None,     # no basemap provider needed — avoids any API-key/token requirement
-        tooltip={
-        "html": "{tooltip_line1_name}<br/>{tooltip_line2_occupancy}"
-        },
-    )
-    st.pydeck_chart(deck)
+    # --- Build and render the folium/Leaflet map ---------------------------
+    folium_map = build_folium_map(processed_parking_data, styled_regions)
+    st_folium(folium_map, width=None, height=600, returned_objects=[])
 
     # Interactive Metrics
     selected_location = st.selectbox(

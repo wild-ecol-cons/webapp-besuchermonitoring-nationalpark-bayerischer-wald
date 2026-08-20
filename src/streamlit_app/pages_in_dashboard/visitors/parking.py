@@ -35,15 +35,6 @@ TOPPLUS_ATTRIBUTION = (
 
 REGIONS_GEOJSON_AZURE_PATH = 'raw-data/geodata/ecocounter_regionen_v2.geojson'
 
-# Qualitative palette for regions (RGB)
-REGION_COLOR_PALETTE = [
-    [158, 29, 201],   # Purple#
-    [29, 143, 201],   # Sky blue
-    [29, 72, 201],    # Blue
-    [72, 29, 201],    # Indigo/violet
-    [29, 201, 186],   # Teal/cyan
-    [201, 29, 158],   # Magenta/pink
-]
 @st.cache_data
 def load_regions(path: str) -> gpd.GeoDataFrame:
     """
@@ -78,14 +69,9 @@ def load_regions(path: str) -> gpd.GeoDataFrame:
 
     regions = regions.to_crs(epsg=4326)
 
-    # Stable per-region color assignment, keyed by Region_ID so colors don't
-    # shuffle between reruns.
-    region_ids = sorted(regions["Region_ID"].unique())
-    color_map = {
-        region_id: REGION_COLOR_PALETTE[i % len(REGION_COLOR_PALETTE)]
-        for i, region_id in enumerate(region_ids)
-    }
-    regions["fill_color_base"] = regions["Region_ID"].map(color_map)
+    # Decisions: All regions have the same green color
+    region_color = (173, 221, 142)
+    regions["fill_color_base"] = [region_color] * len(regions)
 
     return regions
 
@@ -112,7 +98,7 @@ def style_regions_for_display(regions: gpd.GeoDataFrame, highlighted_names: list
         return [160, 160, 160, 120]
 
     def line_width(row):
-        return 4 if (row["Name"] in highlighted_names) else 1
+        return 5
 
     regions["fill_color"] = regions.apply(fill_color, axis=1)
     regions["line_color"] = regions.apply(line_color, axis=1)
@@ -145,18 +131,6 @@ def render_regions_legend(regions: gpd.GeoDataFrame) -> list:
             placeholder=TRANSLATIONS[st.session_state.selected_language]['choose_regions'],
         )
 
-        for _, row in options.iterrows():
-            r, g, b = row["fill_color_base"]
-            swatch_col, label_col = st.columns([0.08, 0.92])
-            with swatch_col:
-                st.markdown(
-                    f'<div style="width:16px;height:16px;border-radius:3px;'
-                    f'background-color:rgb({r},{g},{b});margin-top:4px;"></div>',
-                    unsafe_allow_html=True,
-                )
-            with label_col:
-                st.markdown(row["Name"])
-
     return selected
 
 def get_fixed_size():
@@ -175,7 +149,7 @@ def render_map_symbology_legend():
         <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center; font-size: 0.85rem;">
             <!-- Regions -->
             <div style="display: flex; align-items: center; gap: 8px;">
-                <div style="width: 18px; height: 18px; background-color: rgba(158, 29, 201, 0.4); border: 2px solid rgb(158, 29, 201); border-radius: 3px;"></div>
+                <div style="width: 18px; height: 18px; background-color: rgba(173, 221, 142, 130); border: 4px solid rgb(173, 221, 142); border-radius: 3px;"></div>
                 <span><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_area_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["legend_area_explained"]}</span>
             </div>
             <!-- Markers -->

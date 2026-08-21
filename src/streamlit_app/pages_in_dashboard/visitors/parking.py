@@ -33,7 +33,7 @@ TOPPLUS_ATTRIBUTION = (
     '<a href="https://sgx.geodatenzentrum.de/web_public/gdz/datenquellen/datenquellen_topplusopen.html" target="_blank" rel="noopener noreferrer">Datenquelle</a> '
 )
 
-REGIONS_GEOJSON_AZURE_PATH = 'raw-data/geodata/ecocounter_regionen_v2.geojson'
+REGIONS_GEOJSON_AZURE_PATH = 'raw-data/geodata/ecocounter_regionen_dissolved.geojson'
 
 @st.cache_data
 def load_regions(path: str) -> gpd.GeoDataFrame:

@@ -9,6 +9,7 @@ import src.streamlit_app.pre_processing.process_forecast_weather_data as prfwd
 import streamlit as st
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
 from src.prediction_pipeline.sourcing_data.source_weather import get_hourly_data
+from src.config import visitor_sensors_with_realtime_tracking
 import pytz
 
 
@@ -175,6 +176,46 @@ def source_and_preprocess_realtime_parking_data(current_timestamp):
     st.write(f"{TRANSLATIONS[st.session_state.selected_language]['parking_data_last_updated']} {current_timestamp}")
 
     return processed_parking_data
+
+@st.cache_data(max_entries=1)
+def source_and_preprocess_realtime_visitor_occupancy(current_timestamp):
+
+    """
+    Source and preprocess the real-time visitor occupancy data from five different locations that have real-time tracking to Bayern Cloud enabled.. Returns the timestamp of when the function was run.
+
+    Args:
+        current_timestamp (datetime): The timestamp of when the function was run.
+
+    Returns:
+        processed_visitor_occupancy_data (pd.DataFrame): Preprocessed real-time visitor occupancy data.
+    """
+    print(f"Fetching real-time visitor occupancy data at '{current_timestamp}'...")
+
+    preprocessed_realtime_visitor_occupancy = pd.DataFrame()
+
+    for sensor in visitor_sensors_with_realtime_tracking:
+        API_endpoint = f'https://data.bayerncloud.digital/api/v4/endpoints/list_occupancy/{sensor}'
+
+        request_params = {
+            'token': BAYERN_CLOUD_API_KEY
+        }
+
+        response = requests.get(API_endpoint, params=request_params)
+
+        # Get and preprocess the current occupancy data from the response for one location
+        response_json = response.json()["@graph"][0]["dcls:currentOccupancy"]
+
+        # Build dataframe of sourced and preprocessed visitor occupancy
+        sensor_data = pd.DataFrame({"location": [sensor], "current_occupancy": [response_json]})
+
+        preprocessed_realtime_visitor_occupancy = pd.concat([preprocessed_realtime_visitor_occupancy, sensor_data], ignore_index=True)
+
+    print(preprocessed_realtime_visitor_occupancy)
+
+    # Return the timestamp in German time indicating the time zone Berlin
+    print(f"Visitor occupancy data sourced and processed at {current_timestamp}, Europe/Berlin time.")
+
+    return preprocessed_realtime_visitor_occupancy
 
 ########################################################################################
 # Weather functions

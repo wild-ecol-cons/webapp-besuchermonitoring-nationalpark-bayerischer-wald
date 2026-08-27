@@ -7,7 +7,7 @@ import geopandas as gpd
 import joblib
 import io
 import pytz
-from src.streamlit_app.source_data import source_and_preprocess_realtime_parking_data
+from src.streamlit_app.source_data import source_and_preprocess_realtime_parking_data, source_and_preprocess_realtime_visitor_occupancy
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
 from src.config import CONTAINER_NAME, CONNECTION_STRING
 from azure.storage.blob import BlobClient
@@ -344,6 +344,9 @@ def get_parking_section():
 
     # Source and preprocess the parking data
     processed_parking_data = source_and_preprocess_realtime_parking_data(timestamp_latest_parking_data_fetch)
+
+    # Source and preprocess the real-time visitor occupancy to be shown in the map
+    processed_visitor_occupancy = source_and_preprocess_realtime_visitor_occupancy(timestamp_latest_parking_data_fetch)
 
     st.markdown(f"### {TRANSLATIONS[st.session_state.selected_language]['real_time_parking_occupancy']}")
 

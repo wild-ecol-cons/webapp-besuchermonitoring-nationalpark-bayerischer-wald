@@ -162,3 +162,11 @@ sensor_mapping_to_traffic_metrics = {
         "Waldspielgelände_1 OUT (aus dem WSG)",
         "Wistlberg OUT"]
 }
+
+visitor_sensors_with_realtime_tracking = [
+    "tfg-lusen-1",
+    "tfg-lusen-2",
+    "tfg-lusen-3",
+    "tfg-falkenstein-1",
+    "tfg-falkenstein-2",
+]

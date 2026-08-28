@@ -152,7 +152,7 @@ def render_map_symbology_legend():
                 <div style="width: 18px; height: 18px; background-color: rgba(173, 221, 142, 130); border: 4px solid rgb(173, 221, 142); border-radius: 3px;"></div>
                 <span><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_area_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["legend_area_explained"]}</span>
             </div>
-            <!-- Markers -->
+            <!-- Parking Markers -->
             <div style="display: flex; align-items: center; gap: 12px; border-left: 1px solid #ccc; padding-left: 16px;">
                 <span style="margin-right: -4px;"><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_circles_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["legend_circles_explained"]} </span>
                 <div style="display: flex; align-items: center; gap: 4px;">
@@ -167,6 +167,11 @@ def render_map_symbology_legend():
                     <div style="width: 12px; height: 12px; background-color: rgb(211, 47, 47); border-radius: 50%; border: 1px solid #fff;"></div>
                     <span style="color: #555;">{TRANSLATIONS[st.session_state.selected_language]["parking_status_high"]}</span>
                 </div>
+            </div>
+            <!-- Visitor Sensor Markers -->
+            <div style="display: flex; align-items: center; gap: 3px; border-left: 1px solid #ccc; padding-left: 16px;">
+                <div style="font-size: 25px; line-height: 18px; width: 18px; text-align: center;">🚶</div>
+                <span><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_visitor_sensors_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["current_visitors"]}</span>
             </div>
         </div>
     </div>

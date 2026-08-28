@@ -56,7 +56,7 @@ LONGITUDE = 13.36234
 
 def get_realtime_occupancy_data_for_location(
     location_slug: str,
-):
+) -> int:
     """
     Fetches the real-time occupancy data for a given location from the Bayern Cloud API.
 
@@ -72,7 +72,7 @@ def get_realtime_occupancy_data_for_location(
     response = requests.get(API_endpoint, params=request_params)
 
     # Get and preprocess the current occupancy data from the response for one location
-    realtime_occupancy = response.json()["@graph"][0]["dcls:currentOccupancy"]
+    realtime_occupancy = int(response.json()["@graph"][0]["dcls:currentOccupancy"])
 
     return realtime_occupancy
 
@@ -199,7 +199,7 @@ def source_and_preprocess_realtime_parking_data(current_timestamp):
     return processed_parking_data
 
 @st.cache_data(max_entries=1)
-def source_and_preprocess_realtime_visitor_occupancy(current_timestamp):
+def source_and_preprocess_realtime_visitor_occupancy(current_timestamp: datetime) -> pd.DataFrame:
 
     """
     Source and preprocess the real-time visitor occupancy data from five different locations that have real-time tracking to Bayern Cloud enabled.. Returns the timestamp of when the function was run.

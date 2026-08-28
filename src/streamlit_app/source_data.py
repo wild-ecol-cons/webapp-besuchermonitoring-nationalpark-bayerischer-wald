@@ -54,6 +54,27 @@ END_TIME = (START_TIME + pd.Timedelta(days=7))
 LATITUDE = 48.96119
 LONGITUDE = 13.36234
 
+def get_realtime_occupancy_data_for_location(
+    location_slug: str,
+):
+    """
+    Fetches the real-time occupancy data for a given location from the Bayern Cloud API.
+
+    Args:
+        location_slug (str): The slug identifier for the location.
+    """
+    API_endpoint = f'https://data.bayerncloud.digital/api/v4/endpoints/list_occupancy/{location_slug}'
+
+    request_params = {
+        'token': BAYERN_CLOUD_API_KEY
+    }
+
+    response = requests.get(API_endpoint, params=request_params)
+
+    # Get and preprocess the current occupancy data from the response for one location
+    realtime_occupancy = response.json()["@graph"][0]["dcls:currentOccupancy"]
+
+    return realtime_occupancy
 
 ########################################################################################
 # Parking functions
@@ -194,23 +215,12 @@ def source_and_preprocess_realtime_visitor_occupancy(current_timestamp):
     preprocessed_realtime_visitor_occupancy = pd.DataFrame()
 
     for sensor, sensor_data in visitor_sensors_with_realtime_tracking.items():
-        API_endpoint = f'https://data.bayerncloud.digital/api/v4/endpoints/list_occupancy/{sensor}'
-
-        request_params = {
-            'token': BAYERN_CLOUD_API_KEY
-        }
-
-        response = requests.get(API_endpoint, params=request_params)
-
-        # Get and preprocess the current occupancy data from the response for one location
-        response_json = response.json()["@graph"][0]["dcls:currentOccupancy"]
+        realtime_sensor_occupancy = get_realtime_occupancy_data_for_location(sensor)
 
         # Build dataframe of sourced and preprocessed visitor occupancy
-        sensor_data_df = pd.DataFrame({"location": [sensor_data["sensor_name"]], "latitude": [sensor_data["coordinates"][0]], "longitude": [sensor_data["coordinates"][1]], "current_occupancy": [response_json]})
+        sensor_data_df = pd.DataFrame({"location": [sensor_data["sensor_name"]], "latitude": [sensor_data["coordinates"][0]], "longitude": [sensor_data["coordinates"][1]], "current_occupancy": [realtime_sensor_occupancy]})
 
         preprocessed_realtime_visitor_occupancy = pd.concat([preprocessed_realtime_visitor_occupancy, sensor_data_df], ignore_index=True)
-
-    print(preprocessed_realtime_visitor_occupancy)
 
     # Return the timestamp in German time indicating the time zone Berlin
     print(f"Visitor occupancy data sourced and processed at {current_timestamp}, Europe/Berlin time.")

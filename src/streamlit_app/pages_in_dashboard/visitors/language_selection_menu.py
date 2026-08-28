@@ -9,6 +9,7 @@ LANGUAGE_OPTIONS= {
 # Language dictionary with translations
 TRANSLATIONS = {
         "English": {
+        "current_visitors": "Visitor Count (live)",
         "select_regions_to_visualize": "Select Regions to Highlight",
         'choose_regions': 'Select one or multiple Regions to highlight',
         "symbol_legend": "Symbol Legend",
@@ -99,6 +100,7 @@ TRANSLATIONS = {
         'admin_page_title': 'Bavarian Forest - Admin - Visitor Monitoring',
     },
     "German": {
+        "current_visitors": "Besucherzahl (aktuell)",
         "select_regions_to_visualize": "Wähle Regionen zum Visualisieren aus",
         'choose_regions': 'Wähle eine oder mehrere Regionen aus',
         "symbol_legend": "Symbol-Legende",

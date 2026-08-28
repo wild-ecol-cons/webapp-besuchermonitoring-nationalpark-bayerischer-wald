@@ -309,6 +309,31 @@ def build_folium_map(processed_parking_data: pd.DataFrame, styled_regions: gpd.G
 
     return m
 
+def add_visitor_occupancy_markers(folium_map, processed_visitor_occupancy):
+    visitor_layer = folium.FeatureGroup(name="Visitor Sensors", show=True)
+
+    for _, row in processed_visitor_occupancy.iterrows():
+        tooltip_text = (
+            f"<b>{row['location']}</b><br>"
+            f"{TRANSLATIONS[st.session_state.selected_language]['current_visitors']}: "
+            f"{row['current_occupancy']}"
+        )
+
+        folium.Marker(
+            location=[row['latitude'], row['longitude']],
+            tooltip=folium.Tooltip(tooltip_text),
+            icon=folium.DivIcon(
+                html=(
+                    '<div style="font-size:26px; line-height:26px; '
+                    'text-align:center; filter: drop-shadow(0 0 1px #000);">🚶</div>'
+                ),
+                icon_size=(30, 30),
+                icon_anchor=(15, 15),
+            ),
+        ).add_to(visitor_layer)
+
+    visitor_layer.add_to(folium_map)
+    return folium_map
 
 @st.fragment(run_every="15min")
 def get_parking_section():
@@ -387,6 +412,7 @@ def get_parking_section():
 
     # --- Build and render the folium/Leaflet map ---------------------------
     folium_map = build_folium_map(processed_parking_data, styled_regions)
+    folium_map = add_visitor_occupancy_markers(folium_map, processed_visitor_occupancy)
     st_folium(folium_map, width=None, height=600, returned_objects=[])
 
     # Interactive Metrics

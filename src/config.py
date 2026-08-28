@@ -163,10 +163,11 @@ sensor_mapping_to_traffic_metrics = {
         "Wistlberg OUT"]
 }
 
-visitor_sensors_with_realtime_tracking = [
-    "tfg-lusen-1",
-    "tfg-lusen-2",
-    "tfg-lusen-3",
-    "tfg-falkenstein-1",
-    "tfg-falkenstein-2",
-]
+# Slug names and coordinates of the visitor sensors that have real-time tracking of visitor occupancy to Bayern Cloud
+visitor_sensors_with_realtime_tracking = {
+    "tfg-lusen-1": (48.567, 13.500),
+    "tfg-lusen-2": (48.467, 13.600),
+    "tfg-lusen-3": (48.667, 13.700),
+    "tfg-falkenstein-1": (48.867, 13.900),
+    "tfg-falkenstein-2": (48.367, 13.800),
+}

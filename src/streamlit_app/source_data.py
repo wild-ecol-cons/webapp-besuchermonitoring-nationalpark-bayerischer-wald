@@ -193,7 +193,7 @@ def source_and_preprocess_realtime_visitor_occupancy(current_timestamp):
 
     preprocessed_realtime_visitor_occupancy = pd.DataFrame()
 
-    for sensor, coordinates in visitor_sensors_with_realtime_tracking.items():
+    for sensor, sensor_data in visitor_sensors_with_realtime_tracking.items():
         API_endpoint = f'https://data.bayerncloud.digital/api/v4/endpoints/list_occupancy/{sensor}'
 
         request_params = {
@@ -206,9 +206,9 @@ def source_and_preprocess_realtime_visitor_occupancy(current_timestamp):
         response_json = response.json()["@graph"][0]["dcls:currentOccupancy"]
 
         # Build dataframe of sourced and preprocessed visitor occupancy
-        sensor_data = pd.DataFrame({"location": [sensor], "latitude": [coordinates[0]], "longitude": [coordinates[1]], "current_occupancy": [response_json]})
+        sensor_data_df = pd.DataFrame({"location": [sensor_data["sensor_name"]], "latitude": [sensor_data["coordinates"][0]], "longitude": [sensor_data["coordinates"][1]], "current_occupancy": [response_json]})
 
-        preprocessed_realtime_visitor_occupancy = pd.concat([preprocessed_realtime_visitor_occupancy, sensor_data], ignore_index=True)
+        preprocessed_realtime_visitor_occupancy = pd.concat([preprocessed_realtime_visitor_occupancy, sensor_data_df], ignore_index=True)
 
     print(preprocessed_realtime_visitor_occupancy)
 

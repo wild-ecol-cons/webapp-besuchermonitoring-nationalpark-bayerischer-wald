@@ -169,7 +169,7 @@ def render_map_symbology_legend():
                 </div>
             </div>
             <!-- Visitor Sensor Markers -->
-            <div style="display: flex; align-items: center; gap: 3px; border-left: 1px solid #ccc; padding-left: 16px;">
+            <div style="display: flex; align-items: center; gap: 7px; border-left: 1px solid #ccc; padding-left: 3px;">
                 <div style="font-size: 25px; line-height: 18px; width: 18px; text-align: center;">🚶</div>
                 <span><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_visitor_sensors_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["current_visitors"]}</span>
             </div>

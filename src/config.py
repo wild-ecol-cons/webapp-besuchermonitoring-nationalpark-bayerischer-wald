@@ -164,6 +164,7 @@ sensor_mapping_to_traffic_metrics = {
 }
 
 # Slug names and coordinates of the visitor sensors that have real-time tracking of visitor occupancy to Bayern Cloud
+# TODO: Update to actual coordinates!!!
 visitor_sensors_with_realtime_tracking = {
     "tfg-lusen-1": {
         "sensor_name": "Tierfreigelände Lusen - Sensor 1",

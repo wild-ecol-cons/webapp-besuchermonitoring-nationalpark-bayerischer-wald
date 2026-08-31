@@ -40,12 +40,8 @@ def create_hourly_visitor_forecast_vizualization(selected_region, hourly_predict
         color_discrete_map={'red': 'red', 'blue': 'blue', 'green': 'green'}
     )
 
-    # Customize hover text for relative traffic
-    fig1.update_traces(
-        hovertemplate=(
-            'Hour: %{x|%H:%M}<br>'  # Display the hour in HH:MM format
-        )
-    )
+    # Disable hover text
+    fig1.update_layout(hovermode=False)
 
     # Update layout for relative traffic chart
     fig1.update_yaxes(range=[0, 1], showticklabels=False)  # Set y-axis to range from 0 to 1 and hide tick labels
@@ -98,6 +94,9 @@ def create_daily_visitor_forecast_vizualization(selected_region, daily_predictio
         title=f"{TRANSLATIONS[st.session_state.selected_language]['visitor_foot_traffic_for_week']}",
         color_discrete_map={'red': 'red', 'blue': 'blue', 'green': 'green'}
     )
+
+    # Disable hover text
+    fig1.update_layout(hovermode=False)
 
     # Update layout for relative traffic chart
     fig1.update_yaxes(range=[0, 1], showticklabels=False)  # Set y-axis to range from 0 to 1 and hide tick labels

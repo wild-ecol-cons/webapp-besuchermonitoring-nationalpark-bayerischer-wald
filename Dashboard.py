@@ -38,13 +38,14 @@ if 'selected_language' not in st.session_state:
 # Set the page layout - it is a two column layout
 col1, col2 = page_layout_config.get_page_layout()
 
-def create_dashboard_main_page(inference_predictions):
+def create_dashboard_main_page(hourly_inference_predictions, daily_inference_predictions):
 
     """
     Creates the dashboard page for the Bavarian Forest National Park visitor information. This includes the visitor count, parking, weather, recreation, and other information.
 
     Args:
-        inference_predictions (pd.DataFrame): The inference predictions for region-wise visitor counts.
+        hourly_inference_predictions (pd.DataFrame): The inference predictions for hourly visitor counts.
+        daily_inference_predictions (pd.DataFrame): The inference predictions for daily visitor counts.
     """
     
     with col1:
@@ -55,7 +56,7 @@ def create_dashboard_main_page(inference_predictions):
         st.title(TRANSLATIONS[st.session_state.selected_language]['title'])
 
         # Get the visitor count section
-        visitor_count.get_visitor_counts_section(inference_predictions)
+        visitor_count.get_visitor_counts_section(hourly_inference_predictions, daily_inference_predictions)
 
         # get the parking section
         parking.get_parking_section()
@@ -139,7 +140,7 @@ def run_pipeline_and_create_dashboard(
         hourly_inference_predictions, daily_inference_predictions = run_inference()
 
         # create the dashboard
-        create_dashboard_main_page(hourly_inference_predictions)
+        create_dashboard_main_page(hourly_inference_predictions, daily_inference_predictions)
 
 
 if __name__ == "__main__":

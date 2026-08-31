@@ -165,10 +165,14 @@ def preprocess_overall_inference_predictions(overall_predictions: pd.DataFrame) 
 
     # Calculate the relative traffic rate per region on a daily basis
     cols_for_aggregation = list(regions.keys()) + ['day_date']
-    daily_overall_predictions_with_relative_traffic = hourly_overall_predictions_with_relative_traffic[cols_for_aggregation].groupby('day_date').sum()
+    daily_overall_predictions_with_relative_traffic = hourly_overall_predictions_with_relative_traffic[cols_for_aggregation].groupby('day_date').sum().reset_index()
 
     for key, value in regions.items():
         daily_overall_predictions_with_relative_traffic = calculate_relative_traffic(daily_overall_predictions_with_relative_traffic, key, 'daily')
+
+    # Convert day_date to datetime and sort
+    daily_overall_predictions_with_relative_traffic['day_date'] = pd.to_datetime(daily_overall_predictions_with_relative_traffic['day_date'], format='%d-%m-%Y')
+    daily_overall_predictions_with_relative_traffic = daily_overall_predictions_with_relative_traffic.sort_values('day_date')
 
     return hourly_overall_predictions_with_relative_traffic, daily_overall_predictions_with_relative_traffic
 

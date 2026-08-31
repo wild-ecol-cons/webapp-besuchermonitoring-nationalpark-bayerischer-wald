@@ -145,6 +145,7 @@ def calculate_relative_traffic(df, column, type_of_aggregation):
     )
     return df
 
+@st.cache_data(max_entries=1)
 def preprocess_overall_inference_predictions(overall_predictions: pd.DataFrame) -> pd.DataFrame:
     # Pivot the dataframe to wide format
     hourly_overall_predictions_with_relative_traffic = overall_predictions.pivot(index='Time', columns='region', values='predictions').reset_index()
@@ -177,6 +178,7 @@ def preprocess_overall_inference_predictions(overall_predictions: pd.DataFrame) 
     return hourly_overall_predictions_with_relative_traffic, daily_overall_predictions_with_relative_traffic
 
 
+@st.cache_data(max_entries=1)
 def visitor_predictions(inference_data):
 
     loaded_models = load_latest_models_azure(

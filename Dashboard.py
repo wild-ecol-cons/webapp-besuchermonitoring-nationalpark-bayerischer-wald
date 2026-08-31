@@ -136,10 +136,10 @@ def run_pipeline_and_create_dashboard(
 
 
         # call the sourcing and processing pipeline
-        inference_predictions = run_inference()
+        hourly_inference_predictions, daily_inference_predictions = run_inference()
 
         # create the dashboard
-        create_dashboard_main_page(inference_predictions)
+        create_dashboard_main_page(hourly_inference_predictions)
 
 
 if __name__ == "__main__":

@@ -134,40 +134,45 @@ def predict_with_models(loaded_models, df_features):
     
     return overall_predictions
 
-@st.cache_data(max_entries=1)
+def calculate_relative_traffic(df, column, type_of_aggregation):
+    # Create a weekly relative traffic column with sklearn min-max scaling
+    scaler = MinMaxScaler()
+    df[f'{type_of_aggregation}_relative_traffic_{column}'] = scaler.fit_transform(df[[column]])
+
+    # Create a new column for color coding based on traffic thresholds
+    df[f'{type_of_aggregation}_relative_traffic_color_{column}'] = df[f'{type_of_aggregation}_relative_traffic_{column}'].apply(
+        lambda x: 'red' if x > 0.40 else 'green' if x < 0.05 else 'blue'
+    )
+    return df
+
 def preprocess_overall_inference_predictions(overall_predictions: pd.DataFrame) -> pd.DataFrame:
     # Pivot the dataframe to wide format
-    overall_predictions_wide = overall_predictions.pivot(index='Time', columns='region', values='predictions').reset_index()
+    hourly_overall_predictions_with_relative_traffic = overall_predictions.pivot(index='Time', columns='region', values='predictions').reset_index()
 
     # Convert the 'Time' column to datetime format
-    overall_predictions_wide['Time'] = pd.to_datetime(overall_predictions_wide['Time'], errors='coerce')
+    hourly_overall_predictions_with_relative_traffic['Time'] = pd.to_datetime(hourly_overall_predictions_with_relative_traffic['Time'], errors='coerce')
 
     # Create a new column to combine both date and day for radio buttons
-    overall_predictions_wide['day_date'] = overall_predictions_wide['Time'].dt.strftime('%d-%m-%Y')
+    hourly_overall_predictions_with_relative_traffic['day_date'] = hourly_overall_predictions_with_relative_traffic['Time'].dt.strftime('%d-%m-%Y')
 
-    # Calculate the traffic rate per region
+    # Calculate the traffic rate per region on an hourly basis
     for key, value in regions.items():
         # Summing up the IN and OUT columns
-        overall_predictions_wide[key] = overall_predictions_wide[value[0]] + overall_predictions_wide[value[1]]
+        hourly_overall_predictions_with_relative_traffic[key] = hourly_overall_predictions_with_relative_traffic[value[0]] + hourly_overall_predictions_with_relative_traffic[value[1]]
 
-        def calculate_relative_traffic(df, column, type_of_aggregation):
-            # Create a weekly relative traffic column with sklearn min-max scaling
-            scaler = MinMaxScaler()
-            df[f'{type_of_aggregation}_relative_traffic_{column}'] = scaler.fit_transform(df[[column]])
+        # Calculate the relative traffic rate per region on an hourly basis
+        hourly_overall_predictions_with_relative_traffic = calculate_relative_traffic(hourly_overall_predictions_with_relative_traffic, key, 'hourly')
 
-            # Create a new column for color coding based on traffic thresholds
-            df[f'{type_of_aggregation}_relative_traffic_color_{column}'] = df[f'{type_of_aggregation}_relative_traffic_{column}'].apply(
-                lambda x: 'red' if x > 0.40 else 'green' if x < 0.05 else 'blue'
-            )
-            return df
+    # Calculate the relative traffic rate per region on a daily basis
+    cols_for_aggregation = list(regions.keys()) + ['day_date']
+    daily_overall_predictions_with_relative_traffic = hourly_overall_predictions_with_relative_traffic[cols_for_aggregation].groupby('day_date').sum()
 
-        overall_predictions_with_relative_traffic = calculate_relative_traffic(overall_predictions_wide, key, 'hourly')
+    for key, value in regions.items():
+        daily_overall_predictions_with_relative_traffic = calculate_relative_traffic(daily_overall_predictions_with_relative_traffic, key, 'daily')
 
-
-    return overall_predictions_with_relative_traffic
+    return hourly_overall_predictions_with_relative_traffic, daily_overall_predictions_with_relative_traffic
 
 
-@st.cache_data(max_entries=1)
 def visitor_predictions(inference_data):
 
     loaded_models = load_latest_models_azure(
@@ -181,7 +186,7 @@ def visitor_predictions(inference_data):
     
     overall_inference_predictions = predict_with_models(loaded_models, inference_data)
 
-    preprocessed_overall_inference_predictions = preprocess_overall_inference_predictions(overall_inference_predictions)
+    hourly_inference_predictions, daily_inference_predictions = preprocess_overall_inference_predictions(overall_inference_predictions)
 
-    return preprocessed_overall_inference_predictions
+    return hourly_inference_predictions, daily_inference_predictions
 

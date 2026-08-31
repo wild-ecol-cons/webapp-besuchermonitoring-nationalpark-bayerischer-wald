@@ -31,7 +31,7 @@ def get_visitor_counts_section(inference_predictions):
     if selected_region:
 
         # Filter the DataFrame based on the selected region
-        selected_region_predictions = inference_predictions[["Time", "day_date", selected_region, f"weekly_relative_traffic_{selected_region}", f"traffic_color_{selected_region}"]]
+        selected_region_predictions = inference_predictions[["Time", "day_date", selected_region, f"hourly_relative_traffic_{selected_region}", f"hourly_relative_traffic_color_{selected_region}"]]
 
         # Get unique values for the day and date list
         days_list = selected_region_predictions['day_date'].unique()
@@ -55,9 +55,9 @@ def get_visitor_counts_section(inference_predictions):
         fig1 = px.bar(
             day_df,
             x='Time',  
-            y=f'weekly_relative_traffic_{selected_region}',
-            color=f'traffic_color_{selected_region}',  # Use the traffic color column
-            labels={f'weekly_relative_traffic_{selected_region}': '', 'Time': 'Hour of Day'},
+            y=f'hourly_relative_traffic_{selected_region}',
+            color=f'hourly_relative_traffic_color_{selected_region}',  # Use the traffic color column
+            labels={f'hourly_relative_traffic_{selected_region}': '', 'Time': 'Hour of Day'},
             title=f"{TRANSLATIONS[st.session_state.selected_language]['visitor_foot_traffic_for_day']} - {day_selected}",
             color_discrete_map={'red': 'red', 'blue': 'blue', 'green': 'green'}
         )

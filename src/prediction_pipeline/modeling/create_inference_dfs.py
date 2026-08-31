@@ -147,18 +147,24 @@ def preprocess_overall_inference_predictions(overall_predictions: pd.DataFrame) 
 
     # Calculate the traffic rate per region
     for key, value in regions.items():
+        # Summing up the IN and OUT columns
         overall_predictions_wide[key] = overall_predictions_wide[value[0]] + overall_predictions_wide[value[1]]
 
-        # Create a weekly relative traffic column with sklearn min-max scaling
-        scaler = MinMaxScaler()
-        overall_predictions_wide[f'weekly_relative_traffic_{key}'] = scaler.fit_transform(overall_predictions_wide[[key]])
+        def calculate_relative_traffic(df, column, type_of_aggregation):
+            # Create a weekly relative traffic column with sklearn min-max scaling
+            scaler = MinMaxScaler()
+            df[f'{type_of_aggregation}_relative_traffic_{column}'] = scaler.fit_transform(df[[column]])
 
-        # Create a new column for color coding based on traffic thresholds
-        overall_predictions_wide[f'traffic_color_{key}'] = overall_predictions_wide[f'weekly_relative_traffic_{key}'].apply(
-            lambda x: 'red' if x > 0.40 else 'green' if x < 0.05 else 'blue'
-        )
+            # Create a new column for color coding based on traffic thresholds
+            df[f'{type_of_aggregation}_relative_traffic_color_{column}'] = df[f'{type_of_aggregation}_relative_traffic_{column}'].apply(
+                lambda x: 'red' if x > 0.40 else 'green' if x < 0.05 else 'blue'
+            )
+            return df
 
-    return overall_predictions_wide
+        overall_predictions_with_relative_traffic = calculate_relative_traffic(overall_predictions_wide, key, 'hourly')
+
+
+    return overall_predictions_with_relative_traffic
 
 
 @st.cache_data(max_entries=1)

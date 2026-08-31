@@ -58,7 +58,6 @@ def create_hourly_visitor_forecast_vizualization(selected_region, hourly_predict
             font=dict(size=12),
             orientation="h",
             yanchor="top",
-            y=-0.3,  # Position the legend below the chart
             xanchor="center",
             x=0.5  # Center the legend horizontally
         ),
@@ -90,7 +89,6 @@ def create_daily_visitor_forecast_vizualization(selected_region, daily_predictio
         x='day_date',  
         y=f'daily_relative_traffic_{selected_region}',
         color=f'daily_relative_traffic_color_{selected_region}',  # Use the traffic color column
-        labels={f'daily_relative_traffic_{selected_region}': '', 'day_date': 'Day'},
         title=f"{TRANSLATIONS[st.session_state.selected_language]['visitor_foot_traffic_for_week']}",
         color_discrete_map={'red': 'red', 'blue': 'blue', 'green': 'green'}
     )
@@ -106,12 +104,8 @@ def create_daily_visitor_forecast_vizualization(selected_region, daily_predictio
         yaxis_title=None,  # Hide the y-axis title
         legend_title_text=TRANSLATIONS[st.session_state.selected_language]['visitor_foot_traffic'],
         legend=dict(
-            itemsizing='constant',
-            traceorder="normal",
             font=dict(size=12),
             orientation="h",
-            yanchor="top",
-            y=-0.3,  # Position the legend below the chart
             xanchor="center",
             x=0.5  # Center the legend horizontally
         )

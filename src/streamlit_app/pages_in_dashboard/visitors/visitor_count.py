@@ -75,6 +75,7 @@ def create_hourly_visitor_forecast_vizualization(selected_region, hourly_predict
     # Display the interactive bar chart for relative traffic below the radio button
     st.plotly_chart(fig1)
 
+@st.cache_data(max_entries=1)
 def create_daily_visitor_forecast_vizualization(selected_region, daily_predictions):
 
     # Filter the DataFrame based on the selected region

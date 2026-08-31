@@ -136,7 +136,7 @@ def predict_with_models(loaded_models, df_features):
 
 def calculate_relative_traffic(df, column, type_of_aggregation):
     # Create a weekly relative traffic column with sklearn min-max scaling
-    scaler = MinMaxScaler()
+    scaler = MinMaxScaler(feature_range=(0.03, 1))
     df[f'{type_of_aggregation}_relative_traffic_{column}'] = scaler.fit_transform(df[[column]])
 
     # Create a new column for color coding based on traffic thresholds

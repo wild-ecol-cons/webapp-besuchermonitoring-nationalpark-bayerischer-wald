@@ -59,6 +59,6 @@ def run_inference():
     print(f"The overall inference_df is: {inference_df}")
 
     # make predictions
-    overall_visitor_predictions = visitor_predictions(inference_df) 
+    hourly_inference_predictions, daily_inference_predictions = visitor_predictions(inference_df) 
 
-    return overall_visitor_predictions
+    return hourly_inference_predictions, daily_inference_predictions

@@ -394,6 +394,8 @@ def get_parking_section():
 
     st.markdown(f"### {TRANSLATIONS[st.session_state.selected_language]['real_time_map_visualization']}")
 
+    st.write(f"{TRANSLATIONS[st.session_state.selected_language]['live_data_last_updated']} {timestamp_latest_parking_data_fetch}")
+
     # Display the clear map symbology legend above the map
     render_map_symbology_legend()
     

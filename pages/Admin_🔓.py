@@ -25,8 +25,8 @@ def get_visitor_predictions_section():
     Build the visitor predictions section by running/loading the inference pipeline and displaying the predictions in actual number of visitors.
     """
 
-    inference_predictions = run_inference()
+    hourly_inference_predictions, daily_inference_predictions = run_inference()
 
-    visitor_prediction_graph(inference_predictions)
+    visitor_prediction_graph(hourly_inference_predictions)
 
 get_visitor_predictions_section()

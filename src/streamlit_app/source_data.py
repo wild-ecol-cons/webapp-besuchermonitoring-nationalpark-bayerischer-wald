@@ -207,8 +207,6 @@ def source_and_preprocess_realtime_parking_data(current_timestamp):
 
     print(f"Parking data processed and cleaned at {current_timestamp}, Europe/Berlin time.")
 
-    st.write(f"{TRANSLATIONS[st.session_state.selected_language]['parking_data_last_updated']} {current_timestamp}")
-
     return processed_parking_data
 
 @st.cache_data(max_entries=1)

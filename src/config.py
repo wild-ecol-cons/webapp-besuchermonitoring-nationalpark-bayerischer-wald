@@ -179,7 +179,7 @@ visitor_sensors_with_realtime_tracking = {
     },
     "tfg-falkenstein-1": {
         "sensor_name": "Tierfreigelände Falkenstein - Sensor 1",
-        "coordinates": (449.0605989, 13.2421349),
+        "coordinates": (49.0605989, 13.2421349),
     },
     "tfg-falkenstein-2": {
         "sensor_name": "Tierfreigelände Falkenstein - Sensor 2",

@@ -46,7 +46,7 @@ def get_parking_section(
     Returns:
         None
     """
-    st.markdown(f"### {TRANSLATIONS[st.session_state.selected_language]['real_time_parking_occupancy']}")
+    st.markdown(f"### {TRANSLATIONS[st.session_state.selected_language]['real_time_map_visualization']}")
 
     # Set a fixed size for all markers
     processed_parking_data['size'] = get_fixed_size()

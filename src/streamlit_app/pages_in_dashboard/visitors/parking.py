@@ -392,7 +392,7 @@ def get_parking_section():
     # Source and preprocess the real-time visitor occupancy to be shown in the map
     processed_visitor_occupancy = source_and_preprocess_realtime_visitor_occupancy(timestamp_latest_parking_data_fetch)
 
-    st.markdown(f"### {TRANSLATIONS[st.session_state.selected_language]['real_time_parking_occupancy']}")
+    st.markdown(f"### {TRANSLATIONS[st.session_state.selected_language]['real_time_map_visualization']}")
 
     # Display the clear map symbology legend above the map
     render_map_symbology_legend()

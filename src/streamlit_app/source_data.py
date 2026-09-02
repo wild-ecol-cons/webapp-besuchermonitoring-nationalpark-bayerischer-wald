@@ -70,9 +70,13 @@ def get_realtime_occupancy_data_for_location(
     }
 
     response = requests.get(API_endpoint, params=request_params)
+    response_json = response.json()
+
+    # Access the first item in the @graph list
+    graph_item = response_json["@graph"][0]
 
     # Get and preprocess the current occupancy data from the response for one location
-    realtime_occupancy = int(response.json()["@graph"][0]["dcls:currentOccupancy"])
+    realtime_occupancy = int(graph_item.get("dcls:currentOccupancy", 0.0))
 
     return realtime_occupancy
 

@@ -35,7 +35,18 @@ _A glimpse of the final dashboard ✨_
    ```bash
    git clone https://github.com/DSSGxMunich/bavarian-forest-visitor-monitoring-dssgx-24.git
     ```
-2. Download Docker Desktop from [here](https://www.docker.com/products/docker-desktop/) and install it.
+2. Download Docker Desktop from [here](https://www.docker.com/products/docker-desktop/) and install it. After installation, make sure to start Docker Desktop, so the Docker daemon is running.
+
+3. Create your own local `.streamlit/secrets.toml` file (this files is NOT being tracked with Git, as it contains sensitive credentials) and add the following lines:
+
+    ```toml
+    admin_password = "some_test_password" # TODO: Exchange this with your own password
+    general_access_password = "some_test_password" # TODO: Exchange this with your own password
+    BAYERN_CLOUD_API_KEY = "some_api_key" # TODO: Exchange this with your own API key
+    AZURE_STORAGE_ACCOUNT_NAME = "some_storage_account_name" # TODO: Exchange this with your own name
+    AZURE_STORAGE_ACCOUNT_KEY = "some_long_storage_account_key" # TODO: Exchange this with your own key
+    ```
+    --> Make sure to update each credential to your own (if not, the dashboard will not work).
 
 3. **Run the container via make:**
 

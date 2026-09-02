@@ -11,3 +11,6 @@ pycaret
 openpyxl
 adlfs
 duckdb
+geopandas
+streamlit-folium
+folium

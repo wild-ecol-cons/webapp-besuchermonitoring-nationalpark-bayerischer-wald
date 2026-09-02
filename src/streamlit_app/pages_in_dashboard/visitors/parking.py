@@ -1,17 +1,176 @@
 # Import necessary libraries
 import streamlit as st
-import pydeck as pdk
+import folium
+from streamlit_folium import st_folium
 import pandas as pd
+import geopandas as gpd
+import joblib
+import io
 import pytz
 from src.streamlit_app.source_data import source_and_preprocess_realtime_parking_data
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
+from src.config import CONTAINER_NAME, CONNECTION_STRING
+from azure.storage.blob import BlobClient
 from datetime import datetime
+
+# BKG WMTS endpoint for TopPlusOpen, addressed like a standard XYZ tile
+# source. "web_light_grau" is the "TopPlusOpen Light Grau" variant.
+#
+# NOTE: this is consumed by a folium.TileLayer (Leaflet), which natively
+# supports arbitrary XYZ tile URL templates.
+TOPPLUS_LAYER = "web_light_grau"
+TOPPLUS_TILE_URL = (
+    f"https://sgx.geodatenzentrum.de/wmts_topplus_open/tile/1.0.0/"
+    f"{TOPPLUS_LAYER}/default/WEBMERCATOR/{{z}}/{{y}}/{{x}}.png"
+)
+
+year_of_today = datetime.now().year
+TOPPLUS_ATTRIBUTION = (
+    'Kartendarstellung: &copy; '
+    '<a href="https://www.bkg.bund.de/" target="_blank" rel="noopener noreferrer">BKG</a> '
+    f'({year_of_today}), '
+    '<a href="https://www.govdata.de/dl-de/by-2-0" target="_blank" rel="noopener noreferrer">dl-de/by-2-0</a>, '
+    '<a href="https://sgx.geodatenzentrum.de/web_public/gdz/datenquellen/datenquellen_topplusopen.html" target="_blank" rel="noopener noreferrer">Datenquelle</a> '
+)
+
+REGIONS_GEOJSON_AZURE_PATH = 'raw-data/geodata/ecocounter_regionen_dissolved.geojson'
+
+@st.cache_data
+def load_regions(path: str) -> gpd.GeoDataFrame:
+    """
+    Load the visitor forecast regions GeoJSON and reproject it from
+    EPSG:25832 (as provided) to EPSG:4326 (lat/lon, what folium/Leaflet expects).
+    """
+            
+    # Construct the full blob name (key)
+    print(f"Retrieving the region GeoJSON saved in Azure with blob name {path}")
+    
+    # 1. Create a BlobClient
+    blob_client = BlobClient.from_connection_string(
+        conn_str=CONNECTION_STRING, 
+        container_name=CONTAINER_NAME, 
+        blob_name=path
+    )
+    
+    # 2. Download the blob content
+    download_stream = blob_client.download_blob()
+    
+    # Read all data into a byte stream
+    geojson_bytes = download_stream.readall()
+    
+    # Convert the byte stream to a GeoDataFrame
+    buffer = io.BytesIO(geojson_bytes)
+    regions = gpd.read_file(buffer)
+ 
+    if regions.crs is None:
+        # Fall back to the CRS declared in the file's "crs" block if GeoPandas
+        # didn't pick it up automatically.
+        regions = regions.set_crs(epsg=25832, allow_override=True)
+
+    regions = regions.to_crs(epsg=4326)
+
+    # Decisions: All regions have the same green color
+    region_color = (173, 221, 142)
+    regions["fill_color_base"] = [region_color] * len(regions)
+
+    return regions
+
+
+def style_regions_for_display(regions: gpd.GeoDataFrame, highlighted_names: list) -> gpd.GeoDataFrame:
+    """
+    Set fill/line color + opacity per region based on which region names are
+    currently highlighted via the legend. If nothing is selected, show all
+    regions at full color (default state).
+    """
+    regions = regions.copy()
+    show_all = len(highlighted_names) == 0
+
+    def fill_color(row):
+        r, g, b = row["fill_color_base"]
+        if show_all or row["Name"] in highlighted_names:
+            return [r, g, b, 130]
+        return [190, 190, 190, 40]  # dimmed grey for non-selected regions
+
+    def line_color(row):
+        r, g, b = row["fill_color_base"]
+        if show_all or row["Name"] in highlighted_names:
+            return [r, g, b, 255]
+        return [160, 160, 160, 120]
+
+    def line_width(row):
+        return 5
+
+    regions["fill_color"] = regions.apply(fill_color, axis=1)
+    regions["line_color"] = regions.apply(line_color, axis=1)
+    regions["line_width"] = regions.apply(line_width, axis=1)
+
+    # Compute region-wise tooltip message
+    regions['tooltip_line1_name'] = "Region: " + regions['Name']
+    regions['tooltip_line2_occupancy'] = ""  # TODO: Later add here the real-time occupancy rates of that entire region
+
+    return regions
+
+
+def render_regions_legend(regions: gpd.GeoDataFrame) -> list:
+    """
+    Interactive legend: one swatch + region name per row. Selection drives
+    which regions are highlighted on the map. Returns the list of selected
+    region names.
+    """
+    legend_title = TRANSLATIONS[st.session_state.selected_language]['select_regions_to_visualize']
+
+    with st.expander(legend_title, expanded=False):
+        options = regions.sort_values("Name")[["Name", "fill_color_base"]].drop_duplicates("Name")
+
+        selected = st.multiselect(
+            label="select_regions_to_highlight",
+            label_visibility="collapsed",
+            options=options["Name"].tolist(),
+            default=[],
+            key="selected_regions_multiselect",
+            placeholder=TRANSLATIONS[st.session_state.selected_language]['choose_regions'],
+        )
+
+    return selected
 
 def get_fixed_size():
     """
     Get a fixed size value for the map markers.
     """
     return 450  
+
+def render_map_symbology_legend():
+    """
+    Renders a clean visual legend explaining the map layers (polygons vs markers).
+    """
+    st.markdown(f"""
+    <div style="background-color: #f8f9fa; border: 1px solid #e9ecef; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
+        <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; color: #333;">{TRANSLATIONS[st.session_state.selected_language]["symbol_legend"]}</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center; font-size: 0.85rem;">
+            <!-- Regions -->
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 18px; height: 18px; background-color: rgba(173, 221, 142, 130); border: 4px solid rgb(173, 221, 142); border-radius: 3px;"></div>
+                <span><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_area_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["legend_area_explained"]}</span>
+            </div>
+            <!-- Markers -->
+            <div style="display: flex; align-items: center; gap: 12px; border-left: 1px solid #ccc; padding-left: 16px;">
+                <span style="margin-right: -4px;"><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_circles_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["legend_circles_explained"]} </span>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <div style="width: 12px; height: 12px; background-color: rgb(56, 142, 60); border-radius: 50%; border: 1px solid #fff;"></div>
+                    <span style="color: #555;">{TRANSLATIONS[st.session_state.selected_language]["parking_status_low"]}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <div style="width: 12px; height: 12px; background-color: rgb(255, 160, 0); border-radius: 50%; border: 1px solid #fff;"></div>
+                    <span style="color: #555;">{TRANSLATIONS[st.session_state.selected_language]["parking_status_moderate"]}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <div style="width: 12px; height: 12px; background-color: rgb(211, 47, 47); border-radius: 50%; border: 1px solid #fff;"></div>
+                    <span style="color: #555;">{TRANSLATIONS[st.session_state.selected_language]["parking_status_high"]}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 def calculate_color_based_on_occupancy_rate(occupancy_rate) -> dict:
     """
@@ -29,13 +188,13 @@ def calculate_color_based_on_occupancy_rate(occupancy_rate) -> dict:
     occupancy_rate = float(occupancy_rate)
 
     if occupancy_rate >= 80:
-        return {"color_markers_map_visualization": [230, 39, 39],
+        return {"color_markers_map_visualization": [211, 47, 47],
                 "color_bar_occupancy_rate": "red"} # red
     elif occupancy_rate >= 60:
-        return {"color_markers_map_visualization": [250, 232, 8],
+        return {"color_markers_map_visualization": [255, 160, 0],
                 "color_bar_occupancy_rate": "yellow"} # yellow
     else:
-        return {"color_markers_map_visualization": [109, 249, 2],
+        return {"color_markers_map_visualization": [56, 142, 60],
                 "color_bar_occupancy_rate": "green"} # green
 
 
@@ -80,17 +239,85 @@ def render_occupancy_bar(occupancy_rate):
     </div>
     """, unsafe_allow_html=True)
 
+
+def build_folium_map(processed_parking_data: pd.DataFrame, styled_regions: gpd.GeoDataFrame) -> folium.Map:
+    """
+    Build the interactive Leaflet map (via folium) with:
+      - the BKG TopPlusOpen Light Grau basemap, loaded as a custom XYZ TileLayer
+      - visitor forecast regions as a styled GeoJson layer
+      - real-time parking occupancy markers as CircleMarkers
+
+    Unlike pydeck's TileLayer, folium/Leaflet's TileLayer natively supports
+    arbitrary custom tile URL templates, so this actually renders the BKG
+    basemap instead of silently falling back to a default provider basemap.
+    """
+
+    view_center = [48.98788792657768, 13.388472800551007]
+
+    m = folium.Map(
+        location=view_center,
+        zoom_start=11,
+        tiles=None,  # IMPORTANT: don't let folium add its own default basemap
+        control_scale=True,
+    )
+
+    # --- Basemap: BKG TopPlusOpen Light Grau -------------------------------
+    folium.TileLayer(
+        tiles=TOPPLUS_TILE_URL,
+        attr=TOPPLUS_ATTRIBUTION,
+        name="TopPlusOpen Light Grau",
+        min_zoom=0,
+        max_zoom=19,
+        overlay=False,
+        control=False,
+    ).add_to(m)
+
+    # --- Regions polygons ---------------------------------------------------
+    def region_style(feature):
+        r, g, b, a = feature["properties"]["fill_color"]
+        lr, lg, lb, la = feature["properties"]["line_color"]
+        line_width_px = feature["properties"]["line_width"]
+        return {
+            "fillColor": f"rgb({r},{g},{b})",
+            "color": f"rgb({lr},{lg},{lb})",
+            "weight": line_width_px,
+            "fillOpacity": a / 255,
+            "opacity": la / 255,
+        }
+
+    folium.GeoJson(
+        styled_regions.__geo_interface__,
+        style_function=region_style,
+        tooltip=folium.GeoJsonTooltip(fields=["Name"], aliases=["Region:"]),
+        name="Visitor forecast regions",
+    ).add_to(m)
+
+    # --- Parking markers ------------------------------------------------------
+    for _, row in processed_parking_data.iterrows():
+        r, g, b = row["color"]
+        tooltip_html = f"{row['tooltip_line1_name']}<br/>{row['tooltip_line2_occupancy']}"
+        folium.CircleMarker(
+            location=[row["latitude"], row["longitude"]],
+            radius=8,
+            color="black",
+            weight=1,
+            fill=True,
+            fill_color=f"rgb({r},{g},{b})",
+            fill_opacity=0.9,
+            tooltip=tooltip_html,
+        ).add_to(m)
+
+    return m
+
+
 @st.fragment(run_every="15min")
 def get_parking_section():
     """
-    Display the parking section of the dashboard with a map showing the real-time parking occupancy 
-    and interactive metrics.
-
-    Args:
-        processed_parking_data (pd.DataFrame): Processed parking data.
-
-    Returns:
-        None
+    Display the parking section of the dashboard with a map showing:
+      - the BKG TopPlusOpen Light Grau basemap
+      - visitor forecast regions (with an interactive legend)
+      - real-time parking occupancy markers
+    Fully pannable and zoomable via Leaflet (through folium/streamlit-folium).
     """
 
     print("Rendering parking section for the visitor dashboard...")
@@ -119,6 +346,9 @@ def get_parking_section():
     processed_parking_data = source_and_preprocess_realtime_parking_data(timestamp_latest_parking_data_fetch)
 
     st.markdown(f"### {TRANSLATIONS[st.session_state.selected_language]['real_time_parking_occupancy']}")
+
+    # Display the clear map symbology legend above the map
+    render_map_symbology_legend()
     
     # Set a fixed size for all markers
     processed_parking_data['size'] = get_fixed_size()
@@ -130,36 +360,31 @@ def get_parking_section():
     # Map occupancy rate to status (High, Medium, Low)
     processed_parking_data['occupancy_status'] = processed_parking_data['current_occupancy_rate'].apply(get_occupancy_status)
 
-    # Calculate center of the map based on the average of latitudes and longitudes
-    avg_latitude = processed_parking_data['latitude'].mean()
-    avg_longitude = processed_parking_data['longitude'].mean()
+    # Rename parking locations to be more user-friendly
+    processed_parking_data['location'] = processed_parking_data['location'].replace({
+        "parkplatz-graupsaege-1": "P+R Graupsäge",
+        "p-r-spiegelau-1": "P+R Spiegelau",
+        "parkplatz-zwieslerwaldhaus-1": "Parkplatz Zwieslerwaldhaus",
+        "parkplatz-nationalparkzentrum-falkenstein-2": "Parkplatz Nationalparkzentrum Falkenstein",
+        "scheidt-bachmann-parkplatz-1": "Scheidt-Bachmann-Parkplatz",
+        "parkplatz-nationalparkzentrum-lusen-p2": "Parkplatz Nationalparkzentrum Lusen",
+        "parkplatz-waldhaeuser-kirche-1": "Parkplatz Waldhäuser Kirche",
+        "parkplatz-waldhaeuser-ausblick-1": "Parkplatz Waldhäuser Ausblick",
+        "parkplatz-skisportzentrum-finsterau-1": "Parkplatz Finsterau Ski- und Sportstadion",
+    })
 
-    # PyDeck Map Configuration with adjusted view_state
-    view_state = pdk.ViewState(
-        latitude=avg_latitude,  # Center map at the average latitude
-        longitude=avg_longitude,  # Center map at the average longitude
-        zoom=10,  # Zoom level increased for a closer view
-        pitch=50
-    )
+    # Compute parking place tooltip message
+    processed_parking_data['tooltip_line1_name'] = processed_parking_data['location']
+    processed_parking_data['tooltip_line2_occupancy'] = f"{TRANSLATIONS[st.session_state.selected_language]['occupancy_status']}: " + processed_parking_data['occupancy_status']
 
-    layer = pdk.Layer(
-        "ScatterplotLayer",
-        data=processed_parking_data,
-        get_position=["longitude", "latitude"],
-        get_radius="size",
-        get_fill_color="color",
-        pickable=True,
-    )
+    # --- Regions: load + legend (drives highlight state) -----------------
+    regions = load_regions(path=REGIONS_GEOJSON_AZURE_PATH)
+    highlighted_regions = render_regions_legend(regions)
+    styled_regions = style_regions_for_display(regions, highlighted_regions)
 
-    deck = pdk.Deck(
-        layers=[layer],
-        initial_view_state=view_state,
-        tooltip={
-            "text": "{location}\n" + f"{TRANSLATIONS[st.session_state.selected_language]['occupancy_status']}: " + "{occupancy_status}"
-        },
-        map_style="road"
-    )
-    st.pydeck_chart(deck)
+    # --- Build and render the folium/Leaflet map ---------------------------
+    folium_map = build_folium_map(processed_parking_data, styled_regions)
+    st_folium(folium_map, width=None, height=600, returned_objects=[])
 
     # Interactive Metrics
     selected_location = st.selectbox(

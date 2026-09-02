@@ -144,5 +144,12 @@ def get_visitor_counts_section(hourly_predictions, daily_predictions):
     )
 
     if selected_region:
-        create_daily_visitor_forecast_vizualization(selected_region, daily_predictions)
-        create_hourly_visitor_forecast_vizualization(selected_region, hourly_predictions)
+        with st.expander(
+            label=f"**{TRANSLATIONS[st.session_state.selected_language]['title_weekly_visitor_predictions']}**",
+            icon="📈"):
+            create_daily_visitor_forecast_vizualization(selected_region, daily_predictions)
+
+        with st.expander(
+            label=f"**{TRANSLATIONS[st.session_state.selected_language]['title_hourly_visitor_predictions']}**",
+            icon="📈"):
+            create_hourly_visitor_forecast_vizualization(selected_region, hourly_predictions)

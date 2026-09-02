@@ -9,6 +9,8 @@ LANGUAGE_OPTIONS= {
 # Language dictionary with translations
 TRANSLATIONS = {
         "English": {
+        "title_hourly_visitor_predictions": "Details View: Hourly Outlook",
+        "title_weekly_visitor_predictions": "Overview: Weekly Outlook",
         "current_occupancy_timestamp": "Last updated on",
         'legend_visitor_sensors_mention': 'Real-Time Visitor Sensors:',
         "current_visitors": "People in the last 15-minute interval",
@@ -92,7 +94,7 @@ TRANSLATIONS = {
         'popular_entrances': 'Popular Entrances to the Park',
         'best_way_to_get_there': 'Best Way to Get There',
         'select_region': 'Select a region to view',
-        'parking_data_last_updated': 'Parking Data Last Updated (CET/CEST):',
+        'live_data_last_updated': 'Live Data Last Updated (CET/CEST):',
         'parking_status_low': 'Free Spaces',
         'parking_status_moderate': 'Quite Busy',
         'parking_status_high': 'Too Crowded',
@@ -103,6 +105,8 @@ TRANSLATIONS = {
         'admin_page_title': 'Bavarian Forest - Admin - Visitor Monitoring',
     },
     "German": {
+        "title_hourly_visitor_predictions": "Detailsansicht: Stunden-Ausblick",
+        "title_weekly_visitor_predictions": "Übersicht: 7-Tages-Ausblick",
         "current_occupancy_timestamp": "Zuletzt aktualisiert am",
         'legend_visitor_sensors_mention': 'Echtzeit-Besuchersensoren:',
         "current_visitors": "Personen im letzten 15-Min-Intervall",
@@ -187,7 +191,7 @@ TRANSLATIONS = {
         'popular_entrances': 'Beliebte Zugänge zum Park',
         'best_way_to_get_there': 'Anreise und ÖPNV',
         'select_region': 'Wähle eine Region zum Anzeigen',
-        'parking_data_last_updated': 'Parkdaten zuletzt aktualisiert (CET/CEST):',
+        'live_data_last_updated': 'Live-Daten zuletzt aktualisiert (CET/CEST):',
         'parking_status_low': 'Freie Plätze',
         'parking_status_moderate': 'Gut Besucht',
         'parking_status_high': 'Überfüllt',

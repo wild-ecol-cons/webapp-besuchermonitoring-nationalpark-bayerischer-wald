@@ -70,11 +70,19 @@ def get_realtime_occupancy_data_for_location(
     }
 
     response = requests.get(API_endpoint, params=request_params)
+    response_json = response.json()
+
+    # Access the first item in the @graph list
+    graph_item = response_json["@graph"][0]
 
     # Get and preprocess the current occupancy data from the response for one location
-    realtime_occupancy = int(response.json()["@graph"][0]["dcls:currentOccupancy"])
+    realtime_occupancy = int(graph_item.get("dcls:currentOccupancy", 0.0))
 
-    return realtime_occupancy
+    # Get data collection timestamp of the current occupancy data
+    realtime_occupancy_timestamp = graph_item.get("dcls:latestTimeseriesTimestamp", None)
+    realtime_occupancy_timestamp = datetime.fromisoformat(realtime_occupancy_timestamp).strftime("%d.%m.%Y %H:%M Uhr")
+
+    return realtime_occupancy, realtime_occupancy_timestamp
 
 ########################################################################################
 # Parking functions
@@ -104,10 +112,14 @@ def source_parking_data_from_cloud(location_slug: str) -> pd.DataFrame:
     # Access the first item in the @graph list
     graph_item = response_json["@graph"][0]
 
-    # Extract the current occupancy and capacity
+    # Extract the current occupancy, capacity and data collection timestamp
     current_occupancy = graph_item.get("dcls:currentOccupancy", None)
     current_capacity = graph_item.get("dcls:currentCapacity", None)
     current_occupancy_rate = graph_item.get("dcls:currentOccupancyRate", None)
+
+    # Get data collection timestamp of the current occupancy data
+    realtime_occupancy_timestamp = graph_item.get("dcls:latestTimeseriesTimestamp", None)
+    realtime_occupancy_timestamp = datetime.fromisoformat(realtime_occupancy_timestamp).strftime("%d.%m.%Y %H:%M Uhr")
 
     # Make a dataframe with the three values and the current time stamp in the datetime format
     parking_data = pd.DataFrame({
@@ -116,6 +128,7 @@ def source_parking_data_from_cloud(location_slug: str) -> pd.DataFrame:
         "current_occupancy": [current_occupancy],
         "current_capacity": [current_capacity],
         "current_occupancy_rate": [current_occupancy_rate],
+        "realtime_occupancy_timestamp": [realtime_occupancy_timestamp]
     })
     
     parking_data.reset_index(drop=True, inplace=True)
@@ -215,10 +228,10 @@ def source_and_preprocess_realtime_visitor_occupancy(current_timestamp: datetime
     preprocessed_realtime_visitor_occupancy = pd.DataFrame()
 
     for sensor, sensor_data in visitor_sensors_with_realtime_tracking.items():
-        realtime_sensor_occupancy = get_realtime_occupancy_data_for_location(sensor)
+        realtime_sensor_occupancy, realtime_sensor_occupancy_timestamp = get_realtime_occupancy_data_for_location(sensor)
 
         # Build dataframe of sourced and preprocessed visitor occupancy
-        sensor_data_df = pd.DataFrame({"location": [sensor_data["sensor_name"]], "latitude": [sensor_data["coordinates"][0]], "longitude": [sensor_data["coordinates"][1]], "current_occupancy": [realtime_sensor_occupancy]})
+        sensor_data_df = pd.DataFrame({"location": [sensor_data["sensor_name"]], "latitude": [sensor_data["coordinates"][0]], "longitude": [sensor_data["coordinates"][1]], "current_occupancy": [realtime_sensor_occupancy], "timestamp_data_collected": [realtime_sensor_occupancy_timestamp]})
 
         preprocessed_realtime_visitor_occupancy = pd.concat([preprocessed_realtime_visitor_occupancy, sensor_data_df], ignore_index=True)
 

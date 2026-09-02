@@ -10,6 +10,7 @@ import pytz
 from src.streamlit_app.source_data import source_and_preprocess_realtime_parking_data, source_and_preprocess_realtime_visitor_occupancy
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
 from src.config import CONTAINER_NAME, CONNECTION_STRING
+from folium.plugins import MarkerCluster
 from azure.storage.blob import BlobClient
 from datetime import datetime
 
@@ -300,7 +301,7 @@ def build_folium_map(processed_parking_data: pd.DataFrame, styled_regions: gpd.G
     # --- Parking markers ------------------------------------------------------
     for _, row in processed_parking_data.iterrows():
         r, g, b = row["color"]
-        tooltip_html = f"{row['tooltip_line1_name']}<br/>{row['tooltip_line2_occupancy']}"
+        tooltip_html = f"<b>{row['tooltip_line1_name']}</b><br/>{row['tooltip_line2_availability']}<br/>{row['tooltip_line3_occupancy_rate']}<br/>{row['tooltip_line4_data_collection_timestamp']}"        
         folium.CircleMarker(
             location=[row["latitude"], row["longitude"]],
             radius=8,
@@ -317,11 +318,24 @@ def build_folium_map(processed_parking_data: pd.DataFrame, styled_regions: gpd.G
 def add_visitor_occupancy_markers(folium_map, processed_visitor_occupancy):
     visitor_layer = folium.FeatureGroup(name="Visitor Sensors", show=True)
 
+    # Cluster nearby visitor-sensor markers: at low zoom, close points collapse
+    # into a single numbered bubble. Clicking a cluster zooms in; once markers
+    # are still overlapping at max zoom, they "spiderfy" (fan out) so you can
+    # click the exact one you want instead of just zooming forever.
+    marker_cluster = MarkerCluster(
+        spiderfyOnMaxZoom=True,
+        showCoverageOnHover=False,
+        zoomToBoundsOnClick=True,
+        maxClusterRadius=20
+    ).add_to(visitor_layer)
+
     for _, row in processed_visitor_occupancy.iterrows():
         tooltip_text = (
             f"<b>{row['location']}</b><br>"
             f"{TRANSLATIONS[st.session_state.selected_language]['current_visitors']}: "
-            f"{row['current_occupancy']}"
+            f"{row['current_occupancy']}</b><br>"
+            f"{TRANSLATIONS[st.session_state.selected_language]['current_occupancy_timestamp']}: "
+            f"{row['timestamp_data_collected']}"
         )
 
         folium.Marker(
@@ -335,7 +349,7 @@ def add_visitor_occupancy_markers(folium_map, processed_visitor_occupancy):
                 icon_size=(30, 30),
                 icon_anchor=(15, 15),
             ),
-        ).add_to(visitor_layer)
+        ).add_to(marker_cluster)
 
     visitor_layer.add_to(folium_map)
     return folium_map
@@ -378,7 +392,7 @@ def get_parking_section():
     # Source and preprocess the real-time visitor occupancy to be shown in the map
     processed_visitor_occupancy = source_and_preprocess_realtime_visitor_occupancy(timestamp_latest_parking_data_fetch)
 
-    st.markdown(f"### {TRANSLATIONS[st.session_state.selected_language]['real_time_parking_occupancy']}")
+    st.markdown(f"### {TRANSLATIONS[st.session_state.selected_language]['real_time_map_visualization']}")
 
     # Display the clear map symbology legend above the map
     render_map_symbology_legend()
@@ -392,6 +406,9 @@ def get_parking_section():
 
     # Map occupancy rate to status (High, Medium, Low)
     processed_parking_data['occupancy_status'] = processed_parking_data['current_occupancy_rate'].apply(get_occupancy_status)
+
+    # Format occupancy rate to percentage string
+    processed_parking_data['current_occupancy_rate'] = processed_parking_data['current_occupancy_rate'].apply(lambda x: f"{x:.2f}%" if pd.notna(x) else "N/A")
 
     # Rename parking locations to be more user-friendly
     processed_parking_data['location'] = processed_parking_data['location'].replace({
@@ -408,7 +425,9 @@ def get_parking_section():
 
     # Compute parking place tooltip message
     processed_parking_data['tooltip_line1_name'] = processed_parking_data['location']
-    processed_parking_data['tooltip_line2_occupancy'] = f"{TRANSLATIONS[st.session_state.selected_language]['occupancy_status']}: " + processed_parking_data['occupancy_status']
+    processed_parking_data['tooltip_line2_availability'] = f"{TRANSLATIONS[st.session_state.selected_language]['available_spaces']}: " + processed_parking_data['current_availability'].astype(str) + " 🚗\n"
+    processed_parking_data['tooltip_line3_occupancy_rate'] = f"{TRANSLATIONS[st.session_state.selected_language]['occupancy_rate']}: " + processed_parking_data['current_occupancy_rate'].astype(str)
+    processed_parking_data['tooltip_line4_data_collection_timestamp'] = f"{TRANSLATIONS[st.session_state.selected_language]['current_occupancy_timestamp']}: " + processed_parking_data['realtime_occupancy_timestamp'].astype(str)
 
     # --- Regions: load + legend (drives highlight state) -----------------
     regions = load_regions(path=REGIONS_GEOJSON_AZURE_PATH)
@@ -433,12 +452,8 @@ def get_parking_section():
         selected_data = processed_parking_data[processed_parking_data['location'] == selected_location].iloc[0]
 
         col1, col2, col3 = st.columns(3)
-        col1.metric(label=TRANSLATIONS[st.session_state.selected_language]['capacity'], value=f"{selected_data['current_capacity']} 🚗")
-        
-        # Display occupancy status and bar
-        with col2:
-            st.metric(label = TRANSLATIONS[st.session_state.selected_language]['occupancy_status'], value=f"{selected_data['occupancy_status']}")
-        with col3:
-            st.markdown(f"**{TRANSLATIONS[st.session_state.selected_language]['occupancy_rate']}**")
-            render_occupancy_bar(selected_data['current_occupancy_rate'])
+
+        col1.metric(label=TRANSLATIONS[st.session_state.selected_language]['available_spaces'], value=f"{selected_data['current_availability']} 🚗")
+        col2.metric(label=TRANSLATIONS[st.session_state.selected_language]['capacity'], value=f"{selected_data['current_capacity']} 🚗")
+        col3.metric(label=TRANSLATIONS[st.session_state.selected_language]['occupancy_rate'], value=f"{selected_data['current_occupancy_rate']}")
 

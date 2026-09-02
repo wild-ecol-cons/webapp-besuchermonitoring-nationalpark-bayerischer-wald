@@ -163,26 +163,26 @@ sensor_mapping_to_traffic_metrics = {
         "Wistlberg OUT"]
 }
 
-# Slug names and coordinates of the visitor sensors that have real-time tracking of visitor occupancy to Bayern Cloud
+# Slug names and coordinates of the visitor sensors that have real-time tracking of visitor occupancy to Bayern Cloud (defined in EPSG:4326 WGS84)
 visitor_sensors_with_realtime_tracking = {
     "tfg-lusen-1": {
         "sensor_name": "Tierfreigelände Lusen - Sensor 1",
-        "coordinates": (4609187.1623, 5418339.686899999156594),
+        "coordinates": (48.892878, 13.4875722),
     },
     "tfg-lusen-2": {
         "sensor_name": "Tierfreigelände Lusen - Sensor 2",
-        "coordinates": (4609330.687800000421703, 5418340.348099999129772),
+        "coordinates": (48.8928588, 13.4895289),
     },
     "tfg-lusen-3": {
         "sensor_name": "Tierfreigelände Lusen - Sensor 3",
-        "coordinates": (4607969.006400000303984, 5419565.471999999135733),
+        "coordinates": (48.90411, 13.4712889),
     },
     "tfg-falkenstein-1": {
         "sensor_name": "Tierfreigelände Falkenstein - Sensor 1",
-        "coordinates": (4590885.0565, 5436668.004000000655651),
+        "coordinates": (449.0605989, 13.2421349),
     },
     "tfg-falkenstein-2": {
         "sensor_name": "Tierfreigelände Falkenstein - Sensor 2",
-        "coordinates": (4590598.5148, 5436546.696000000461936),
+        "coordinates": (49.0595505, 13.238188),
     },
 }

@@ -9,8 +9,9 @@ LANGUAGE_OPTIONS= {
 # Language dictionary with translations
 TRANSLATIONS = {
         "English": {
+        "current_occupancy_timestamp": "Last updated on",
         'legend_visitor_sensors_mention': 'Real-Time Visitor Sensors:',
-        "current_visitors": "Visitor Count (live)",
+        "current_visitors": "People in the last 15-minute interval",
         "select_regions_to_visualize": "Select Regions to Highlight",
         'choose_regions': 'Select one or multiple Regions to highlight',
         "symbol_legend": "Symbol Legend",
@@ -101,8 +102,9 @@ TRANSLATIONS = {
         'admin_page_title': 'Bavarian Forest - Admin - Visitor Monitoring',
     },
     "German": {
+        "current_occupancy_timestamp": "Zuletzt aktualisiert am",
         'legend_visitor_sensors_mention': 'Echtzeit-Besuchersensoren:',
-        "current_visitors": "Besucherzahl (aktuell)",
+        "current_visitors": "Personen im letzten 15-Min-Intervall",
         "select_regions_to_visualize": "Wähle Regionen zum Visualisieren aus",
         'choose_regions': 'Wähle eine oder mehrere Regionen aus',
         "symbol_legend": "Symbol-Legende",

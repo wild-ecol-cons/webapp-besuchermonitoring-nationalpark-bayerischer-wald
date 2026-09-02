@@ -78,7 +78,11 @@ def get_realtime_occupancy_data_for_location(
     # Get and preprocess the current occupancy data from the response for one location
     realtime_occupancy = int(graph_item.get("dcls:currentOccupancy", 0.0))
 
-    return realtime_occupancy
+    # Get data collection timestamp of the current occupancy data
+    realtime_occupancy_timestamp = graph_item.get("dcls:latestTimeseriesTimestamp", None)
+    realtime_occupancy_timestamp = datetime.fromisoformat(realtime_occupancy_timestamp).strftime("%d.%m.%Y %H:%M Uhr")
+
+    return realtime_occupancy, realtime_occupancy_timestamp
 
 ########################################################################################
 # Parking functions
@@ -219,10 +223,10 @@ def source_and_preprocess_realtime_visitor_occupancy(current_timestamp: datetime
     preprocessed_realtime_visitor_occupancy = pd.DataFrame()
 
     for sensor, sensor_data in visitor_sensors_with_realtime_tracking.items():
-        realtime_sensor_occupancy = get_realtime_occupancy_data_for_location(sensor)
+        realtime_sensor_occupancy, realtime_sensor_occupancy_timestamp = get_realtime_occupancy_data_for_location(sensor)
 
         # Build dataframe of sourced and preprocessed visitor occupancy
-        sensor_data_df = pd.DataFrame({"location": [sensor_data["sensor_name"]], "latitude": [sensor_data["coordinates"][0]], "longitude": [sensor_data["coordinates"][1]], "current_occupancy": [realtime_sensor_occupancy]})
+        sensor_data_df = pd.DataFrame({"location": [sensor_data["sensor_name"]], "latitude": [sensor_data["coordinates"][0]], "longitude": [sensor_data["coordinates"][1]], "current_occupancy": [realtime_sensor_occupancy], "timestamp_data_collected": [realtime_sensor_occupancy_timestamp]})
 
         preprocessed_realtime_visitor_occupancy = pd.concat([preprocessed_realtime_visitor_occupancy, sensor_data_df], ignore_index=True)
 

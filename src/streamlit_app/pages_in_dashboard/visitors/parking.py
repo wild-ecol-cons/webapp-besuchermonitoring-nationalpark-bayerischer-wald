@@ -10,6 +10,7 @@ import pytz
 from src.streamlit_app.source_data import source_and_preprocess_realtime_parking_data, source_and_preprocess_realtime_visitor_occupancy
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
 from src.config import CONTAINER_NAME, CONNECTION_STRING
+from folium.plugins import MarkerCluster
 from azure.storage.blob import BlobClient
 from datetime import datetime
 
@@ -317,6 +318,17 @@ def build_folium_map(processed_parking_data: pd.DataFrame, styled_regions: gpd.G
 def add_visitor_occupancy_markers(folium_map, processed_visitor_occupancy):
     visitor_layer = folium.FeatureGroup(name="Visitor Sensors", show=True)
 
+    # Cluster nearby visitor-sensor markers: at low zoom, close points collapse
+    # into a single numbered bubble. Clicking a cluster zooms in; once markers
+    # are still overlapping at max zoom, they "spiderfy" (fan out) so you can
+    # click the exact one you want instead of just zooming forever.
+    marker_cluster = MarkerCluster(
+        spiderfyOnMaxZoom=True,
+        showCoverageOnHover=False,
+        zoomToBoundsOnClick=True,
+        maxClusterRadius=20
+    ).add_to(visitor_layer)
+
     for _, row in processed_visitor_occupancy.iterrows():
         tooltip_text = (
             f"<b>{row['location']}</b><br>"
@@ -335,7 +347,7 @@ def add_visitor_occupancy_markers(folium_map, processed_visitor_occupancy):
                 icon_size=(30, 30),
                 icon_anchor=(15, 15),
             ),
-        ).add_to(visitor_layer)
+        ).add_to(marker_cluster)
 
     visitor_layer.add_to(folium_map)
     return folium_map

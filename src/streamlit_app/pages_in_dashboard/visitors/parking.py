@@ -301,7 +301,7 @@ def build_folium_map(processed_parking_data: pd.DataFrame, styled_regions: gpd.G
     # --- Parking markers ------------------------------------------------------
     for _, row in processed_parking_data.iterrows():
         r, g, b = row["color"]
-        tooltip_html = f"{row['tooltip_line1_name']}<br/>{row['tooltip_line2_occupancy']}"
+        tooltip_html = f"{row['tooltip_line1_name']}<br/>{row['tooltip_line2_occupancy']}<br/>{row['tooltip_line3_data_collection_timestamp']}"
         folium.CircleMarker(
             location=[row["latitude"], row["longitude"]],
             radius=8,
@@ -423,6 +423,7 @@ def get_parking_section():
     # Compute parking place tooltip message
     processed_parking_data['tooltip_line1_name'] = processed_parking_data['location']
     processed_parking_data['tooltip_line2_occupancy'] = f"{TRANSLATIONS[st.session_state.selected_language]['occupancy_status']}: " + processed_parking_data['occupancy_status']
+    processed_parking_data['tooltip_line3_data_collection_timestamp'] = f"{TRANSLATIONS[st.session_state.selected_language]['current_occupancy_timestamp']}: " + processed_parking_data['realtime_occupancy_timestamp'].astype(str)
 
     # --- Regions: load + legend (drives highlight state) -----------------
     regions = load_regions(path=REGIONS_GEOJSON_AZURE_PATH)

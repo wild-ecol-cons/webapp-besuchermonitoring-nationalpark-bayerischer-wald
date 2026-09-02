@@ -112,10 +112,14 @@ def source_parking_data_from_cloud(location_slug: str) -> pd.DataFrame:
     # Access the first item in the @graph list
     graph_item = response_json["@graph"][0]
 
-    # Extract the current occupancy and capacity
+    # Extract the current occupancy, capacity and data collection timestamp
     current_occupancy = graph_item.get("dcls:currentOccupancy", None)
     current_capacity = graph_item.get("dcls:currentCapacity", None)
     current_occupancy_rate = graph_item.get("dcls:currentOccupancyRate", None)
+
+    # Get data collection timestamp of the current occupancy data
+    realtime_occupancy_timestamp = graph_item.get("dcls:latestTimeseriesTimestamp", None)
+    realtime_occupancy_timestamp = datetime.fromisoformat(realtime_occupancy_timestamp).strftime("%d.%m.%Y %H:%M Uhr")
 
     # Make a dataframe with the three values and the current time stamp in the datetime format
     parking_data = pd.DataFrame({
@@ -124,6 +128,7 @@ def source_parking_data_from_cloud(location_slug: str) -> pd.DataFrame:
         "current_occupancy": [current_occupancy],
         "current_capacity": [current_capacity],
         "current_occupancy_rate": [current_occupancy_rate],
+        "realtime_occupancy_timestamp": [realtime_occupancy_timestamp]
     })
     
     parking_data.reset_index(drop=True, inplace=True)

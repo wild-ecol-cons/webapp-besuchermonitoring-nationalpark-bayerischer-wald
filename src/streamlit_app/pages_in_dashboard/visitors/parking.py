@@ -7,9 +7,10 @@ import geopandas as gpd
 import joblib
 import io
 import pytz
-from src.streamlit_app.source_data import source_and_preprocess_realtime_parking_data
+from src.streamlit_app.source_data import source_and_preprocess_realtime_parking_data, source_and_preprocess_realtime_visitor_occupancy
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
 from src.config import CONTAINER_NAME, CONNECTION_STRING
+from folium.plugins import MarkerCluster
 from azure.storage.blob import BlobClient
 from datetime import datetime
 
@@ -152,7 +153,7 @@ def render_map_symbology_legend():
                 <div style="width: 18px; height: 18px; background-color: rgba(173, 221, 142, 130); border: 4px solid rgb(173, 221, 142); border-radius: 3px;"></div>
                 <span><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_area_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["legend_area_explained"]}</span>
             </div>
-            <!-- Markers -->
+            <!-- Parking Markers -->
             <div style="display: flex; align-items: center; gap: 12px; border-left: 1px solid #ccc; padding-left: 16px;">
                 <span style="margin-right: -4px;"><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_circles_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["legend_circles_explained"]} </span>
                 <div style="display: flex; align-items: center; gap: 4px;">
@@ -167,6 +168,11 @@ def render_map_symbology_legend():
                     <div style="width: 12px; height: 12px; background-color: rgb(211, 47, 47); border-radius: 50%; border: 1px solid #fff;"></div>
                     <span style="color: #555;">{TRANSLATIONS[st.session_state.selected_language]["parking_status_high"]}</span>
                 </div>
+            </div>
+            <!-- Visitor Sensor Markers -->
+            <div style="display: flex; align-items: center; gap: 7px; border-left: 1px solid #ccc; padding-left: 3px;">
+                <div style="font-size: 25px; line-height: 18px; width: 18px; text-align: center;">🚶</div>
+                <span><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_visitor_sensors_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["current_visitors"]}</span>
             </div>
         </div>
     </div>
@@ -295,7 +301,7 @@ def build_folium_map(processed_parking_data: pd.DataFrame, styled_regions: gpd.G
     # --- Parking markers ------------------------------------------------------
     for _, row in processed_parking_data.iterrows():
         r, g, b = row["color"]
-        tooltip_html = f"{row['tooltip_line1_name']}<br/>{row['tooltip_line2_occupancy']}"
+        tooltip_html = f"<b>{row['tooltip_line1_name']}</b><br/>{row['tooltip_line2_availability']}<br/>{row['tooltip_line3_occupancy_rate']}<br/>{row['tooltip_line4_data_collection_timestamp']}"        
         folium.CircleMarker(
             location=[row["latitude"], row["longitude"]],
             radius=8,
@@ -309,6 +315,44 @@ def build_folium_map(processed_parking_data: pd.DataFrame, styled_regions: gpd.G
 
     return m
 
+def add_visitor_occupancy_markers(folium_map, processed_visitor_occupancy):
+    visitor_layer = folium.FeatureGroup(name="Visitor Sensors", show=True)
+
+    # Cluster nearby visitor-sensor markers: at low zoom, close points collapse
+    # into a single numbered bubble. Clicking a cluster zooms in; once markers
+    # are still overlapping at max zoom, they "spiderfy" (fan out) so you can
+    # click the exact one you want instead of just zooming forever.
+    marker_cluster = MarkerCluster(
+        spiderfyOnMaxZoom=True,
+        showCoverageOnHover=False,
+        zoomToBoundsOnClick=True,
+        maxClusterRadius=20
+    ).add_to(visitor_layer)
+
+    for _, row in processed_visitor_occupancy.iterrows():
+        tooltip_text = (
+            f"<b>{row['location']}</b><br>"
+            f"{TRANSLATIONS[st.session_state.selected_language]['current_visitors']}: "
+            f"{row['current_occupancy']}</b><br>"
+            f"{TRANSLATIONS[st.session_state.selected_language]['current_occupancy_timestamp']}: "
+            f"{row['timestamp_data_collected']}"
+        )
+
+        folium.Marker(
+            location=[row['latitude'], row['longitude']],
+            tooltip=folium.Tooltip(tooltip_text),
+            icon=folium.DivIcon(
+                html=(
+                    '<div style="font-size:26px; line-height:26px; '
+                    'text-align:center; filter: drop-shadow(0 0 1px #000);">🚶</div>'
+                ),
+                icon_size=(30, 30),
+                icon_anchor=(15, 15),
+            ),
+        ).add_to(marker_cluster)
+
+    visitor_layer.add_to(folium_map)
+    return folium_map
 
 @st.fragment(run_every="15min")
 def get_parking_section():
@@ -345,7 +389,10 @@ def get_parking_section():
     # Source and preprocess the parking data
     processed_parking_data = source_and_preprocess_realtime_parking_data(timestamp_latest_parking_data_fetch)
 
-    st.markdown(f"### {TRANSLATIONS[st.session_state.selected_language]['real_time_parking_occupancy']}")
+    # Source and preprocess the real-time visitor occupancy to be shown in the map
+    processed_visitor_occupancy = source_and_preprocess_realtime_visitor_occupancy(timestamp_latest_parking_data_fetch)
+
+    st.markdown(f"### {TRANSLATIONS[st.session_state.selected_language]['real_time_map_visualization']}")
 
     # Display the clear map symbology legend above the map
     render_map_symbology_legend()
@@ -359,6 +406,9 @@ def get_parking_section():
 
     # Map occupancy rate to status (High, Medium, Low)
     processed_parking_data['occupancy_status'] = processed_parking_data['current_occupancy_rate'].apply(get_occupancy_status)
+
+    # Format occupancy rate to percentage string
+    processed_parking_data['current_occupancy_rate'] = processed_parking_data['current_occupancy_rate'].apply(lambda x: f"{x:.2f}%" if pd.notna(x) else "N/A")
 
     # Rename parking locations to be more user-friendly
     processed_parking_data['location'] = processed_parking_data['location'].replace({
@@ -375,7 +425,9 @@ def get_parking_section():
 
     # Compute parking place tooltip message
     processed_parking_data['tooltip_line1_name'] = processed_parking_data['location']
-    processed_parking_data['tooltip_line2_occupancy'] = f"{TRANSLATIONS[st.session_state.selected_language]['occupancy_status']}: " + processed_parking_data['occupancy_status']
+    processed_parking_data['tooltip_line2_availability'] = f"{TRANSLATIONS[st.session_state.selected_language]['available_spaces']}: " + processed_parking_data['current_availability'].astype(str) + " 🚗\n"
+    processed_parking_data['tooltip_line3_occupancy_rate'] = f"{TRANSLATIONS[st.session_state.selected_language]['occupancy_rate']}: " + processed_parking_data['current_occupancy_rate'].astype(str)
+    processed_parking_data['tooltip_line4_data_collection_timestamp'] = f"{TRANSLATIONS[st.session_state.selected_language]['current_occupancy_timestamp']}: " + processed_parking_data['realtime_occupancy_timestamp'].astype(str)
 
     # --- Regions: load + legend (drives highlight state) -----------------
     regions = load_regions(path=REGIONS_GEOJSON_AZURE_PATH)
@@ -384,6 +436,7 @@ def get_parking_section():
 
     # --- Build and render the folium/Leaflet map ---------------------------
     folium_map = build_folium_map(processed_parking_data, styled_regions)
+    folium_map = add_visitor_occupancy_markers(folium_map, processed_visitor_occupancy)
     st_folium(folium_map, width=None, height=600, returned_objects=[])
 
     # Interactive Metrics
@@ -399,12 +452,8 @@ def get_parking_section():
         selected_data = processed_parking_data[processed_parking_data['location'] == selected_location].iloc[0]
 
         col1, col2, col3 = st.columns(3)
-        col1.metric(label=TRANSLATIONS[st.session_state.selected_language]['capacity'], value=f"{selected_data['current_capacity']} 🚗")
-        
-        # Display occupancy status and bar
-        with col2:
-            st.metric(label = TRANSLATIONS[st.session_state.selected_language]['occupancy_status'], value=f"{selected_data['occupancy_status']}")
-        with col3:
-            st.markdown(f"**{TRANSLATIONS[st.session_state.selected_language]['occupancy_rate']}**")
-            render_occupancy_bar(selected_data['current_occupancy_rate'])
+
+        col1.metric(label=TRANSLATIONS[st.session_state.selected_language]['available_spaces'], value=f"{selected_data['current_availability']} 🚗")
+        col2.metric(label=TRANSLATIONS[st.session_state.selected_language]['capacity'], value=f"{selected_data['current_capacity']} 🚗")
+        col3.metric(label=TRANSLATIONS[st.session_state.selected_language]['occupancy_rate'], value=f"{selected_data['current_occupancy_rate']}")
 

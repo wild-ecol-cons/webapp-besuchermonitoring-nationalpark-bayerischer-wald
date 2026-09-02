@@ -164,26 +164,25 @@ sensor_mapping_to_traffic_metrics = {
 }
 
 # Slug names and coordinates of the visitor sensors that have real-time tracking of visitor occupancy to Bayern Cloud
-# TODO: Update to actual coordinates!!!
 visitor_sensors_with_realtime_tracking = {
     "tfg-lusen-1": {
         "sensor_name": "Tierfreigelände Lusen - Sensor 1",
-        "coordinates": (48.567, 13.500),
+        "coordinates": (4609187.1623, 5418339.686899999156594),
     },
     "tfg-lusen-2": {
         "sensor_name": "Tierfreigelände Lusen - Sensor 2",
-        "coordinates": (48.467, 13.600),
+        "coordinates": (4609330.687800000421703, 5418340.348099999129772),
     },
     "tfg-lusen-3": {
         "sensor_name": "Tierfreigelände Lusen - Sensor 3",
-        "coordinates": (48.667, 13.700),
+        "coordinates": (4607969.006400000303984, 5419565.471999999135733),
     },
     "tfg-falkenstein-1": {
         "sensor_name": "Tierfreigelände Falkenstein - Sensor 1",
-        "coordinates": (48.867, 13.900),
+        "coordinates": (4590885.0565, 5436668.004000000655651),
     },
     "tfg-falkenstein-2": {
         "sensor_name": "Tierfreigelände Falkenstein - Sensor 2",
-        "coordinates": (48.367, 13.800),
+        "coordinates": (4590598.5148, 5436546.696000000461936),
     },
 }

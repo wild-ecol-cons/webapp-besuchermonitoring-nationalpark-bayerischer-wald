@@ -76,6 +76,15 @@ def load_regions(path: str) -> gpd.GeoDataFrame:
 
     return regions
 
+@st.cache_data
+def load_walker_svg_icon(path: str = "assets/walker.svg") -> str:
+    """
+    Load the visitor-marker SVG once and cache it as a string, so it can be
+    embedded directly into folium DivIcon HTML.
+    """
+    with open(path, "r", encoding="utf-8") as f:
+        svg_content = f.read()
+    return svg_content
 
 def style_regions_for_display(regions: gpd.GeoDataFrame, highlighted_names: list) -> gpd.GeoDataFrame:
     """
@@ -329,6 +338,9 @@ def add_visitor_occupancy_markers(folium_map, processed_visitor_occupancy):
         maxClusterRadius=20
     ).add_to(visitor_layer)
 
+    walker_svg = load_walker_svg_icon()
+    icon_size_px = 10
+
     for _, row in processed_visitor_occupancy.iterrows():
         tooltip_text = (
             f"<b>{row['location']}</b><br>"
@@ -338,14 +350,16 @@ def add_visitor_occupancy_markers(folium_map, processed_visitor_occupancy):
             f"{row['timestamp_data_collected']}"
         )
 
+        icon_html = (
+            f'<div style="width:{icon_size_px}px; height:{icon_size_px}px; '
+            f'filter: drop-shadow(0 0 1px #000);">{walker_svg}</div>'
+        )
+
         folium.Marker(
             location=[row['latitude'], row['longitude']],
             tooltip=folium.Tooltip(tooltip_text),
             icon=folium.DivIcon(
-                html=(
-                    '<div style="font-size:26px; line-height:26px; '
-                    'text-align:center; filter: drop-shadow(0 0 1px #000);">🚶</div>'
-                ),
+                html=icon_html,
                 icon_size=(30, 30),
                 icon_anchor=(15, 15),
             ),

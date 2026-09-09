@@ -6,6 +6,26 @@ import plotly.express as px
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
 from src.config import regions
 
+def get_weekday_abbreviated_x_labels(dates: pd.Series, language: str) -> list[str]:
+    """
+    Create abbreviated weekday labels for the x-axis of a bar chart.
+
+    Args:
+        dates (pd.Series): Series of datetime objects.
+        language (str): Language code for the abbreviation.
+
+    Returns:
+        list[str]: list of abbreviated weekday labels.
+    """
+    weekday_abbreviations = {
+        "German": ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
+        "English": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    }
+    abbreviations = weekday_abbreviations.get(language, "")
+
+    parsed_dates = pd.to_datetime(dates)
+    return [f"{abbreviations[d.weekday()]}, {d.strftime('%d.%m.')}" for d in parsed_dates]
+
 def create_hourly_visitor_forecast_vizualization(selected_region, hourly_predictions):
 
     predictions_per_region = regions[selected_region]
@@ -80,7 +100,7 @@ def create_hourly_visitor_forecast_vizualization(selected_region, hourly_predict
     # Display the interactive bar chart for relative traffic below the radio button
     st.plotly_chart(fig1)
 
-@st.cache_data(max_entries=1)
+
 def create_daily_visitor_forecast_vizualization(selected_region, daily_predictions):
 
     # Filter the DataFrame based on the selected region
@@ -111,6 +131,15 @@ def create_daily_visitor_forecast_vizualization(selected_region, daily_predictio
     )
 
     fig1.update_traces(marker_color='green') # Set marker color to green
+
+    fig1.update_xaxes(
+        tickmode="array",
+        tickvals=selected_region_predictions["day_date"],
+        ticktext=get_weekday_abbreviated_x_labels(
+            selected_region_predictions["day_date"],
+            st.session_state.selected_language,
+        ),
+    )
 
     # Display the interactive bar chart for relative traffic below the radio button
     st.plotly_chart(fig1)

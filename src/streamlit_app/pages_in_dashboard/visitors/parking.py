@@ -86,6 +86,16 @@ def load_walker_svg_icon(path: str = "assets/walker.svg") -> str:
         svg_content = f.read()
     return svg_content
 
+@st.cache_data
+def load_parking_svg_icon(path: str = "assets/parking.svg") -> str:
+    """
+    Load the parking-marker SVG once and cache it as a string, so it can be
+    embedded directly into folium DivIcon HTML.
+    """
+    with open(path, "r", encoding="utf-8") as f:
+        svg_content = f.read()
+    return svg_content
+
 def style_regions_for_display(regions: gpd.GeoDataFrame, highlighted_names: list) -> gpd.GeoDataFrame:
     """
     Set fill/line color + opacity per region based on which region names are
@@ -314,17 +324,26 @@ def build_folium_map(processed_parking_data: pd.DataFrame, styled_regions: gpd.G
     ).add_to(m)
 
     # --- Parking markers ------------------------------------------------------
+    parking_svg = load_parking_svg_icon()
+    icon_size_px = 28
+
     for _, row in processed_parking_data.iterrows():
         r, g, b = row["color"]
-        tooltip_html = f"<b>{row['tooltip_line1_name']}</b><br/>{row['tooltip_line2_availability']}<br/>{row['tooltip_line3_occupancy_rate']}<br/>{row['tooltip_line4_data_collection_timestamp']}"        
-        folium.CircleMarker(
+        tooltip_html = f"<b>{row['tooltip_line1_name']}</b><br/>{row['tooltip_line2_availability']}<br/>{row['tooltip_line3_occupancy_rate']}<br/>{row['tooltip_line4_data_collection_timestamp']}"
+
+        icon_html = (
+            f'<div style="width:{icon_size_px}px; height:{icon_size_px}px; '
+            f'color: rgb({r},{g},{b}); filter: drop-shadow(0 1px 1px rgba(0,0,0,0.5));">'
+            f'{parking_svg}</div>'
+        )
+
+        folium.Marker(
             location=[row["latitude"], row["longitude"]],
-            radius=8,
-            color="black",
-            weight=1,
-            fill=True,
-            fill_color=f"rgb({r},{g},{b})",
-            fill_opacity=0.9,
+            icon=folium.DivIcon(
+                html=icon_html,
+                icon_size=(icon_size_px, icon_size_px),
+                icon_anchor=(icon_size_px // 2, icon_size_px // 2),
+            ),
             tooltip=tooltip_html,
         ).add_to(m)
 

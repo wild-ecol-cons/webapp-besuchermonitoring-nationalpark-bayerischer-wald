@@ -8,8 +8,11 @@ from src.config import regions
 
 def create_hourly_visitor_forecast_vizualization(selected_region, hourly_predictions):
 
+    predictions_per_region = regions[selected_region]
+    further_columns_to_show = ["Time", "day_date"]
+
     # Filter the DataFrame based on the selected region
-    selected_region_predictions = hourly_predictions[["Time", "day_date", selected_region, f"hourly_relative_traffic_{selected_region}", f"hourly_relative_traffic_color_{selected_region}"]]
+    selected_region_predictions = hourly_predictions[predictions_per_region + further_columns_to_show]
 
     # Get unique values for the day and date list
     days_list = selected_region_predictions['day_date'].unique()
@@ -33,18 +36,25 @@ def create_hourly_visitor_forecast_vizualization(selected_region, hourly_predict
     fig1 = px.bar(
         day_df,
         x='Time',  
-        y=f'hourly_relative_traffic_{selected_region}',
-        color=f'hourly_relative_traffic_color_{selected_region}',  # Use the traffic color column
-        labels={f'hourly_relative_traffic_{selected_region}': '', 'Time': 'Hour of Day'},
+        y=predictions_per_region,
+        barmode='group',
+        labels={f'traffic_{selected_region}': '', 'Time': 'Hour of Day'},
         title=f"{TRANSLATIONS[st.session_state.selected_language]['visitor_foot_traffic_for_day']} - {day_selected}",
         color_discrete_map={'red': 'red', 'blue': 'blue', 'green': 'green'}
     )
 
-    # Disable hover text
-    fig1.update_layout(hovermode=False)
+    # Customize hover text for relative traffic
+    fig1.update_traces(
+        hovertemplate=(
+            'Traffic: %{y}<br>'  # Display the traffic value
+            'Hour: %{x|%H:%M}<br>'  # Display the hour in HH:MM format
+        )
+    )
+
+    weekly_max_value_per_region = selected_region_predictions[predictions_per_region].max().max()
 
     # Update layout for relative traffic chart
-    fig1.update_yaxes(range=[0, 1], showticklabels=False)  # Set y-axis to range from 0 to 1 and hide tick labels
+    fig1.update_yaxes(range=[0, weekly_max_value_per_region])  # Set y-axis to range from 0 to the max traffic value of the forecasted week for a region
     fig1.update_xaxes(showticklabels=True)  # Keep the x-axis tick labels visible
 
     fig1.update_layout(
@@ -58,18 +68,13 @@ def create_hourly_visitor_forecast_vizualization(selected_region, hourly_predict
             font=dict(size=12),
             orientation="h",
             yanchor="top",
+            y=-0.3,  # Position the legend below the chart
             xanchor="center",
             x=0.5  # Center the legend horizontally
         ),
         xaxis=dict(
             tickformat='%H:%M'
         )
-    )
-
-    # Update the legend names
-    fig1.for_each_trace(
-        lambda t: t.update(name={
-            'red': TRANSLATIONS[st.session_state.selected_language]['peak_traffic'], 'green': TRANSLATIONS[st.session_state.selected_language]['low_traffic'], 'blue': TRANSLATIONS[st.session_state.selected_language]['moderate_traffic']}[t.name])
     )
 
     # Display the interactive bar chart for relative traffic below the radio button

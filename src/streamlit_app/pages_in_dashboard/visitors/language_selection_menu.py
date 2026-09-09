@@ -11,7 +11,7 @@ TRANSLATIONS = {
         "English": {
         "current_occupancy_timestamp": "Last updated on",
         'legend_visitor_sensors_mention': 'Real-Time Visitor Sensors:',
-        "current_visitors": "People in the last 15-minute interval",
+        "current_visitors": "Visitor Traffic (last 15-minute interval)",
         "select_regions_to_visualize": "Select Regions to Highlight",
         'choose_regions': 'Select one or multiple Regions to highlight',
         "symbol_legend": "Symbol Legend",
@@ -104,7 +104,7 @@ TRANSLATIONS = {
     "German": {
         "current_occupancy_timestamp": "Zuletzt aktualisiert am",
         'legend_visitor_sensors_mention': 'Echtzeit-Besuchersensoren:',
-        "current_visitors": "Personen im letzten 15-Min-Intervall",
+        "current_visitors": "Besucheraufkommen (letztes 15-Min-Intervall)",
         "select_regions_to_visualize": "Wähle Regionen zum Visualisieren aus",
         'choose_regions': 'Wähle eine oder mehrere Regionen aus',
         "symbol_legend": "Symbol-Legende",

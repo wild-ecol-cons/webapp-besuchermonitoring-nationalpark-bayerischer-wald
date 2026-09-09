@@ -149,10 +149,16 @@ def get_fixed_size():
     """
     return 450  
 
-def render_map_symbology_legend():
+def render_map_symbology_legend(walker_svg_icon: str) -> None:
     """
     Renders a clean visual legend explaining the map layers (polygons vs markers).
+
+    Args:
+        walker_svg_icon (str): The SVG content of the walker icon.
     """
+
+    walker_icon_size_px = 30
+
     st.markdown(f"""
     <div style="background-color: #f8f9fa; border: 1px solid #e9ecef; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
         <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; color: #333;">{TRANSLATIONS[st.session_state.selected_language]["symbol_legend"]}</div>
@@ -180,7 +186,7 @@ def render_map_symbology_legend():
             </div>
             <!-- Visitor Sensor Markers -->
             <div style="display: flex; align-items: center; gap: 7px; border-left: 1px solid #ccc; padding-left: 3px;">
-                <div style="font-size: 25px; line-height: 18px; width: 18px; text-align: center;">🚶</div>
+                <div style="width:{walker_icon_size_px}px; height:{walker_icon_size_px}px; filter: drop-shadow(0 0 1px #000);">{walker_svg_icon}</div>
                 <span><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_visitor_sensors_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["current_visitors"]}</span>
             </div>
         </div>
@@ -324,7 +330,7 @@ def build_folium_map(processed_parking_data: pd.DataFrame, styled_regions: gpd.G
 
     return m
 
-def add_visitor_occupancy_markers(folium_map, processed_visitor_occupancy):
+def add_visitor_occupancy_markers(folium_map, processed_visitor_occupancy, walker_svg_icon):
     visitor_layer = folium.FeatureGroup(name="Visitor Sensors", show=True)
 
     # Cluster nearby visitor-sensor markers: at low zoom, close points collapse
@@ -338,8 +344,8 @@ def add_visitor_occupancy_markers(folium_map, processed_visitor_occupancy):
         maxClusterRadius=20
     ).add_to(visitor_layer)
 
-    walker_svg = load_walker_svg_icon()
-    icon_size_px = 10
+    # Load and define icons
+    icon_size_walker_px = 50
 
     for _, row in processed_visitor_occupancy.iterrows():
         tooltip_text = (
@@ -351,8 +357,8 @@ def add_visitor_occupancy_markers(folium_map, processed_visitor_occupancy):
         )
 
         icon_html = (
-            f'<div style="width:{icon_size_px}px; height:{icon_size_px}px; '
-            f'filter: drop-shadow(0 0 1px #000);">{walker_svg}</div>'
+            f'<div style="width:{icon_size_walker_px}px; height:{icon_size_walker_px}px; '
+            f'filter: drop-shadow(0 0 1px #000);">{walker_svg_icon}</div>'
         )
 
         folium.Marker(
@@ -408,8 +414,11 @@ def get_parking_section():
 
     st.markdown(f"### {TRANSLATIONS[st.session_state.selected_language]['real_time_map_visualization']}")
 
+    # Load icons to be used in the map
+    walker_svg = load_walker_svg_icon()
+
     # Display the clear map symbology legend above the map
-    render_map_symbology_legend()
+    render_map_symbology_legend(walker_svg)
     
     # Set a fixed size for all markers
     processed_parking_data['size'] = get_fixed_size()
@@ -450,7 +459,7 @@ def get_parking_section():
 
     # --- Build and render the folium/Leaflet map ---------------------------
     folium_map = build_folium_map(processed_parking_data, styled_regions)
-    folium_map = add_visitor_occupancy_markers(folium_map, processed_visitor_occupancy)
+    folium_map = add_visitor_occupancy_markers(folium_map, processed_visitor_occupancy, walker_svg)
     st_folium(folium_map, width=None, height=600, returned_objects=[])
 
     # Interactive Metrics

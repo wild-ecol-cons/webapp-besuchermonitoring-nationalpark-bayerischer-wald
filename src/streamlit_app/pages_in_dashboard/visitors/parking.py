@@ -77,7 +77,7 @@ def load_regions(path: str) -> gpd.GeoDataFrame:
     return regions
 
 @st.cache_data
-def load_walker_svg_icon(path: str = "assets/walker.svg") -> str:
+def load_walker_svg_icon(path: str = "assets/202609 Zählgerät.svg") -> str:
     """
     Load the visitor-marker SVG once and cache it as a string, so it can be
     embedded directly into folium DivIcon HTML.

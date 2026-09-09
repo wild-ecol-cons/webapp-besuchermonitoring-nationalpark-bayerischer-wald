@@ -84,7 +84,7 @@ def create_hourly_visitor_forecast_vizualization(selected_region, hourly_predict
 def create_daily_visitor_forecast_vizualization(selected_region, daily_predictions):
 
     # Filter the DataFrame based on the selected region
-    selected_region_predictions = daily_predictions[["day_date", f"daily_relative_traffic_{selected_region}", f"daily_relative_traffic_color_{selected_region}"]]
+    selected_region_predictions = daily_predictions[["day_date", selected_region]]
 
     # Add a note that this is forecasted data
     st.markdown(f":green[*{TRANSLATIONS[st.session_state.selected_language]['forecasted_visitor_data']}*].")
@@ -93,17 +93,10 @@ def create_daily_visitor_forecast_vizualization(selected_region, daily_predictio
     fig1 = px.bar(
         selected_region_predictions,
         x='day_date',  
-        y=f'daily_relative_traffic_{selected_region}',
-        color=f'daily_relative_traffic_color_{selected_region}',  # Use the traffic color column
+        y=selected_region,
         title=f"{TRANSLATIONS[st.session_state.selected_language]['visitor_foot_traffic_for_week']}",
-        color_discrete_map={'red': 'red', 'blue': 'blue', 'green': 'green'}
+        color_discrete_map={'green': 'green'}
     )
-
-    # Disable hover text
-    fig1.update_layout(hovermode=False)
-
-    # Update layout for relative traffic chart
-    fig1.update_yaxes(range=[0, 1], showticklabels=False)  # Set y-axis to range from 0 to 1 and hide tick labels
 
     fig1.update_layout(
         xaxis_title=None,  # Hide the x-axis title
@@ -117,11 +110,7 @@ def create_daily_visitor_forecast_vizualization(selected_region, daily_predictio
         )
     )
 
-    # Update the legend names
-    fig1.for_each_trace(
-        lambda t: t.update(name={
-            'red': TRANSLATIONS[st.session_state.selected_language]['peak_traffic'], 'green': TRANSLATIONS[st.session_state.selected_language]['low_traffic'], 'blue': TRANSLATIONS[st.session_state.selected_language]['moderate_traffic']}[t.name])
-    )
+    fig1.update_traces(marker_color='green') # Set marker color to green
 
     # Display the interactive bar chart for relative traffic below the radio button
     st.plotly_chart(fig1)

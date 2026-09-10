@@ -6,6 +6,7 @@ import pandas as pd
 import geopandas as gpd
 import joblib
 import io
+import base64
 import pytz
 from src.streamlit_app.source_data import source_and_preprocess_realtime_parking_data, source_and_preprocess_realtime_visitor_occupancy
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
@@ -391,6 +392,13 @@ def add_house_visitor_count_markers(folium_map, house_counts_df: pd.DataFrame, h
 
     icon_size_info_px = 50
 
+    # Convert SVG once into a data URI
+    svg_base64 = base64.b64encode(
+        info_svg_icon.encode("utf-8")
+    ).decode("utf-8")
+
+    icon_data_uri = f"data:image/svg+xml;base64,{svg_base64}"
+
     for _, row in house_counts_df.iterrows():
         location_id = str(row["location_id"])
         coordinates = house_coordinates.get(location_id)
@@ -408,19 +416,19 @@ def add_house_visitor_count_markers(folium_map, house_counts_df: pd.DataFrame, h
             f"{TRANSLATIONS[st.session_state.selected_language]['house_count_inside']}: {row['inside']}"
         )
 
-        icon_html = (
-            f'<div style="width:{icon_size_info_px}px; height:{icon_size_info_px}px; '
-            f'filter: drop-shadow(0 0 1px #000);">{info_svg_icon}</div>'
+        info_icon = folium.CustomIcon(
+            icon_image=icon_data_uri,
+            icon_size=(icon_size_info_px, icon_size_info_px),
+            icon_anchor=(
+                icon_size_info_px // 2,
+                icon_size_info_px // 2
+            ),
         )
 
         folium.Marker(
             location=[latitude, longitude],
             tooltip=folium.Tooltip(tooltip_text),
-            icon=folium.DivIcon(
-                html=icon_html,
-                icon_size=(icon_size_info_px, icon_size_info_px),
-                icon_anchor=(icon_size_info_px // 2, icon_size_info_px // 2),
-            ),
+            icon=info_icon,
         ).add_to(info_layer)
 
     info_layer.add_to(folium_map)

@@ -77,7 +77,7 @@ def load_regions(path: str) -> gpd.GeoDataFrame:
     return regions
 
 @st.cache_data
-def load_walker_svg_icon(path: str = "assets/202609 Zählgerät.svg") -> str:
+def load_svg_icon(path: str) -> str:
     """
     Load the visitor-marker SVG once and cache it as a string, so it can be
     embedded directly into folium DivIcon HTML.
@@ -149,7 +149,7 @@ def get_fixed_size():
     """
     return 450  
 
-def render_map_symbology_legend(walker_svg_icon: str) -> None:
+def render_map_symbology_legend(walker_svg_icon: str, info_svg_icon: str) -> None:
     """
     Renders a clean visual legend explaining the map layers (polygons vs markers).
 
@@ -158,6 +158,7 @@ def render_map_symbology_legend(walker_svg_icon: str) -> None:
     """
 
     walker_icon_size_px = 30
+    info_icon_size_px = 30
 
     st.markdown(f"""
     <div style="background-color: #f8f9fa; border: 1px solid #e9ecef; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
@@ -188,6 +189,11 @@ def render_map_symbology_legend(walker_svg_icon: str) -> None:
             <div style="display: flex; align-items: center; gap: 7px; border-left: 1px solid #ccc; padding-left: 3px;">
                 <div style="width:{walker_icon_size_px}px; height:{walker_icon_size_px}px; filter: drop-shadow(0 0 1px #000);">{walker_svg_icon}</div>
                 <span><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_visitor_sensors_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["current_visitors"]}</span>
+            </div>
+            <!-- Visitor Sensor Markers -->
+            <div style="display: flex; align-items: center; gap: 7px; border-left: 1px solid #ccc; padding-left: 3px;">
+                <div style="width:{info_icon_size_px}px; height:{info_icon_size_px}px; filter: drop-shadow(0 0 1px #000);">{info_svg_icon}</div>
+                <span><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_house_sensors_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["current_visitor_no_house"]}</span>
             </div>
         </div>
     </div>
@@ -417,10 +423,11 @@ def get_parking_section():
     st.write(f"{TRANSLATIONS[st.session_state.selected_language]['live_data_last_updated']} {timestamp_latest_parking_data_fetch}")
 
     # Load icons to be used in the map
-    walker_svg = load_walker_svg_icon()
+    walker_svg = load_svg_icon(path="assets/202609 Zählgerät.svg")
+    info_svg = load_svg_icon(path="assets/202609 Info.svg")
 
     # Display the clear map symbology legend above the map
-    render_map_symbology_legend(walker_svg)
+    render_map_symbology_legend(walker_svg, info_svg)
     
     # Set a fixed size for all markers
     processed_parking_data['size'] = get_fixed_size()

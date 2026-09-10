@@ -201,9 +201,6 @@ if __name__ == "__main__":
 
     df = to_dataframe(report_json, visitor_houses_with_realtime_tracking)
 
-    # keep only buckets from 09:00 onward, in case the API ever returns earlier ones
-    df = df[df["datetime"].dt.time >= pd.Timestamp("09:00").time()]
-
     print(df)
 
     # Get historic counts

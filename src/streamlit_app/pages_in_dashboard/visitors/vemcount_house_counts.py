@@ -248,6 +248,19 @@ def fetch_historic_house_visitor_counts_from_vemcount_api(
     # Rename time colum to expected col name from Data Hub
     house_counts_df = house_counts_df.rename(columns={"datetime": "general_time_index"})
 
+    # Pivot to wide
+    house_counts_df_wide = house_counts_df.pivot(
+        index="general_time_index",
+        columns="location_name",
+        values=["count_in", "count_out", "inside"]
+    ).reset_index()
+
+    # Reorder MultiIndex levels
+    house_counts_df_wide.columns = [
+        f"{location}_{metric}" if location else metric
+        for metric, location in house_counts_df_wide.columns
+    ]
+
     print("Historic house visitor counts fetched successfully:")
     
-    return house_counts_df
+    return house_counts_df_wide

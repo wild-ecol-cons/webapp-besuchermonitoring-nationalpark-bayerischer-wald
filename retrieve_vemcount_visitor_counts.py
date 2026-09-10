@@ -1,34 +1,19 @@
-# Description: Pulls today's hourly visitor in/out counts for every location registered under
-# the Vemcount API key, and assembles them into a single pandas DataFrame. Vemcount is the
-# people-counting sensor platform used at some park visitor centers (currently Bavarian Forest
-# sites).
-#
-# Requires the VEMCOUNT_API_KEY environment variable to be set (get one from the Vemcount app
-# under user settings > API key). Never hardcode the key here.
-
 import os
-
+import pytz
+import time
 import pandas as pd
 import requests
 from datetime import datetime, timedelta
-import pytz
-import time
+from src.config import visitor_houses_with_realtime_tracking
 
-BASE_URL = "https://vemcount.app/api/v3"
-
-API_KEY = os.environ["VEMCOUNT_API_KEY"]  # raises KeyError with a clear message if unset
-
-# Dictionary of house names and their respective location IDs in Vemcount
-visitor_houses_with_realtime_tracking = {
-    "33955": "Hans-Eisenmann-Haus",
-    "33320": "Nationalparkverwaltung Bayerischer Wald - Haus zur Wildnis",
-    "33951": "Waldgeschichtliches Museum St. Oswald"
-}
+# Define constants
+VEMCOUNT_API_BASE_URL = "https://vemcount.app/api/v3"
+VEMCOUNT_API_KEY = os.environ["VEMCOUNT_API_KEY"]
 
 def get_token(api_key: str) -> str:
     """Exchange the API key for a short-lived bearer token (valid ~6h)."""
     resp = requests.post(
-        f"{BASE_URL}/auth/login",
+        f"{VEMCOUNT_API_BASE_URL}/auth/login",
         json={"api_key": api_key},
         headers={"Accept": "application/json"},
     )
@@ -71,7 +56,7 @@ def get_vemcount_counts(token: str, location_ids: list[int], start_date: str, en
     detail."""
 
     resp = requests.post(
-        f"{BASE_URL}/report",
+        f"{VEMCOUNT_API_BASE_URL}/report",
         json={
             "source": "locations",
             "data": location_ids,
@@ -198,7 +183,7 @@ def get_vemcount_counts_chunked(
 
 
 if __name__ == "__main__":
-    token = get_token(API_KEY)
+    token = get_token(VEMCOUNT_API_KEY)
 
     location_ids = list(visitor_houses_with_realtime_tracking.keys())
 

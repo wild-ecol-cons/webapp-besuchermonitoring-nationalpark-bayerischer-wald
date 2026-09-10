@@ -186,3 +186,10 @@ visitor_sensors_with_realtime_tracking = {
         "coordinates": (49.0595505, 13.238188),
     },
 }
+
+# Dictionary of house names and their respective location IDs in Vemcount
+visitor_houses_with_realtime_tracking = {
+    "33955": "Hans-Eisenmann-Haus",
+    "33320": "Nationalparkverwaltung Bayerischer Wald - Haus zur Wildnis",
+    "33951": "Waldgeschichtliches Museum St. Oswald"
+}

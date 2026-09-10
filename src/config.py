@@ -200,5 +200,5 @@ visitor_houses_with_realtime_tracking = {
 visitor_house_coordinates = {
     "33955": (48.8901888, 13.4866217),   # Hans-Eisenmann-Haus
     "33320": (49.0604494, 13.2434616),   # Nationalparkverwaltung Bayerischer Wald - Haus zur Wildnis
-    "33951": None,                        # TODO: Waldgeschichtliches Museum St. Oswald - ask for coordinates
+    "33951": (48.891487, 13.427821),     # Waldgeschichtliches Museum St. Oswald
 }

@@ -11,6 +11,7 @@ from src.utils import query_azure_with_duck_db, upload_dataframe_to_azure, read_
 from src.prediction_pipeline.sourcing_data.source_historic_parking_data import process_all_locations
 from src.prediction_pipeline.sourcing_data.source_weather import source_weather_data
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
+from src.streamlit_app.pages_in_dashboard.visitors.vemcount_house_counts import fetch_historic_house_visitor_counts_from_vemcount_api
 
 
 def log_queried_data_to_azure(queried_data: pd.DataFrame) -> str:
@@ -58,7 +59,7 @@ def get_min_date_from_queried_data(data_categories: list[str]) -> datetime:
 
     for category in data_categories:
 
-        if category in ["Parkplatzzählungen", "Wetterdaten", "Schulferien & Feiertage (BY & CZ)"]:
+        if category in ["Parkplatzzählungen", "Wetterdaten", "Schulferien & Feiertage (BY & CZ)", "Häuserzählungen der Vemcount API"]:
             continue
         else:
             min_date = query_azure_with_duck_db(
@@ -111,6 +112,11 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
                 specify_timerange=specify_timerange,
                 start_time=start_time,
                 end_time=end_time)
+        elif category == "Häuserzählungen der Vemcount API":
+            queried_single_category_data = fetch_historic_house_visitor_counts_from_vemcount_api(
+                specify_timerange=specify_timerange,
+                start_time=start_time,
+                end_time=end_time)
         else:
             if specify_timerange:
                 queried_single_category_data = query_azure_with_duck_db(
@@ -133,7 +139,7 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
         # Convert empty strings to NaN and drop empty columns (before merge or preview)
         queried_single_category_data = queried_single_category_data.replace("", np.nan).dropna(axis=1, how='all')
         
-        if category == "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage":
+        if category == "(legacy) Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage":
             daily_value_cols_to_be_filled = queried_single_category_data.columns.difference(['general_time_index'])
 
         # Do a full outer join between the current state of the overall queried data and the queried data of the current category, resulting again in the overall queried data
@@ -149,7 +155,7 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
             continue
 
     # Fill missing values for daily data
-    if "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage" in data_categories_to_query:
+    if "(legacy) Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage" in data_categories_to_query:
         # overlap_eco_counter_huetten["general_time_index"] = pd.to_datetime(overlap_eco_counter_huetten["general_time_index"])
 
         overall_queried_data[daily_value_cols_to_be_filled] = overall_queried_data.groupby(overall_queried_data['general_time_index'].dt.date)[daily_value_cols_to_be_filled].ffill()

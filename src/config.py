@@ -39,16 +39,17 @@ regions = {
 # Mapping data upload categories to specific folders in Azure Blob Storage
 data_upload_categories_to_azure_folders = {
     "Permanente Besucherzählung (Eco-Counter)": "visitor-counts-eco-counter",
-    "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage": "huts-counts-openings-weather-station-holidays",
+    "(legacy) Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage": "huts-counts-openings-weather-station-holidays",
     "Sonderzählungen": "special-counts",
     "Parkplatzzählungen": None,
     "Wetterdaten": None,
+    "Häuserzählungen der Vemcount API": None,
     # "Schulferien & Feiertage (BY & CZ)", # TODO: Add this at the end of the project if time allows
 }
 
 data_upload_categories_time_cols_freq = {
     "Permanente Besucherzählung (Eco-Counter)": {"col": "Time", "freq": "1 hour"},
-    "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage": {"col": "Datum", "freq": "1 day"},
+    "(legacy) Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage": {"col": "Datum", "freq": "1 day"},
     "Sonderzählungen": {"col": None, "freq": "1 hour"},
 }
 
@@ -185,4 +186,19 @@ visitor_sensors_with_realtime_tracking = {
         "sensor_name": "Tierfreigelände Falkenstein - Sensor 2",
         "coordinates": (49.0595505, 13.238188),
     },
+}
+
+# Dictionary of house names and their respective location IDs in Vemcount
+visitor_houses_with_realtime_tracking = {
+    "33955": "Hans-Eisenmann-Haus",
+    "33320": "Nationalparkverwaltung Bayerischer Wald - Haus zur Wildnis",
+    "33951": "Waldgeschichtliches Museum St. Oswald"
+}
+
+# Coordinates (lat, lon) for each house, keyed by the same location IDs as
+# visitor_houses_with_realtime_tracking. St. Oswald is missing pending coords.
+visitor_house_coordinates = {
+    "33955": (48.8901888, 13.4866217),   # Hans-Eisenmann-Haus
+    "33320": (49.0604494, 13.2434616),   # Nationalparkverwaltung Bayerischer Wald - Haus zur Wildnis
+    "33951": (48.891487, 13.427821),     # Waldgeschichtliches Museum St. Oswald
 }

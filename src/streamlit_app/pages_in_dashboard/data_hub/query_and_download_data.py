@@ -139,7 +139,7 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
         # Convert empty strings to NaN and drop empty columns (before merge or preview)
         queried_single_category_data = queried_single_category_data.replace("", np.nan).dropna(axis=1, how='all')
         
-        if category == "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage":
+        if category == "(legacy) Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage":
             daily_value_cols_to_be_filled = queried_single_category_data.columns.difference(['general_time_index'])
 
         # Do a full outer join between the current state of the overall queried data and the queried data of the current category, resulting again in the overall queried data
@@ -155,7 +155,7 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
             continue
 
     # Fill missing values for daily data
-    if "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage" in data_categories_to_query:
+    if "(legacy) Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage" in data_categories_to_query:
         # overlap_eco_counter_huetten["general_time_index"] = pd.to_datetime(overlap_eco_counter_huetten["general_time_index"])
 
         overall_queried_data[daily_value_cols_to_be_filled] = overall_queried_data.groupby(overall_queried_data['general_time_index'].dt.date)[daily_value_cols_to_be_filled].ffill()

@@ -189,7 +189,15 @@ visitor_sensors_with_realtime_tracking = {
 
 # Dictionary of house names and their respective location IDs in Vemcount
 visitor_houses_with_realtime_tracking = {
-    "33955": "Hans-Eisenmann-Haus", # coordinatees: (48.8901888, 13.4866217),
-    "33320": "Nationalparkverwaltung Bayerischer Wald - Haus zur Wildnis", # coordinates: (49.0604494, 13.2434616),
-    "33951": "Waldgeschichtliches Museum St. Oswald" # TODO: Ask for coordinates!
+    "33955": "Hans-Eisenmann-Haus",
+    "33320": "Nationalparkverwaltung Bayerischer Wald - Haus zur Wildnis",
+    "33951": "Waldgeschichtliches Museum St. Oswald"
+}
+
+# Coordinates (lat, lon) for each house, keyed by the same location IDs as
+# visitor_houses_with_realtime_tracking. St. Oswald is missing pending coords.
+visitor_house_coordinates = {
+    "33955": (48.8901888, 13.4866217),   # Hans-Eisenmann-Haus
+    "33320": (49.0604494, 13.2434616),   # Nationalparkverwaltung Bayerischer Wald - Haus zur Wildnis
+    "33951": None,                        # TODO: Waldgeschichtliches Museum St. Oswald - ask for coordinates
 }

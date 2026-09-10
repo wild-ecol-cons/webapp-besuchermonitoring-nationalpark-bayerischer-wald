@@ -181,6 +181,22 @@ def get_vemcount_counts_chunked(
 
     return pd.concat(all_dataframes, ignore_index=True)
 
+def fetch_realtime_house_visitor_counts() -> pd.DataFrame:
+    vemcount_token = get_token(VEMCOUNT_API_KEY)
+    house_location_ids = list(visitor_houses_with_realtime_tracking.keys())
+    date_dict_now = get_current_berlin_date_and_hour_range()
+
+    house_report_json = get_vemcount_counts(
+        token=vemcount_token,
+        location_ids=house_location_ids,
+        start_date=date_dict_now["date_from"],
+        end_date=date_dict_now["date_to"],
+        start_hour=date_dict_now["hour_from"],
+        end_hour=date_dict_now["hour_to"],
+    )
+    house_counts_df = to_dataframe(house_report_json, visitor_houses_with_realtime_tracking)
+
+    return house_counts_df
 
 if __name__ == "__main__":
     token = get_token(VEMCOUNT_API_KEY)

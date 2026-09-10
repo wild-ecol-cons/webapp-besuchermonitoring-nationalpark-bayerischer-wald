@@ -212,40 +212,42 @@ def fetch_realtime_house_visitor_counts() -> pd.DataFrame:
 
     return house_counts_filtered
 
-if __name__ == "__main__":
-    token = get_token(VEMCOUNT_API_KEY)
+def fetch_historic_house_visitor_counts_from_vemcount_api(
+        specify_timerange: bool = False,
+        start_time: datetime = None,
+        end_time: datetime = None) -> pd.DataFrame:
+    
+    print("Fetching historic house visitor counts...")
+    vemcount_token = get_token(VEMCOUNT_API_KEY)
+    house_location_ids = list(visitor_houses_with_realtime_tracking.keys())
 
-    location_ids = list(visitor_houses_with_realtime_tracking.keys())
+    if specify_timerange:
+        start_date = start_time.strftime("%Y-%m-%d")
+        end_date = end_time.strftime("%Y-%m-%d")
+        start_hour = start_time.strftime("%H:%M")
+        end_hour = end_time.strftime("%H:%M")
+    else:
+        date_dict_now = get_last_hour_date_fields()
 
-    # Get realtime counts for today
-    date_dict_now = get_current_berlin_date_and_hour_range()
+        start_date = "2025-12-02"
+        end_date = date_dict_now["date_to"]
+        start_hour = "00:00"
+        end_hour = date_dict_now["hour_to"]
 
-    report_json = get_vemcount_counts(
-        token=token,
-        location_ids=location_ids,
-        start_date=date_dict_now["date_from"],
-        end_date=date_dict_now["date_to"],
-        start_hour=date_dict_now["hour_from"],
-        end_hour=date_dict_now["hour_to"],
-    )
-
-    df = to_dataframe(report_json, visitor_houses_with_realtime_tracking)
-
-    print(df)
-
-    # Get historic counts
-    print("This is now historic counts for for the maximum lifetime of the Data Hub for all realtime tracking locations.")
-    df = get_vemcount_counts_chunked(
-        token=token,
-        location_ids=location_ids,
-        start_date="2025-12-02",
-        end_date=date_dict_now["date_to"],
-        start_hour="00:00",
-        end_hour="23:00",
+    house_counts_df = get_vemcount_counts_chunked(
+        token=vemcount_token,
+        location_ids=house_location_ids,
+        start_date=start_date,
+        end_date=end_date,
+        start_hour=start_hour,
+        end_hour=end_hour,
         period_step="hour",
         chunk_days=120,
     )
 
-    print(df)
+    # Rename time colum to expected col name from Data Hub
+    house_counts_df = house_counts_df.rename(columns={"datetime": "general_time_index"})
 
-    df.to_csv("historic_visitor_counts.csv", index=False)
+    print("Historic house visitor counts fetched successfully:")
+    
+    return house_counts_df

@@ -11,6 +11,7 @@ from src.utils import query_azure_with_duck_db, upload_dataframe_to_azure, read_
 from src.prediction_pipeline.sourcing_data.source_historic_parking_data import process_all_locations
 from src.prediction_pipeline.sourcing_data.source_weather import source_weather_data
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
+from src.streamlit_app.pages_in_dashboard.visitors.vemcount_house_counts import fetch_historic_house_visitor_counts_from_vemcount_api
 
 
 def log_queried_data_to_azure(queried_data: pd.DataFrame) -> str:
@@ -58,7 +59,7 @@ def get_min_date_from_queried_data(data_categories: list[str]) -> datetime:
 
     for category in data_categories:
 
-        if category in ["Parkplatzzählungen", "Wetterdaten", "Schulferien & Feiertage (BY & CZ)"]:
+        if category in ["Parkplatzzählungen", "Wetterdaten", "Schulferien & Feiertage (BY & CZ)", "Häuserzählungen der Vemcount API"]:
             continue
         else:
             min_date = query_azure_with_duck_db(
@@ -108,6 +109,11 @@ def query_and_preprocess_data(data_categories_to_query: list[str], specify_timer
                 queried_single_category_data = queried_single_category_data.rename(columns={"Time": "general_time_index"})
         elif category == "Parkplatzzählungen":
             queried_single_category_data = process_all_locations(
+                specify_timerange=specify_timerange,
+                start_time=start_time,
+                end_time=end_time)
+        elif category == "Häuserzählungen der Vemcount API":
+            queried_single_category_data = fetch_historic_house_visitor_counts_from_vemcount_api(
                 specify_timerange=specify_timerange,
                 start_time=start_time,
                 end_time=end_time)

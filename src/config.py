@@ -43,6 +43,7 @@ data_upload_categories_to_azure_folders = {
     "Sonderzählungen": "special-counts",
     "Parkplatzzählungen": None,
     "Wetterdaten": None,
+    "Häuserzählungen der Vemcount API": None,
     # "Schulferien & Feiertage (BY & CZ)", # TODO: Add this at the end of the project if time allows
 }
 

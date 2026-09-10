@@ -22,7 +22,7 @@ def get_token(api_key: str) -> str:
     
     return bearer_token
 
-def get_current_berlin_date_and_hour_range() -> dict:
+def get_last_hour_date_fields() -> dict:
     """
     Get the current date and the current+next hour, in Europe/Berlin local
     time (automatically handling CET/CEST daylight saving), formatted for
@@ -39,8 +39,8 @@ def get_current_berlin_date_and_hour_range() -> dict:
         }
     """
     now_berlin = datetime.now(pytz.timezone('Europe/Berlin'))
-    hour_from = now_berlin.replace(minute=0, second=0, microsecond=0)
-    hour_to = hour_from + timedelta(hours=1)
+    hour_to = now_berlin.replace(minute=0, second=0, microsecond=0)
+    hour_from = hour_to - timedelta(hours=1)
 
     return {
         "date_from": hour_from.strftime("%Y-%m-%d"),
@@ -182,21 +182,35 @@ def get_vemcount_counts_chunked(
     return pd.concat(all_dataframes, ignore_index=True)
 
 def fetch_realtime_house_visitor_counts() -> pd.DataFrame:
+    print("Fetching realtime house visitor counts...")
     vemcount_token = get_token(VEMCOUNT_API_KEY)
     house_location_ids = list(visitor_houses_with_realtime_tracking.keys())
-    date_dict_now = get_current_berlin_date_and_hour_range()
+    date_dict_now = get_last_hour_date_fields()
 
     house_report_json = get_vemcount_counts(
         token=vemcount_token,
         location_ids=house_location_ids,
         start_date=date_dict_now["date_from"],
         end_date=date_dict_now["date_to"],
-        start_hour=date_dict_now["hour_from"],
+        start_hour="00:00",
         end_hour=date_dict_now["hour_to"],
     )
     house_counts_df = to_dataframe(house_report_json, visitor_houses_with_realtime_tracking)
 
-    return house_counts_df
+    # inside_computed: our own running occupancy from the per-bucket in/out deltas, as a check
+    # against the API's own "inside" figure. Cumulative rather than per-bucket, since a bucket's
+    # net flow only tells you the change in occupancy, not the occupancy itself. Clipped at 0
+    # since a negative running total can only mean drift (missed entries/exits or a bad reset),
+    # not an actual negative number of people inside.
+    net_flow = house_counts_df["count_in"] - house_counts_df["count_out"]
+    house_counts_df["inside_computed"] = net_flow.groupby(house_counts_df["location_id"]).cumsum().clip(lower=0)
+
+    # Filter only for the current hour (datetime column has type datetime64[ns])
+    house_counts_filtered = house_counts_df[house_counts_df["datetime"] == pd.to_datetime(f"{date_dict_now['date_from']} {date_dict_now['hour_from']}")]
+
+    print("Realtime house visitor counts fetched successfully:")
+
+    return house_counts_filtered
 
 if __name__ == "__main__":
     token = get_token(VEMCOUNT_API_KEY)

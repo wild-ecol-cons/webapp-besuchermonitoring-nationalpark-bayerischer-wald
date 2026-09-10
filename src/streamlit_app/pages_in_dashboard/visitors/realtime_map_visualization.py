@@ -413,7 +413,7 @@ def add_house_visitor_count_markers(folium_map, house_counts_df: pd.DataFrame, h
             f"<b>{row['location_name']}</b><br>"
             f"{TRANSLATIONS[st.session_state.selected_language]['house_count_in']}: {row['count_in']}<br>"
             f"{TRANSLATIONS[st.session_state.selected_language]['house_count_out']}: {row['count_out']}<br>"
-            f"{TRANSLATIONS[st.session_state.selected_language]['house_count_inside']}: {row['inside']}"
+            f"{TRANSLATIONS[st.session_state.selected_language]['house_count_inside']}: {row['inside_computed']}"
         )
 
         info_icon = folium.CustomIcon(

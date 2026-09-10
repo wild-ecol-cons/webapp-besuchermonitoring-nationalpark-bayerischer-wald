@@ -12,6 +12,7 @@ import pandas as pd
 import requests
 from datetime import datetime, timedelta
 import pytz
+import time
 
 BASE_URL = "https://vemcount.app/api/v3"
 
@@ -87,6 +88,39 @@ def get_vemcount_counts(token: str, location_ids: list[int], start_date: str, en
     resp.raise_for_status()
     return resp.json()
 
+def get_vemcount_counts_with_retry(
+    *args,
+    max_retries: int = 5,
+    backoff_seconds: float = 5.0,
+    **kwargs,
+) -> dict:
+    """
+    Wraps get_vemcount_counts with retry logic for transient server errors
+    (500/502/503/504) and rate limiting (429). For 429s, honors the
+    Retry-After response header if the API provides one; otherwise falls
+    back to exponential backoff.
+    """
+    for attempt in range(1, max_retries + 1):
+        try:
+            return get_vemcount_counts(*args, **kwargs)
+        except requests.exceptions.HTTPError as e:
+            status = e.response.status_code if e.response is not None else None
+
+            if status == 429:
+                retry_after = e.response.headers.get("Retry-After")
+                wait_seconds = float(retry_after) if retry_after else backoff_seconds * attempt
+                print(f"Rate limited (429). Waiting {wait_seconds}s before retry {attempt}/{max_retries}...")
+                time.sleep(wait_seconds)
+                continue
+
+            if status in (500, 502, 503, 504) and attempt < max_retries:
+                print(f"Server error ({status}). Waiting {backoff_seconds}s before retry {attempt}/{max_retries}...")
+                time.sleep(backoff_seconds)
+                continue
+
+            raise
+
+    raise RuntimeError(f"Exceeded max retries ({max_retries}) for get_vemcount_counts")
 
 def to_dataframe(report_json: dict, names_by_id: dict[str, str]) -> pd.DataFrame:
     """Flatten the nested {period -> location -> dates -> data} response into a tidy DataFrame
@@ -121,6 +155,7 @@ def get_vemcount_counts_chunked(
     end_hour: str,
     period_step: str = "hour",
     chunk_days: int = 30,
+    delay_between_requests: float = 1.0,
 ) -> pd.DataFrame:
     """
     Same as get_vemcount_counts, but splits a long date range into smaller
@@ -142,7 +177,7 @@ def get_vemcount_counts_chunked(
 
         print(f"Fetching {chunk_start_str} to {chunk_end_str}...")
 
-        report_json = get_vemcount_counts(
+        report_json = get_vemcount_counts_with_retry(
             token=token,
             location_ids=location_ids,
             start_date=chunk_start_str,
@@ -156,6 +191,9 @@ def get_vemcount_counts_chunked(
 
         chunk_start = chunk_end + timedelta(days=1)
 
+        if chunk_start <= end:
+            time.sleep(delay_between_requests)  # proactive pacing, not just reactive retry
+
     return pd.concat(all_dataframes, ignore_index=True)
 
 
@@ -165,35 +203,35 @@ if __name__ == "__main__":
     location_ids = list(visitor_houses_with_realtime_tracking.keys())
 
     # Get realtime counts for today
-    # date_dict_now = get_current_berlin_date_and_hour_range()
+    date_dict_now = get_current_berlin_date_and_hour_range()
 
-    # report_json = get_vemcount_counts(
-    #     token=token,
-    #     location_ids=location_ids,
-    #     start_date=date_dict_now["date_from"],
-    #     end_date=date_dict_now["date_to"],
-    #     start_hour=date_dict_now["hour_from"],
-    #     end_hour=date_dict_now["hour_to"],
-    # )
+    report_json = get_vemcount_counts(
+        token=token,
+        location_ids=location_ids,
+        start_date=date_dict_now["date_from"],
+        end_date=date_dict_now["date_to"],
+        start_hour=date_dict_now["hour_from"],
+        end_hour=date_dict_now["hour_to"],
+    )
 
-    # df = to_dataframe(report_json, visitor_houses_with_realtime_tracking)
+    df = to_dataframe(report_json, visitor_houses_with_realtime_tracking)
 
-    # # keep only buckets from 09:00 onward, in case the API ever returns earlier ones
-    # df = df[df["datetime"].dt.time >= pd.Timestamp("09:00").time()]
+    # keep only buckets from 09:00 onward, in case the API ever returns earlier ones
+    df = df[df["datetime"].dt.time >= pd.Timestamp("09:00").time()]
 
-    # print(df)
+    print(df)
 
     # Get historic counts
-    print("This is now historic counts for for the maximum lifetime of the Data Hub (2016-09-10 to 2026-09-10) for all realtime tracking locations.")
+    print("This is now historic counts for for the maximum lifetime of the Data Hub for all realtime tracking locations.")
     df = get_vemcount_counts_chunked(
         token=token,
         location_ids=location_ids,
-        start_date="2016-09-10",
-        end_date="2026-09-10",
+        start_date="2025-12-02",
+        end_date=date_dict_now["date_to"],
         start_hour="00:00",
         end_hour="23:00",
         period_step="hour",
-        chunk_days=30,
+        chunk_days=120,
     )
 
     print(df)

@@ -202,3 +202,18 @@ visitor_house_coordinates = {
     "33320": (49.0604494, 13.2434616),   # Nationalparkverwaltung Bayerischer Wald - Haus zur Wildnis
     "33951": (48.891487, 13.427821),     # Waldgeschichtliches Museum St. Oswald
 }
+
+# Dictionary of parking sensors and their respective location IDs in Bayern Cloud and coordinates
+parking_sensors = {
+     "parkplatz-graupsaege-1":["e42069a6-702f-4ef4-b3b5-04e310d97ca0",(48.92414,13.44515)],
+     # "parkplatz-fredenbruecke-1":["fac08b6b-e9cb-40cd-a106-b9f2cbfc7447",()],
+     "p-r-spiegelau-1": ["ee0490b2-3cc5-4adb-a527-95267257598e",(48.9178,13.35544)],
+     # "skiwanderzentrum-zwieslerwaldhaus-2":[ "dd3734c2-c4fb-4e1d-a57c-9bbed8130d8f",()],
+     "parkplatz-zwieslerwaldhaus-1": [ "6c9b765e-1ff9-401d-98bc-b0302ee65c62",(49.08837,13.24707)],
+     # "parkplatz-zwieslerwaldhaus-nord-1": [ "4bbb3b5c-edc2-4b00-a923-91c1544aa29d",()],
+     "parkplatz-nationalparkzentrum-falkenstein-2" : [ "a93b64e9-35fb-4b3e-8348-81ba8f1c0d6f",(49.06042,13.23583)],
+     "parkplatz-nationalparkzentrum-lusen-p2" : [ "454b0f50-130b-4c21-9db2-b163e158c847",(48.8907,13.48924)],
+     "parkplatz-waldhaeuser-kirche-1" : [ "454b0f50-130b-4c21-9db2-b163e158c847",(48.92842,13.4624,)],
+     "parkplatz-waldhaeuser-ausblick-1" : [ "a14d8ebd-9261-49f7-875b-6a924fe34990",(48.92796,13.47076)],
+     "parkplatz-skisportzentrum-finsterau-1": [ "ea474092-1064-4ae7-955e-8db099955c16",(48.94129,13.57491)],
+}

@@ -136,8 +136,8 @@ def add_spatial_info_to_parking_sensors(parking_data_df):
 
     for location_slug in parking_sensors.keys():
         if location_slug in parking_data_df['location'].values:
-            parking_data_df['latitude'] = parking_sensors[location_slug][1][0]
-            parking_data_df['longitude'] = parking_sensors[location_slug][1][1]
+            parking_data_df['latitude'] = parking_sensors[location_slug]["coordinates"][0]
+            parking_data_df['longitude'] = parking_sensors[location_slug]["coordinates"][1]
 
             return parking_data_df
 

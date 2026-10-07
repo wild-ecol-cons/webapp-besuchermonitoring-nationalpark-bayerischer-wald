@@ -73,7 +73,9 @@ def get_realtime_occupancy_data_for_location(
 ########################################################################################
 
 
-def source_parking_data_from_cloud(location_slug: str) -> pd.DataFrame:
+def source_parking_data_from_cloud(
+        location_slug: str,
+        location_name: str) -> pd.DataFrame:
     """Sources the current occupancy data from the Bayern Cloud API.
     
     Args:
@@ -109,6 +111,7 @@ def source_parking_data_from_cloud(location_slug: str) -> pd.DataFrame:
     parking_data = pd.DataFrame({
         "timestamp": datetime.now(), 
         "location" : [location_slug],
+        "location_name": [location_name],
         "current_occupancy": [current_occupancy],
         "current_capacity": [current_capacity],
         "current_occupancy_rate": [current_occupancy_rate],
@@ -175,7 +178,9 @@ def source_and_preprocess_realtime_parking_data(current_timestamp):
     all_parking_dataframes = []
     for location_slug in parking_sensors.keys():
         print(f"Fetching and saving real-time occupancy data for location '{location_slug}'...")
-        parking_df = source_parking_data_from_cloud(location_slug)
+        parking_df = source_parking_data_from_cloud(
+            location_slug=location_slug,
+            location_name=parking_sensors[location_slug]["pretty_name"])
         all_parking_dataframes.append(parking_df)
 
     all_parking_data = merge_all_df_from_list(all_parking_dataframes)

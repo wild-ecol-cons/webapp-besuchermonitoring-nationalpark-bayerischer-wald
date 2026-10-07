@@ -499,21 +499,8 @@ def get_parking_section():
     # Format occupancy rate to percentage string
     processed_parking_data['current_occupancy_rate'] = processed_parking_data['current_occupancy_rate'].apply(lambda x: f"{x:.2f}%" if pd.notna(x) else "N/A")
 
-    # Rename parking locations to be more user-friendly
-    processed_parking_data['location'] = processed_parking_data['location'].replace({
-        "parkplatz-graupsaege-1": "P+R Graupsäge",
-        "p-r-spiegelau-1": "P+R Spiegelau",
-        "parkplatz-zwieslerwaldhaus-1": "Parkplatz Zwieslerwaldhaus",
-        "parkplatz-nationalparkzentrum-falkenstein-2": "Parkplatz Nationalparkzentrum Falkenstein",
-        "scheidt-bachmann-parkplatz-1": "Scheidt-Bachmann-Parkplatz",
-        "parkplatz-nationalparkzentrum-lusen-p2": "Parkplatz Nationalparkzentrum Lusen",
-        "parkplatz-waldhaeuser-kirche-1": "Parkplatz Waldhäuser Kirche",
-        "parkplatz-waldhaeuser-ausblick-1": "Parkplatz Waldhäuser Ausblick",
-        "parkplatz-skisportzentrum-finsterau-1": "Parkplatz Finsterau Ski- und Sportstadion",
-    })
-
     # Compute parking place tooltip message
-    processed_parking_data['tooltip_line1_name'] = processed_parking_data['location']
+    processed_parking_data['tooltip_line1_name'] = processed_parking_data['location_name']
     processed_parking_data['tooltip_line2_availability'] = f"{TRANSLATIONS[st.session_state.selected_language]['available_spaces']}: " + processed_parking_data['current_availability'].astype(str) + " 🚗\n"
     processed_parking_data['tooltip_line3_occupancy_rate'] = f"{TRANSLATIONS[st.session_state.selected_language]['occupancy_rate']}: " + processed_parking_data['current_occupancy_rate'].astype(str)
     processed_parking_data['tooltip_line4_data_collection_timestamp'] = f"{TRANSLATIONS[st.session_state.selected_language]['current_occupancy_timestamp']}: " + processed_parking_data['realtime_occupancy_timestamp'].astype(str)
@@ -532,14 +519,14 @@ def get_parking_section():
     # Interactive Metrics
     selected_location = st.selectbox(
         TRANSLATIONS[st.session_state.selected_language]['select_parking_section'], 
-        processed_parking_data['location'].unique(),
+        processed_parking_data['location_name'].unique(),
         key="selectbox_parking_section",
         width=400
     )
 
     # Display selected location details
     if selected_location:
-        selected_data = processed_parking_data[processed_parking_data['location'] == selected_location].iloc[0]
+        selected_data = processed_parking_data[processed_parking_data['location_name'] == selected_location].iloc[0]
 
         col1, col2, col3 = st.columns(3)
 

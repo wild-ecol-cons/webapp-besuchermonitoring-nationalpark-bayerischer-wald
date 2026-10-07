@@ -6,13 +6,15 @@ import pandas as pd
 import geopandas as gpd
 import joblib
 import io
+import base64
 import pytz
 from src.streamlit_app.source_data import source_and_preprocess_realtime_parking_data, source_and_preprocess_realtime_visitor_occupancy
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
-from src.config import CONTAINER_NAME, CONNECTION_STRING
+from src.config import CONTAINER_NAME, CONNECTION_STRING, visitor_house_coordinates
 from folium.plugins import MarkerCluster
 from azure.storage.blob import BlobClient
 from datetime import datetime
+from src.streamlit_app.pages_in_dashboard.visitors.vemcount_house_counts import fetch_realtime_house_visitor_counts
 
 # BKG WMTS endpoint for TopPlusOpen, addressed like a standard XYZ tile
 # source. "web_light_grau" is the "TopPlusOpen Light Grau" variant.
@@ -77,7 +79,7 @@ def load_regions(path: str) -> gpd.GeoDataFrame:
     return regions
 
 @st.cache_data
-def load_walker_svg_icon(path: str = "assets/202609 Zählgerät.svg") -> str:
+def load_svg_icon(path: str) -> str:
     """
     Load the visitor-marker SVG once and cache it as a string, so it can be
     embedded directly into folium DivIcon HTML.
@@ -149,7 +151,7 @@ def get_fixed_size():
     """
     return 450  
 
-def render_map_symbology_legend(walker_svg_icon: str) -> None:
+def render_map_symbology_legend(walker_svg_icon: str, info_svg_icon: str) -> None:
     """
     Renders a clean visual legend explaining the map layers (polygons vs markers).
 
@@ -158,6 +160,7 @@ def render_map_symbology_legend(walker_svg_icon: str) -> None:
     """
 
     walker_icon_size_px = 30
+    info_icon_size_px = 30
 
     st.markdown(f"""
     <div style="background-color: #f8f9fa; border: 1px solid #e9ecef; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
@@ -188,6 +191,11 @@ def render_map_symbology_legend(walker_svg_icon: str) -> None:
             <div style="display: flex; align-items: center; gap: 7px; border-left: 1px solid #ccc; padding-left: 3px;">
                 <div style="width:{walker_icon_size_px}px; height:{walker_icon_size_px}px; filter: drop-shadow(0 0 1px #000);">{walker_svg_icon}</div>
                 <span><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_visitor_sensors_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["current_visitors"]}</span>
+            </div>
+            <!-- Visitor Sensor Markers -->
+            <div style="display: flex; align-items: center; gap: 7px; border-left: 1px solid #ccc; padding-left: 3px;">
+                <div style="width:{info_icon_size_px}px; height:{info_icon_size_px}px; filter: drop-shadow(0 0 1px #000);">{info_svg_icon}</div>
+                <span><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_house_sensors_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["current_visitor_no_house"]}</span>
             </div>
         </div>
     </div>
@@ -374,6 +382,58 @@ def add_visitor_occupancy_markers(folium_map, processed_visitor_occupancy, walke
     visitor_layer.add_to(folium_map)
     return folium_map
 
+def add_house_visitor_count_markers(folium_map, house_counts_df: pd.DataFrame, house_coordinates: dict, info_svg_icon: str):
+    """
+    Add one marker per tracked visitor house, using the info icon, with
+    count_in / count_out / inside shown in the tooltip. Houses missing
+    coordinates are skipped (logged), rather than failing the whole map.
+    """
+    info_layer = folium.FeatureGroup(name="Visitor Houses", show=True)
+
+    icon_size_info_px = 50
+
+    # Convert SVG once into a data URI
+    svg_base64 = base64.b64encode(
+        info_svg_icon.encode("utf-8")
+    ).decode("utf-8")
+
+    icon_data_uri = f"data:image/svg+xml;base64,{svg_base64}"
+
+    for _, row in house_counts_df.iterrows():
+        location_id = str(row["location_id"])
+        coordinates = house_coordinates.get(location_id)
+
+        if coordinates is None:
+            print(f"Skipping house marker for '{row['location_name']}' (id {location_id}): no coordinates set.")
+            continue
+
+        latitude, longitude = coordinates
+
+        tooltip_text = (
+            f"<b>{row['location_name']}</b><br>"
+            f"{TRANSLATIONS[st.session_state.selected_language]['house_count_in']}: {row['count_in']}<br>"
+            f"{TRANSLATIONS[st.session_state.selected_language]['house_count_out']}: {row['count_out']}<br>"
+            f"{TRANSLATIONS[st.session_state.selected_language]['house_count_inside']}: {row['inside_computed']}"
+        )
+
+        info_icon = folium.CustomIcon(
+            icon_image=icon_data_uri,
+            icon_size=(icon_size_info_px, icon_size_info_px),
+            icon_anchor=(
+                icon_size_info_px // 2,
+                icon_size_info_px // 2
+            ),
+        )
+
+        folium.Marker(
+            location=[latitude, longitude],
+            tooltip=folium.Tooltip(tooltip_text),
+            icon=info_icon,
+        ).add_to(info_layer)
+
+    info_layer.add_to(folium_map)
+    return folium_map
+
 @st.fragment(run_every="15min")
 def get_parking_section():
     """
@@ -412,15 +472,19 @@ def get_parking_section():
     # Source and preprocess the real-time visitor occupancy to be shown in the map
     processed_visitor_occupancy = source_and_preprocess_realtime_visitor_occupancy(timestamp_latest_parking_data_fetch)
 
+    # Source and preprocess the visitor house occupancy to be shown in the map
+    processed_visitor_house_occupancy = fetch_realtime_house_visitor_counts()
+
     st.markdown(f"### {TRANSLATIONS[st.session_state.selected_language]['real_time_map_visualization']}")
 
     st.write(f"{TRANSLATIONS[st.session_state.selected_language]['live_data_last_updated']} {timestamp_latest_parking_data_fetch}")
 
     # Load icons to be used in the map
-    walker_svg = load_walker_svg_icon()
+    walker_svg = load_svg_icon(path="assets/202609 Zählgerät.svg")
+    info_svg = load_svg_icon(path="assets/202609 Info.svg")
 
     # Display the clear map symbology legend above the map
-    render_map_symbology_legend(walker_svg)
+    render_map_symbology_legend(walker_svg, info_svg)
     
     # Set a fixed size for all markers
     processed_parking_data['size'] = get_fixed_size()
@@ -462,6 +526,7 @@ def get_parking_section():
     # --- Build and render the folium/Leaflet map ---------------------------
     folium_map = build_folium_map(processed_parking_data, styled_regions)
     folium_map = add_visitor_occupancy_markers(folium_map, processed_visitor_occupancy, walker_svg)
+    folium_map = add_house_visitor_count_markers(folium_map, processed_visitor_house_occupancy, visitor_house_coordinates, info_svg)
     st_folium(folium_map, width=None, height=600, returned_objects=[])
 
     # Interactive Metrics

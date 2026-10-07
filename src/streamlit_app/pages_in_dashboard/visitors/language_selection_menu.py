@@ -9,6 +9,11 @@ LANGUAGE_OPTIONS= {
 # Language dictionary with translations
 TRANSLATIONS = {
         "English": {
+        "house_count_in": "Number of People Entering",
+        "house_count_out": "Number of People Exiting",
+        "house_count_inside": "Number of People Still Inside",
+        "legend_house_sensors_mention": 'Real-Time House Visitors:',
+        "current_visitor_no_house": "Number of House Visitors (current hour)",
         "title_hourly_visitor_predictions": "Details View: Hourly Outlook",
         "title_weekly_visitor_predictions": "Overview: Weekly Outlook",
         "current_occupancy_timestamp": "Last updated on",
@@ -104,6 +109,11 @@ TRANSLATIONS = {
         'getting_there_description': '🚌 Learn about the best ways to reach the Bavarian Forest.',
     },
     "German": {
+        "house_count_in": "Anzahl der Eingänge",
+        "house_count_out": "Anzahl der Abgänge",
+        "house_count_inside": "Anzahl der Personen im Gebäude",
+        "legend_house_sensors_mention": 'Echtzeit-Hausbesucher:',
+        "current_visitor_no_house": "Anzahl Hausbesucher (aktuelle Stunde)",
         "title_hourly_visitor_predictions": "Detailsansicht: Stunden-Ausblick",
         "title_weekly_visitor_predictions": "Übersicht: 7-Tages-Ausblick",
         "current_occupancy_timestamp": "Zuletzt aktualisiert am",

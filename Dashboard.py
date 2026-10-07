@@ -7,7 +7,7 @@ import pytz
 # get the streamlit app modules
 import src.streamlit_app.pages_in_dashboard.visitors.page_layout_config as page_layout_config
 import src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu as lang_sel_menu
-import src.streamlit_app.pages_in_dashboard.visitors.parking as parking 
+import src.streamlit_app.pages_in_dashboard.visitors.realtime_map_visualization as realtime_map_viz 
 import src.streamlit_app.pages_in_dashboard.visitors.visitor_count as visitor_count
 import src.streamlit_app.pages_in_dashboard.visitors.recreational_activities as recreation
 import src.streamlit_app.pages_in_dashboard.visitors.other_information as other_info
@@ -59,7 +59,7 @@ def create_dashboard_main_page(hourly_inference_predictions, daily_inference_pre
         visitor_count.get_visitor_counts_section(hourly_inference_predictions, daily_inference_predictions)
 
         # get the parking section
-        parking.get_parking_section()
+        realtime_map_viz.get_parking_section()
 
 
     with col2:

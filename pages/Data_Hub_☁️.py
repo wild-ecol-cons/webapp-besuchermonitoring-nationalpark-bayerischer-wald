@@ -117,7 +117,7 @@ with tab_upload_data:
     TRANSLATIONS[st.session_state.selected_language]['title_data_upload_data_category_selection'],
     [
         "Permanente Besucherzählung (Eco-Counter)",
-        "Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage",
+        "(legacy) Hütten: Zählungen, Wetterstationsdaten,Öffnungszeiten & Feiertage",
         "Sonderzählungen",
     ],
     captions=[

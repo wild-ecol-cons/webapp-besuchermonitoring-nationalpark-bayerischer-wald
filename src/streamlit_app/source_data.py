@@ -9,6 +9,7 @@ import src.streamlit_app.pre_processing.process_forecast_weather_data as prfwd
 import streamlit as st
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
 from src.prediction_pipeline.sourcing_data.source_weather import get_hourly_data
+from src.config import visitor_sensors_with_realtime_tracking
 import pytz
 
 
@@ -53,6 +54,35 @@ END_TIME = (START_TIME + pd.Timedelta(days=7))
 LATITUDE = 48.96119
 LONGITUDE = 13.36234
 
+def get_realtime_occupancy_data_for_location(
+    location_slug: str,
+) -> int:
+    """
+    Fetches the real-time occupancy data for a given location from the Bayern Cloud API.
+
+    Args:
+        location_slug (str): The slug identifier for the location.
+    """
+    API_endpoint = f'https://data.bayerncloud.digital/api/v4/endpoints/list_occupancy/{location_slug}'
+
+    request_params = {
+        'token': BAYERN_CLOUD_API_KEY
+    }
+
+    response = requests.get(API_endpoint, params=request_params)
+    response_json = response.json()
+
+    # Access the first item in the @graph list
+    graph_item = response_json["@graph"][0]
+
+    # Get and preprocess the current occupancy data from the response for one location
+    realtime_occupancy = int(graph_item.get("dcls:currentOccupancy", 0.0))
+
+    # Get data collection timestamp of the current occupancy data
+    realtime_occupancy_timestamp = graph_item.get("dcls:latestTimeseriesTimestamp", None)
+    realtime_occupancy_timestamp = datetime.fromisoformat(realtime_occupancy_timestamp).strftime("%d.%m.%Y %H:%M Uhr")
+
+    return realtime_occupancy, realtime_occupancy_timestamp
 
 ########################################################################################
 # Parking functions
@@ -82,10 +112,14 @@ def source_parking_data_from_cloud(location_slug: str) -> pd.DataFrame:
     # Access the first item in the @graph list
     graph_item = response_json["@graph"][0]
 
-    # Extract the current occupancy and capacity
+    # Extract the current occupancy, capacity and data collection timestamp
     current_occupancy = graph_item.get("dcls:currentOccupancy", None)
     current_capacity = graph_item.get("dcls:currentCapacity", None)
     current_occupancy_rate = graph_item.get("dcls:currentOccupancyRate", None)
+
+    # Get data collection timestamp of the current occupancy data
+    realtime_occupancy_timestamp = graph_item.get("dcls:latestTimeseriesTimestamp", None)
+    realtime_occupancy_timestamp = datetime.fromisoformat(realtime_occupancy_timestamp).strftime("%d.%m.%Y %H:%M Uhr")
 
     # Make a dataframe with the three values and the current time stamp in the datetime format
     parking_data = pd.DataFrame({
@@ -94,6 +128,7 @@ def source_parking_data_from_cloud(location_slug: str) -> pd.DataFrame:
         "current_occupancy": [current_occupancy],
         "current_capacity": [current_capacity],
         "current_occupancy_rate": [current_occupancy_rate],
+        "realtime_occupancy_timestamp": [realtime_occupancy_timestamp]
     })
     
     parking_data.reset_index(drop=True, inplace=True)
@@ -175,6 +210,35 @@ def source_and_preprocess_realtime_parking_data(current_timestamp):
     st.write(f"{TRANSLATIONS[st.session_state.selected_language]['parking_data_last_updated']} {current_timestamp}")
 
     return processed_parking_data
+
+@st.cache_data(max_entries=1)
+def source_and_preprocess_realtime_visitor_occupancy(current_timestamp: datetime) -> pd.DataFrame:
+
+    """
+    Source and preprocess the real-time visitor occupancy data from five different locations that have real-time tracking to Bayern Cloud enabled.. Returns the timestamp of when the function was run.
+
+    Args:
+        current_timestamp (datetime): The timestamp of when the function was run.
+
+    Returns:
+        processed_visitor_occupancy_data (pd.DataFrame): Preprocessed real-time visitor occupancy data.
+    """
+    print(f"Fetching real-time visitor occupancy data at '{current_timestamp}'...")
+
+    preprocessed_realtime_visitor_occupancy = pd.DataFrame()
+
+    for sensor, sensor_data in visitor_sensors_with_realtime_tracking.items():
+        realtime_sensor_occupancy, realtime_sensor_occupancy_timestamp = get_realtime_occupancy_data_for_location(sensor)
+
+        # Build dataframe of sourced and preprocessed visitor occupancy
+        sensor_data_df = pd.DataFrame({"location": [sensor_data["sensor_name"]], "latitude": [sensor_data["coordinates"][0]], "longitude": [sensor_data["coordinates"][1]], "current_occupancy": [realtime_sensor_occupancy], "timestamp_data_collected": [realtime_sensor_occupancy_timestamp]})
+
+        preprocessed_realtime_visitor_occupancy = pd.concat([preprocessed_realtime_visitor_occupancy, sensor_data_df], ignore_index=True)
+
+    # Return the timestamp in German time indicating the time zone Berlin
+    print(f"Visitor occupancy data sourced and processed at {current_timestamp}, Europe/Berlin time.")
+
+    return preprocessed_realtime_visitor_occupancy
 
 ########################################################################################
 # Weather functions

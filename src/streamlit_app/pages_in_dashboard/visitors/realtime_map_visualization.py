@@ -353,7 +353,7 @@ def add_visitor_occupancy_markers(folium_map, processed_visitor_occupancy, walke
     ).add_to(visitor_layer)
 
     # Load and define icons
-    icon_size_walker_px = 50
+    icon_size_walker_px = 25
 
     for _, row in processed_visitor_occupancy.iterrows():
         tooltip_text = (
@@ -390,7 +390,7 @@ def add_house_visitor_count_markers(folium_map, house_counts_df: pd.DataFrame, h
     """
     info_layer = folium.FeatureGroup(name="Visitor Houses", show=True)
 
-    icon_size_info_px = 50
+    icon_size_info_px = 25
 
     # Convert SVG once into a data URI
     svg_base64 = base64.b64encode(

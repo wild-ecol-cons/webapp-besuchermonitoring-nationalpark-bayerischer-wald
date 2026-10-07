@@ -414,6 +414,8 @@ def get_parking_section():
 
     st.markdown(f"### {TRANSLATIONS[st.session_state.selected_language]['real_time_map_visualization']}")
 
+    st.write(f"{TRANSLATIONS[st.session_state.selected_language]['live_data_last_updated']} {timestamp_latest_parking_data_fetch}")
+
     # Load icons to be used in the map
     walker_svg = load_walker_svg_icon()
 

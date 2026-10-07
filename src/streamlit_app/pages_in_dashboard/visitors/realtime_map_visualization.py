@@ -159,8 +159,8 @@ def render_map_symbology_legend(walker_svg_icon: str, info_svg_icon: str) -> Non
         walker_svg_icon (str): The SVG content of the walker icon.
     """
 
-    walker_icon_size_px = 30
-    info_icon_size_px = 30
+    walker_icon_size_px = 20
+    info_icon_size_px = 20
 
     st.markdown(f"""
     <div style="background-color: #f8f9fa; border: 1px solid #e9ecef; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">

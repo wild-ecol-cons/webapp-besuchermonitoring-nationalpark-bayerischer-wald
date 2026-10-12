@@ -9,8 +9,9 @@ LANGUAGE_OPTIONS= {
 # Language dictionary with translations
 TRANSLATIONS = {
         "English": {
-        "parking_scale_low": "Low Occupancy",
-        "parking_scale_high": "High Occupancy",
+        "parking_occupancy": "Parking Occupancy",
+        "parking_scale_low": "Low",
+        "parking_scale_high": "High",
         "occupancy_of_the_entire_day": "Day-to-date total",
         "house_count_in": "Entry (last hour)",
         "house_count_out": "Exit (last hour)",
@@ -112,8 +113,9 @@ TRANSLATIONS = {
         'getting_there_description': '🚌 Learn about the best ways to reach the Bavarian Forest.',
     },
     "German": {
-        "parking_scale_low": "Geringe Auslastung",
-        "parking_scale_high": "Starke Auslastung",
+        "parking_occupancy": "Parkplatz-Auslastung",
+        "parking_scale_low": "Gering",
+        "parking_scale_high": "Stark",
         "occupancy_of_the_entire_day": "Tagessumme bis jetzt",
         "house_count_in": "Eingang (letzte Stunde)",
         "house_count_out": "Ausgang (letzte Stunde)",

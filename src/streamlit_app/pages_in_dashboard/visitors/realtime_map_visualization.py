@@ -161,7 +161,7 @@ def render_regions_legend(regions: gpd.GeoDataFrame) -> list:
 
     return selected
 
-def render_map_symbology_legend(walker_svg_icon: str, info_svg_icon: str) -> None:
+def render_map_symbology_legend(walker_svg_icon: str, info_svg_icon: str, parking_svg_icon: str) -> None:
     """
     Renders a clean visual legend explaining the map layers (polygons vs markers).
 
@@ -171,6 +171,7 @@ def render_map_symbology_legend(walker_svg_icon: str, info_svg_icon: str) -> Non
 
     walker_icon_size_px = 20
     info_icon_size_px = 20
+    parking_icon_size_px = 20
 
     # Continuous occupancy color scale shown in the legend
     occupancy_scale_gradient = get_coolwarm_css_gradient()
@@ -187,8 +188,9 @@ def render_map_symbology_legend(walker_svg_icon: str, info_svg_icon: str) -> Non
                 <span><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_area_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["legend_area_explained"]}</span>
             </div>
             <!-- Parking Markers -->
-            <div style="display: flex; align-items: center; gap: 12px; border-left: 1px solid #ccc; padding-left: 16px;">
-                <span style="margin-right: -4px;"><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_circles_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["legend_circles_explained"]} </span>
+            <div style="display: flex; align-items: center; gap: 7px; border-left: 1px solid #ccc; padding-left: 12px;">
+                <div style="width:{parking_icon_size_px}px; height:{parking_icon_size_px}px; filter: drop-shadow(0 0 1px #000);">{parking_svg_icon}</div>
+                <span><strong>{TRANSLATIONS[st.session_state.selected_language]["parking_occupancy"]}</strong></span>
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="color: #555;">{scale_label_low}</span>
                     <div style="width: 140px; height: 12px; background: {occupancy_scale_gradient}; border: 1px solid #555; border-radius: 2px;"></div>
@@ -196,12 +198,12 @@ def render_map_symbology_legend(walker_svg_icon: str, info_svg_icon: str) -> Non
                 </div>
             </div>
             <!-- Visitor Sensor Markers -->
-            <div style="display: flex; align-items: center; gap: 7px; border-left: 1px solid #ccc; padding-left: 3px;">
+            <div style="display: flex; align-items: center; gap: 7px; border-left: 1px solid #ccc; padding-left: 12px;">
                 <div style="width:{walker_icon_size_px}px; height:{walker_icon_size_px}px; filter: drop-shadow(0 0 1px #000);">{walker_svg_icon}</div>
                 <span><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_visitor_sensors_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["current_visitors"]}</span>
             </div>
             <!-- Visitor Sensor Markers -->
-            <div style="display: flex; align-items: center; gap: 7px; border-left: 1px solid #ccc; padding-left: 3px;">
+            <div style="display: flex; align-items: center; gap: 7px; border-left: 1px solid #ccc; padding-left: 12px;">
                 <div style="width:{info_icon_size_px}px; height:{info_icon_size_px}px; filter: drop-shadow(0 0 1px #000);">{info_svg_icon}</div>
                 <span><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_house_sensors_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["current_visitor_no_house"]}</span>
             </div>
@@ -512,7 +514,7 @@ def get_parking_section():
     parking_svg = load_svg_icon(path="assets/parking.svg")
 
     # Display the clear map symbology legend above the map
-    render_map_symbology_legend(walker_svg, info_svg)
+    render_map_symbology_legend(walker_svg, info_svg, parking_svg)
 
     # Convert the occupancy rate to numeric and handle errors
     processed_parking_data['current_occupancy_rate'] = pd.to_numeric(processed_parking_data['current_occupancy_rate'], errors='coerce')

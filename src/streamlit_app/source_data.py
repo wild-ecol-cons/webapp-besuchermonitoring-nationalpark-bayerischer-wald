@@ -10,6 +10,7 @@ import streamlit as st
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
 from src.prediction_pipeline.sourcing_data.source_weather import get_hourly_data
 from src.config import visitor_sensors_with_realtime_tracking, parking_sensors
+from src.prediction_pipeline.sourcing_data.source_historic_parking_data import get_historical_data_for_location
 import pytz
 
 
@@ -38,8 +39,26 @@ END_TIME = (START_TIME + pd.Timedelta(days=7))
 LATITUDE = 48.96119
 LONGITUDE = 13.36234
 
-def get_realtime_occupancy_data_for_location(
-    location_slug: str,
+def sum_occupancy_today(df: pd.DataFrame, now_iso: str) -> int:
+    now = pd.Timestamp(now_iso)
+
+    # Align timezone awareness with the index
+    if df.index.tz is None and now.tzinfo is not None:
+        now = now.tz_localize(None)           # drop tz, keep the local wall-clock time
+    elif df.index.tz is not None and now.tzinfo is None:
+        now = now.tz_localize(df.index.tz)    # make it aware to match the index
+
+    start = now.normalize()                   # today 00:00
+    end = start + pd.Timedelta(days=1)        # tomorrow 00:00
+
+    mask = (df.index >= start) & (df.index < end)
+
+    today_occupancy_sum = df.loc[mask, "occupancy"].sum()
+    return today_occupancy_sum
+
+def get_historic_and_realtime_occupancy_data_for_location(
+    location_id: str,
+    location_slug: str
 ) -> int:
     """
     Fetches the real-time occupancy data for a given location from the Bayern Cloud API.
@@ -64,9 +83,20 @@ def get_realtime_occupancy_data_for_location(
 
     # Get data collection timestamp of the current occupancy data
     realtime_occupancy_timestamp = graph_item.get("dcls:latestTimeseriesTimestamp", None)
+
+    # Get historic occupancy data for one location
+    historic_occupancy = get_historical_data_for_location(
+        location_id=location_id,
+        api_endpoint_suffix='dcls_occupancy',
+        column_name="occupancy",
+        )
+
+    today_occupancy_sum = sum_occupancy_today(historic_occupancy, realtime_occupancy_timestamp)
+
+    # Convert the realtime-timestamp to a human-readable format
     realtime_occupancy_timestamp = datetime.fromisoformat(realtime_occupancy_timestamp).strftime("%d.%m.%Y %H:%M Uhr")
 
-    return realtime_occupancy, realtime_occupancy_timestamp
+    return realtime_occupancy, realtime_occupancy_timestamp, today_occupancy_sum
 
 ########################################################################################
 # Parking functions
@@ -215,10 +245,18 @@ def source_and_preprocess_realtime_visitor_occupancy(current_timestamp: datetime
     preprocessed_realtime_visitor_occupancy = pd.DataFrame()
 
     for sensor, sensor_data in visitor_sensors_with_realtime_tracking.items():
-        realtime_sensor_occupancy, realtime_sensor_occupancy_timestamp = get_realtime_occupancy_data_for_location(sensor)
+        realtime_sensor_occupancy, realtime_sensor_occupancy_timestamp, today_occupancy_sum = get_historic_and_realtime_occupancy_data_for_location(
+            location_slug=sensor,
+            location_id=visitor_sensors_with_realtime_tracking[sensor]["location_id"])
 
         # Build dataframe of sourced and preprocessed visitor occupancy
-        sensor_data_df = pd.DataFrame({"location": [sensor_data["sensor_name"]], "latitude": [sensor_data["coordinates"][0]], "longitude": [sensor_data["coordinates"][1]], "current_occupancy": [realtime_sensor_occupancy], "timestamp_data_collected": [realtime_sensor_occupancy_timestamp]})
+        sensor_data_df = pd.DataFrame({
+            "location": [sensor_data["sensor_name"]],
+            "latitude": [sensor_data["coordinates"][0]],
+            "longitude": [sensor_data["coordinates"][1]],
+            "current_occupancy": [realtime_sensor_occupancy],
+            "occupancy_of_the_entire_day": [today_occupancy_sum],
+            "timestamp_data_collected": [realtime_sensor_occupancy_timestamp]})
 
         preprocessed_realtime_visitor_occupancy = pd.concat([preprocessed_realtime_visitor_occupancy, sensor_data_df], ignore_index=True)
 

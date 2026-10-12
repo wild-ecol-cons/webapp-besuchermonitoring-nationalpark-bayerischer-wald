@@ -9,6 +9,7 @@ LANGUAGE_OPTIONS= {
 # Language dictionary with translations
 TRANSLATIONS = {
         "English": {
+        "occupancy_of_the_entire_day": "Day-to-date total",
         "house_count_in": "Entry (last hour)",
         "house_count_out": "Exit (last hour)",
         "house_count_inside": "People in the building",
@@ -109,6 +110,7 @@ TRANSLATIONS = {
         'getting_there_description': '🚌 Learn about the best ways to reach the Bavarian Forest.',
     },
     "German": {
+        "occupancy_of_the_entire_day": "Tagessumme bis jetzt",
         "house_count_in": "Eingang (letzte Stunde)",
         "house_count_out": "Ausgang (letzte Stunde)",
         "house_count_inside": "Personen im Gebäude",

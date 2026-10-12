@@ -360,6 +360,8 @@ def add_visitor_occupancy_markers(folium_map, processed_visitor_occupancy, walke
             f"<b>{row['location']}</b><br>"
             f"{TRANSLATIONS[st.session_state.selected_language]['current_visitors']}: "
             f"{row['current_occupancy']}</b><br>"
+            f"{TRANSLATIONS[st.session_state.selected_language]['occupancy_of_the_entire_day']}: "
+            f"{row['occupancy_of_the_entire_day']}<br>"
             f"{TRANSLATIONS[st.session_state.selected_language]['current_occupancy_timestamp']}: "
             f"{row['timestamp_data_collected']}"
         )

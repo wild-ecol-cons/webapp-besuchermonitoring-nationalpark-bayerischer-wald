@@ -22,11 +22,8 @@ OUTPUT_DIR = './outputs/parking_data_final/'
 
 def get_historical_data_for_location(
     location_id: str,
-    location_slug: str,
-    data_type: str,
     api_endpoint_suffix: str,
     column_name: str,
-    save_file_path: str = 'outputs'
 ):
     """
     Fetch historical data from the BayernCloud API and save it as a CSV file.
@@ -104,8 +101,6 @@ def process_all_locations(
 
             parking_df  = get_historical_data_for_location(
                 location_id=value["location_id"],
-                location_slug=key,
-                data_type=data_type,
                 api_endpoint_suffix=api_suffix,
                 column_name=column_name
             )

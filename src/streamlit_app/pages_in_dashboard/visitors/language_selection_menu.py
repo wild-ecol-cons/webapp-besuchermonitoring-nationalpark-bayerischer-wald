@@ -9,6 +9,7 @@ LANGUAGE_OPTIONS= {
 # Language dictionary with translations
 TRANSLATIONS = {
         "English": {
+        "total_visitors_per_day": "Day-to-date total",
         "parking_occupancy": "Parking Occupancy",
         "parking_scale_low": "Low",
         "parking_scale_high": "High",
@@ -113,6 +114,7 @@ TRANSLATIONS = {
         'getting_there_description': '🚌 Learn about the best ways to reach the Bavarian Forest.',
     },
     "German": {
+        "total_visitors_per_day": "Tagessumme bis jetzt",
         "parking_occupancy": "Parkplatz-Auslastung",
         "parking_scale_low": "Gering",
         "parking_scale_high": "Stark",

@@ -205,6 +205,9 @@ def fetch_realtime_house_visitor_counts() -> pd.DataFrame:
     net_flow = house_counts_df["count_in"] - house_counts_df["count_out"]
     house_counts_df["inside_computed"] = net_flow.groupby(house_counts_df["location_id"]).cumsum().clip(lower=0)
 
+    # Calculate the sums of total visitors for the entire day
+    house_counts_df["total_visitors_per_day"] = house_counts_df.groupby("location_id")["count_in"].cumsum()
+
     # Filter only for the current hour (datetime column has type datetime64[ns])
     house_counts_filtered = house_counts_df[house_counts_df["datetime"] == pd.to_datetime(f"{date_dict_now['date_from']} {date_dict_now['hour_from']}")]
 

@@ -100,7 +100,7 @@ def process_all_locations(
     for key, value in parking_sensors.items():
         historical_data = []
         for data_type, api_suffix, column_name in data_types:
-            print(f"Loading historical {data_type} data for location: {key} with location_id: {value["location_id"]}")
+            print(f"Loading historical {data_type} data for location: {key} with location_id: {value['location_id']}")
 
             parking_df  = get_historical_data_for_location(
                 location_id=value["location_id"],

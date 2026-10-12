@@ -90,6 +90,20 @@ def load_svg_icon(path: str) -> str:
         svg_content = f.read()
     return svg_content
 
+# Size of the parking icon on the map (pixels)
+PARKING_ICON_SIZE_PX = 28
+
+def build_parking_icon_html(parking_svg_icon: str, rgb: list, size_px: int = PARKING_ICON_SIZE_PX) -> str:
+    """
+    Wrap the parking SVG in a div whose CSS `color` is the calculated occupancy color.
+    The SVG sets `fill="currentColor"`, so the entire icon takes on exactly this color.
+    """
+    r, g, b = rgb
+    return (
+        f'<div style="width:{size_px}px; height:{size_px}px; color:rgb({r},{g},{b}); '
+        f'filter: drop-shadow(0 0 1px #000);">{parking_svg_icon}</div>'
+    )
+
 def style_regions_for_display(regions: gpd.GeoDataFrame, highlighted_names: list) -> gpd.GeoDataFrame:
     """
     Set fill/line color + opacity per region based on which region names are
@@ -146,12 +160,6 @@ def render_regions_legend(regions: gpd.GeoDataFrame) -> list:
         )
 
     return selected
-
-def get_fixed_size():
-    """
-    Get a fixed size value for the map markers.
-    """
-    return 450  
 
 def render_map_symbology_legend(walker_svg_icon: str, info_svg_icon: str) -> None:
     """
@@ -286,12 +294,12 @@ def render_occupancy_bar(occupancy_rate):
     """, unsafe_allow_html=True)
 
 
-def build_folium_map(processed_parking_data: pd.DataFrame, styled_regions: gpd.GeoDataFrame) -> folium.Map:
+def build_folium_map(processed_parking_data: pd.DataFrame, styled_regions: gpd.GeoDataFrame, parking_svg_icon: str) -> folium.Map:
     """
     Build the interactive Leaflet map (via folium) with:
       - the BKG TopPlusOpen Light Grau basemap, loaded as a custom XYZ TileLayer
       - visitor forecast regions as a styled GeoJson layer
-      - real-time parking occupancy markers as CircleMarkers
+      - real-time parking occupancy markers as parking icons colored on the continuous color scale
 
     Unlike pydeck's TileLayer, folium/Leaflet's TileLayer natively supports
     arbitrary custom tile URL templates, so this actually renders the BKG
@@ -339,18 +347,18 @@ def build_folium_map(processed_parking_data: pd.DataFrame, styled_regions: gpd.G
     ).add_to(m)
 
     # --- Parking markers ------------------------------------------------------
+    icon_half_px = PARKING_ICON_SIZE_PX // 2
+
     for _, row in processed_parking_data.iterrows():
-        r, g, b = row["color"]
-        tooltip_html = f"<b>{row['tooltip_line1_name']}</b><br/>{row['tooltip_line2_availability']}<br/>{row['tooltip_line3_occupancy_rate']}<br/>{row['tooltip_line4_data_collection_timestamp']}"        
-        folium.CircleMarker(
+        tooltip_html = f"<b>{row['tooltip_line1_name']}</b><br/>{row['tooltip_line2_availability']}<br/>{row['tooltip_line3_occupancy_rate']}<br/>{row['tooltip_line4_data_collection_timestamp']}"
+        folium.Marker(
             location=[row["latitude"], row["longitude"]],
-            radius=8,
-            color="black",
-            weight=1,
-            fill=True,
-            fill_color=f"rgb({r},{g},{b})",
-            fill_opacity=0.9,
-            tooltip=tooltip_html,
+            tooltip=folium.Tooltip(tooltip_html),
+            icon=folium.DivIcon(
+                html=build_parking_icon_html(parking_svg_icon, row["color"]),
+                icon_size=(PARKING_ICON_SIZE_PX, PARKING_ICON_SIZE_PX),
+                icon_anchor=(icon_half_px, icon_half_px),
+            ),
         ).add_to(m)
 
     return m
@@ -501,12 +509,10 @@ def get_parking_section():
     # Load icons to be used in the map
     walker_svg = load_svg_icon(path="assets/202609 Zählgerät.svg")
     info_svg = load_svg_icon(path="assets/202609 Info.svg")
+    parking_svg = load_svg_icon(path="assets/parking.svg")
 
     # Display the clear map symbology legend above the map
     render_map_symbology_legend(walker_svg, info_svg)
-    
-    # Set a fixed size for all markers
-    processed_parking_data['size'] = get_fixed_size()
 
     # Convert the occupancy rate to numeric and handle errors
     processed_parking_data['current_occupancy_rate'] = pd.to_numeric(processed_parking_data['current_occupancy_rate'], errors='coerce')
@@ -532,7 +538,7 @@ def get_parking_section():
     styled_regions = style_regions_for_display(regions, highlighted_regions)
 
     # --- Build and render the folium/Leaflet map ---------------------------
-    folium_map = build_folium_map(processed_parking_data, styled_regions)
+    folium_map = build_folium_map(processed_parking_data, styled_regions, parking_svg)
     folium_map = add_visitor_occupancy_markers(folium_map, processed_visitor_occupancy, walker_svg)
     folium_map = add_house_visitor_count_markers(folium_map, processed_visitor_house_occupancy, visitor_house_coordinates, info_svg)
     st_folium(folium_map, width=None, height=600, returned_objects=[])

@@ -12,6 +12,8 @@ from src.streamlit_app.source_data import source_and_preprocess_realtime_parking
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
 from src.config import CONTAINER_NAME, CONNECTION_STRING, visitor_house_coordinates
 from folium.plugins import MarkerCluster
+from matplotlib import colormaps
+from matplotlib.colors import Normalize, to_hex
 from azure.storage.blob import BlobClient
 from datetime import datetime
 from src.streamlit_app.pages_in_dashboard.visitors.vemcount_house_counts import fetch_realtime_house_visitor_counts
@@ -162,6 +164,11 @@ def render_map_symbology_legend(walker_svg_icon: str, info_svg_icon: str) -> Non
     walker_icon_size_px = 20
     info_icon_size_px = 20
 
+    # Continuous occupancy color scale shown in the legend
+    occupancy_scale_gradient = get_coolwarm_css_gradient()
+    scale_label_low = TRANSLATIONS[st.session_state.selected_language]["parking_scale_low"]
+    scale_label_high = TRANSLATIONS[st.session_state.selected_language]["parking_scale_high"]
+
     st.markdown(f"""
     <div style="background-color: #f8f9fa; border: 1px solid #e9ecef; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
         <div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; color: #333;">{TRANSLATIONS[st.session_state.selected_language]["symbol_legend"]}</div>
@@ -174,17 +181,10 @@ def render_map_symbology_legend(walker_svg_icon: str, info_svg_icon: str) -> Non
             <!-- Parking Markers -->
             <div style="display: flex; align-items: center; gap: 12px; border-left: 1px solid #ccc; padding-left: 16px;">
                 <span style="margin-right: -4px;"><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_circles_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["legend_circles_explained"]} </span>
-                <div style="display: flex; align-items: center; gap: 4px;">
-                    <div style="width: 12px; height: 12px; background-color: rgb(56, 142, 60); border-radius: 50%; border: 1px solid #fff;"></div>
-                    <span style="color: #555;">{TRANSLATIONS[st.session_state.selected_language]["parking_status_low"]}</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 4px;">
-                    <div style="width: 12px; height: 12px; background-color: rgb(255, 160, 0); border-radius: 50%; border: 1px solid #fff;"></div>
-                    <span style="color: #555;">{TRANSLATIONS[st.session_state.selected_language]["parking_status_moderate"]}</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 4px;">
-                    <div style="width: 12px; height: 12px; background-color: rgb(211, 47, 47); border-radius: 50%; border: 1px solid #fff;"></div>
-                    <span style="color: #555;">{TRANSLATIONS[st.session_state.selected_language]["parking_status_high"]}</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="color: #555;">{scale_label_low}</span>
+                    <div style="width: 140px; height: 12px; background: {occupancy_scale_gradient}; border: 1px solid #555; border-radius: 2px;"></div>
+                    <span style="color: #555;">{scale_label_high}</span>
                 </div>
             </div>
             <!-- Visitor Sensor Markers -->
@@ -201,30 +201,47 @@ def render_map_symbology_legend(walker_svg_icon: str, info_svg_icon: str) -> Non
     </div>
     """, unsafe_allow_html=True)
 
+# Continuous color scale: matplotlib's "coolwarm" colormap
+OCCUPANCY_COLORMAP = colormaps["coolwarm"]
+
+# Occupancy rates (in %) that are mapped to the two ends of the color scale
+OCCUPANCY_NORM = Normalize(vmin=0, vmax=100, clip=True)
+
+# Neutral color for parking places without a valid occupancy rate
+COLOR_NO_DATA = (150, 150, 150)
+
+def get_coolwarm_css_gradient(steps: int = 11) -> str:
+    """
+    Build a CSS `linear-gradient(...)` string (left = low, right = high
+    occupancy) by sampling the colormap, for use in the legend.
+    """
+    stops = [
+        f"{to_hex(OCCUPANCY_COLORMAP(i / (steps - 1)))} {i / (steps - 1) * 100:.0f}%"
+        for i in range(steps)
+    ]
+    return f"linear-gradient(to right, {', '.join(stops)})"
+
 def calculate_color_based_on_occupancy_rate(occupancy_rate) -> dict:
     """
-    Calculate the color of the marker based on the occupancy rate.
-    Returns a named tuple with the RGB values and a CSS gradient color value.
-
-
+    Calculate the color of the marker based on the occupancy rate using the
+    continuous matplotlib "coolwarm" colormap.
 
     Args:
-        occupancy_rate (float): The occupancy rate of the parking section.
+        occupancy_rate (float): The occupancy rate of the parking section in %.
 
     Returns:
-        list: A list of RGB values representing the color of the marker.
+        dict: "color_markers_map_visualization" -> [R, G, B] (0-255) for the marker,
+              "color_bar_occupancy_rate"        -> CSS color string for the occupancy bar.
     """
-    occupancy_rate = float(occupancy_rate)
+    occupancy_rate = pd.to_numeric(occupancy_rate, errors="coerce")
 
-    if occupancy_rate >= 80:
-        return {"color_markers_map_visualization": [211, 47, 47],
-                "color_bar_occupancy_rate": "red"} # red
-    elif occupancy_rate >= 60:
-        return {"color_markers_map_visualization": [255, 160, 0],
-                "color_bar_occupancy_rate": "yellow"} # yellow
+    if pd.isna(occupancy_rate):
+        r, g, b = COLOR_NO_DATA
     else:
-        return {"color_markers_map_visualization": [56, 142, 60],
-                "color_bar_occupancy_rate": "green"} # green
+        r, g, b = (round(c * 255) for c in OCCUPANCY_COLORMAP(OCCUPANCY_NORM(occupancy_rate))[:3])
+
+    return {"color_markers_map_visualization": [r, g, b],
+            "color_bar_occupancy_rate": f"rgb({r},{g},{b})"}
 
 
 def get_occupancy_status(occupancy_rate):
@@ -490,10 +507,12 @@ def get_parking_section():
     
     # Set a fixed size for all markers
     processed_parking_data['size'] = get_fixed_size()
-    processed_parking_data['color'] = processed_parking_data['current_occupancy_rate'].apply(lambda occupancy_rate: calculate_color_based_on_occupancy_rate(occupancy_rate)["color_markers_map_visualization"])
 
     # Convert the occupancy rate to numeric and handle errors
     processed_parking_data['current_occupancy_rate'] = pd.to_numeric(processed_parking_data['current_occupancy_rate'], errors='coerce')
+
+    # Continuous coolwarm color per parking place (blue = low, red = high occupancy)
+    processed_parking_data['color'] = processed_parking_data['current_occupancy_rate'].apply(lambda occupancy_rate: calculate_color_based_on_occupancy_rate(occupancy_rate)["color_markers_map_visualization"])
 
     # Map occupancy rate to status (High, Medium, Low)
     processed_parking_data['occupancy_status'] = processed_parking_data['current_occupancy_rate'].apply(get_occupancy_status)
@@ -535,4 +554,3 @@ def get_parking_section():
         col1.metric(label=TRANSLATIONS[st.session_state.selected_language]['available_spaces'], value=f"{selected_data['current_availability']} 🚗")
         col2.metric(label=TRANSLATIONS[st.session_state.selected_language]['capacity'], value=f"{selected_data['current_capacity']} 🚗")
         col3.metric(label=TRANSLATIONS[st.session_state.selected_language]['occupancy_rate'], value=f"{selected_data['current_occupancy_rate']}")
-

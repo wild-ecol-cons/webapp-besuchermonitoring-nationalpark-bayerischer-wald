@@ -167,22 +167,27 @@ sensor_mapping_to_traffic_metrics = {
 # Slug names and coordinates of the visitor sensors that have real-time tracking of visitor occupancy to Bayern Cloud (defined in EPSG:4326 WGS84)
 visitor_sensors_with_realtime_tracking = {
     "tfg-lusen-1": {
+        "location_id": "7453d98e-8ba7-4dfc-8054-a55c685c9e12",
         "sensor_name": "Tierfreigelände Lusen - Sensor 1",
         "coordinates": (48.892878, 13.4875722),
     },
     "tfg-lusen-2": {
+        "location_id": "11c69a64-8600-47d9-93a8-825e655d50f5",
         "sensor_name": "Tierfreigelände Lusen - Sensor 2",
         "coordinates": (48.8928588, 13.4895289),
     },
     "tfg-lusen-3": {
+        "location_id": "0dce6a7a-e256-46b9-86cb-1189de9387c7",
         "sensor_name": "Tierfreigelände Lusen - Sensor 3",
         "coordinates": (48.90411, 13.4712889),
     },
     "tfg-falkenstein-1": {
+        "location_id": "6d666ec4-96e3-4506-ac08-b8953c98b569",
         "sensor_name": "Tierfreigelände Falkenstein - Sensor 1",
         "coordinates": (49.0605989, 13.2421349),
     },
     "tfg-falkenstein-2": {
+        "location_id": "2105b493-02a8-4ae9-a6e4-bce6c866eca6",
         "sensor_name": "Tierfreigelände Falkenstein - Sensor 2",
         "coordinates": (49.0595505, 13.238188),
     },
@@ -201,4 +206,78 @@ visitor_house_coordinates = {
     "33955": (48.8901888, 13.4866217),   # Hans-Eisenmann-Haus
     "33320": (49.0604494, 13.2434616),   # Nationalparkverwaltung Bayerischer Wald - Haus zur Wildnis
     "33951": (48.891487, 13.427821),     # Waldgeschichtliches Museum St. Oswald
+}
+
+# Dictionary of parking sensors and their respective location IDs in Bayern Cloud, coordinates, and prettified names
+parking_sensors = {
+     "parkplatz-graupsaege-1":{
+         "location_id":"e42069a6-702f-4ef4-b3b5-04e310d97ca0",
+         "coordinates":(48.92414,13.44515),
+         "pretty_name": "P+R Graupsäge"
+     },
+     "parkplatz-fredenbruecke-1":{
+         "location_id":"fac08b6b-e9cb-40cd-a106-b9f2cbfc7447",
+         "coordinates":(48.93759, 13.45431),
+         "pretty_name": "Fredenbrücke"
+     },
+     "p-r-spiegelau-1":{
+         "location_id":"ee0490b2-3cc5-4adb-a527-95267257598e",
+         "coordinates":(48.9178,13.35544),
+         "pretty_name": "P+R Spiegelau P+R"
+     },
+     "parkplatz-zwieslerwaldhaus-1":{
+         "location_id":"6c9b765e-1ff9-401d-98bc-b0302ee65c62",
+         "coordinates":(49.08802, 13.24647),
+         "pretty_name": "Parkplatz Zwieslerwaldhaus (P1)"
+     },
+     "parkplatz-nationalparkzentrum-falkenstein-2":{
+         "location_id":"a93b64e9-35fb-4b3e-8348-81ba8f1c0d6f",
+         "coordinates":(49.06042,13.23583),
+         "pretty_name": "Parkplatz Nationalparkzentrum Falkenstein"
+     },
+     "parkplatz-nationalparkzentrum-lusen-p2":{
+         "location_id":"454b0f50-130b-4c21-9db2-b163e158c847",
+         "coordinates":(48.89060, 13.48939),
+         "pretty_name": "Parkplatz Nationalparkzentrum Lusen (P2)"
+     },
+     "parkplatz-waldhaeuser-kirche-1":{
+         "location_id":"454b0f50-130b-4c21-9db2-b163e158c847",
+         "coordinates":(48.92842,13.4624),
+         "pretty_name": "Parkplatz Waldhäuser Kirche"   
+     },
+     "parkplatz-waldhaeuser-ausblick-1":{
+         "location_id":"a14d8ebd-9261-49f7-875b-6a924fe34990",
+         "coordinates":(48.92796,13.47076),
+         "pretty_name": "Parkplatz Waldhäuser Ausblick"
+     },
+     "parkplatz-skisportzentrum-finsterau-1":{
+         "location_id":"ea474092-1064-4ae7-955e-8db099955c16",
+         "coordinates":(48.94129,13.57491),
+         "pretty_name": "Parkplatz Finsterau Ski-/Sportstadion"
+     },
+     "parkplatz-zwieslerwaldhaus-nord-1": {
+         "location_id":"4bbb3b5c-edc2-4b00-a923-91c1544aa29d",
+         "coordinates":(49.09685, 13.23761),
+         "pretty_name": "Parkplatz Zwieslerwaldhaus Nord"
+     },
+     "parkplatz-schillerstrasse": {
+         "location_id":"eba1578b-9ca9-4a74-8855-09ed598331c8",
+         "coordinates":(49.08805, 13.24864),
+         "pretty_name": "Parkplatz Schillerstraße (P1)"
+     },
+     "skiwanderzentrum-zwieslerwaldhaus-2": {
+         "location_id":"dd3734c2-c4fb-4e1d-a57c-9bbed8130d8f",
+         "coordinates":(49.08676, 13.24436),
+         "pretty_name": "Parkplatz Skiwanderzentrum Zwieslerwaldhaus"
+     },
+     "parkplatz-wistlberg-1": {
+         "location_id":"13f76ce2-4b07-4e62-9623-cb19091d9a95",
+         "coordinates":(48.94149, 13.57114),
+         "pretty_name": "Parkplatz Wistlberg"
+     },
+     "scheidt-bachmann-parkplatz-1": {
+         "location_id":"144e1868-3051-4140-a83c-41d4b79a6d14",
+         "coordinates":(48.89186, 13.48963),
+         "pretty_name": "Parkplatz Nationalparkzentrum Lusen (P1)"
+     }
 }

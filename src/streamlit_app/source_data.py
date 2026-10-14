@@ -9,7 +9,8 @@ import src.streamlit_app.pre_processing.process_forecast_weather_data as prfwd
 import streamlit as st
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
 from src.prediction_pipeline.sourcing_data.source_weather import get_hourly_data
-from src.config import visitor_sensors_with_realtime_tracking
+from src.config import visitor_sensors_with_realtime_tracking, parking_sensors
+from src.prediction_pipeline.sourcing_data.source_historic_parking_data import get_historical_data_for_location
 import pytz
 
 
@@ -20,22 +21,6 @@ import pytz
 # Load Bayern Cloud API key from environment variables
 BAYERN_CLOUD_API_KEY = os.getenv('BAYERN_CLOUD_API_KEY')
 
-
-# We are not using 'parkplatz-fredenbruecke-1' and 'skiwanderzentrum-zwieslerwaldhaus-2' because of inconsistency in sending data to the cloud
-parking_sensors = {
-     "parkplatz-graupsaege-1":["e42069a6-702f-4ef4-b3b5-04e310d97ca0",(48.92414,13.44515)],
-     # "parkplatz-fredenbruecke-1":["fac08b6b-e9cb-40cd-a106-b9f2cbfc7447",()],
-     "p-r-spiegelau-1": ["ee0490b2-3cc5-4adb-a527-95267257598e",(48.9178,13.35544)],
-     # "skiwanderzentrum-zwieslerwaldhaus-2":[ "dd3734c2-c4fb-4e1d-a57c-9bbed8130d8f",()],
-     "parkplatz-zwieslerwaldhaus-1": [ "6c9b765e-1ff9-401d-98bc-b0302ee65c62",(49.08837,13.24707)],
-     # "parkplatz-zwieslerwaldhaus-nord-1": [ "4bbb3b5c-edc2-4b00-a923-91c1544aa29d",()],
-     "parkplatz-nationalparkzentrum-falkenstein-2" : [ "a93b64e9-35fb-4b3e-8348-81ba8f1c0d6f",(49.06042,13.23583)],
-     "scheidt-bachmann-parkplatz-1" : [ "144e1868-3051-4140-a83c-41d4b79a6d14",(48.9346,13.32418)],
-     "parkplatz-nationalparkzentrum-lusen-p2" : [ "454b0f50-130b-4c21-9db2-b163e158c847",(48.8907,13.48924)],
-     "parkplatz-waldhaeuser-kirche-1" : [ "454b0f50-130b-4c21-9db2-b163e158c847",(48.92842,13.4624,)],
-     "parkplatz-waldhaeuser-ausblick-1" : [ "a14d8ebd-9261-49f7-875b-6a924fe34990",(48.92796,13.47076)],
-     "parkplatz-skisportzentrum-finsterau-1": [ "ea474092-1064-4ae7-955e-8db099955c16",(48.94129,13.57491)],
-}
 
 ########################################################################################
 # Weather Data Sourcing - METEOSTAT API
@@ -54,8 +39,26 @@ END_TIME = (START_TIME + pd.Timedelta(days=7))
 LATITUDE = 48.96119
 LONGITUDE = 13.36234
 
-def get_realtime_occupancy_data_for_location(
-    location_slug: str,
+def sum_occupancy_today(df: pd.DataFrame, now_iso: str) -> int:
+    now = pd.Timestamp(now_iso)
+
+    # Align timezone awareness with the index
+    if df.index.tz is None and now.tzinfo is not None:
+        now = now.tz_localize(None)           # drop tz, keep the local wall-clock time
+    elif df.index.tz is not None and now.tzinfo is None:
+        now = now.tz_localize(df.index.tz)    # make it aware to match the index
+
+    start = now.normalize()                   # today 00:00
+    end = start + pd.Timedelta(days=1)        # tomorrow 00:00
+
+    mask = (df.index >= start) & (df.index < end)
+
+    today_occupancy_sum = df.loc[mask, "occupancy"].sum()
+    return today_occupancy_sum
+
+def get_historic_and_realtime_occupancy_data_for_location(
+    location_id: str,
+    location_slug: str
 ) -> int:
     """
     Fetches the real-time occupancy data for a given location from the Bayern Cloud API.
@@ -80,16 +83,29 @@ def get_realtime_occupancy_data_for_location(
 
     # Get data collection timestamp of the current occupancy data
     realtime_occupancy_timestamp = graph_item.get("dcls:latestTimeseriesTimestamp", None)
+
+    # Get historic occupancy data for one location
+    historic_occupancy = get_historical_data_for_location(
+        location_id=location_id,
+        api_endpoint_suffix='dcls_occupancy',
+        column_name="occupancy",
+        )
+
+    today_occupancy_sum = sum_occupancy_today(historic_occupancy, realtime_occupancy_timestamp)
+
+    # Convert the realtime-timestamp to a human-readable format
     realtime_occupancy_timestamp = datetime.fromisoformat(realtime_occupancy_timestamp).strftime("%d.%m.%Y %H:%M Uhr")
 
-    return realtime_occupancy, realtime_occupancy_timestamp
+    return realtime_occupancy, realtime_occupancy_timestamp, today_occupancy_sum
 
 ########################################################################################
 # Parking functions
 ########################################################################################
 
 
-def source_parking_data_from_cloud(location_slug: str) -> pd.DataFrame:
+def source_parking_data_from_cloud(
+        location_slug: str,
+        location_name: str) -> pd.DataFrame:
     """Sources the current occupancy data from the Bayern Cloud API.
     
     Args:
@@ -125,6 +141,7 @@ def source_parking_data_from_cloud(location_slug: str) -> pd.DataFrame:
     parking_data = pd.DataFrame({
         "timestamp": datetime.now(), 
         "location" : [location_slug],
+        "location_name": [location_name],
         "current_occupancy": [current_occupancy],
         "current_capacity": [current_capacity],
         "current_occupancy_rate": [current_occupancy_rate],
@@ -152,8 +169,8 @@ def add_spatial_info_to_parking_sensors(parking_data_df):
 
     for location_slug in parking_sensors.keys():
         if location_slug in parking_data_df['location'].values:
-            parking_data_df['latitude'] = parking_sensors[location_slug][1][0]
-            parking_data_df['longitude'] = parking_sensors[location_slug][1][1]
+            parking_data_df['latitude'] = parking_sensors[location_slug]["coordinates"][0]
+            parking_data_df['longitude'] = parking_sensors[location_slug]["coordinates"][1]
 
             return parking_data_df
 
@@ -191,7 +208,9 @@ def source_and_preprocess_realtime_parking_data(current_timestamp):
     all_parking_dataframes = []
     for location_slug in parking_sensors.keys():
         print(f"Fetching and saving real-time occupancy data for location '{location_slug}'...")
-        parking_df = source_parking_data_from_cloud(location_slug)
+        parking_df = source_parking_data_from_cloud(
+            location_slug=location_slug,
+            location_name=parking_sensors[location_slug]["pretty_name"])
         all_parking_dataframes.append(parking_df)
 
     all_parking_data = merge_all_df_from_list(all_parking_dataframes)
@@ -226,10 +245,18 @@ def source_and_preprocess_realtime_visitor_occupancy(current_timestamp: datetime
     preprocessed_realtime_visitor_occupancy = pd.DataFrame()
 
     for sensor, sensor_data in visitor_sensors_with_realtime_tracking.items():
-        realtime_sensor_occupancy, realtime_sensor_occupancy_timestamp = get_realtime_occupancy_data_for_location(sensor)
+        realtime_sensor_occupancy, realtime_sensor_occupancy_timestamp, today_occupancy_sum = get_historic_and_realtime_occupancy_data_for_location(
+            location_slug=sensor,
+            location_id=visitor_sensors_with_realtime_tracking[sensor]["location_id"])
 
         # Build dataframe of sourced and preprocessed visitor occupancy
-        sensor_data_df = pd.DataFrame({"location": [sensor_data["sensor_name"]], "latitude": [sensor_data["coordinates"][0]], "longitude": [sensor_data["coordinates"][1]], "current_occupancy": [realtime_sensor_occupancy], "timestamp_data_collected": [realtime_sensor_occupancy_timestamp]})
+        sensor_data_df = pd.DataFrame({
+            "location": [sensor_data["sensor_name"]],
+            "latitude": [sensor_data["coordinates"][0]],
+            "longitude": [sensor_data["coordinates"][1]],
+            "current_occupancy": [realtime_sensor_occupancy],
+            "occupancy_of_the_entire_day": [today_occupancy_sum],
+            "timestamp_data_collected": [realtime_sensor_occupancy_timestamp]})
 
         preprocessed_realtime_visitor_occupancy = pd.concat([preprocessed_realtime_visitor_occupancy, sensor_data_df], ignore_index=True)
 

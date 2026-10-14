@@ -12,6 +12,8 @@ from src.streamlit_app.source_data import source_and_preprocess_realtime_parking
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
 from src.config import CONTAINER_NAME, CONNECTION_STRING, visitor_house_coordinates
 from folium.plugins import MarkerCluster
+from matplotlib import colormaps
+from matplotlib.colors import Normalize, to_hex
 from azure.storage.blob import BlobClient
 from datetime import datetime
 from src.streamlit_app.pages_in_dashboard.visitors.vemcount_house_counts import fetch_realtime_house_visitor_counts
@@ -88,6 +90,20 @@ def load_svg_icon(path: str) -> str:
         svg_content = f.read()
     return svg_content
 
+# Size of the parking icon on the map (pixels)
+PARKING_ICON_SIZE_PX = 28
+
+def build_parking_icon_html(parking_svg_icon: str, rgb: list, size_px: int = PARKING_ICON_SIZE_PX) -> str:
+    """
+    Wrap the parking SVG in a div whose CSS `color` is the calculated occupancy color.
+    The SVG sets `fill="currentColor"`, so the entire icon takes on exactly this color.
+    """
+    r, g, b = rgb
+    return (
+        f'<div style="width:{size_px}px; height:{size_px}px; color:rgb({r},{g},{b}); '
+        f'filter: drop-shadow(0 0 1px #000);">{parking_svg_icon}</div>'
+    )
+
 def style_regions_for_display(regions: gpd.GeoDataFrame, highlighted_names: list) -> gpd.GeoDataFrame:
     """
     Set fill/line color + opacity per region based on which region names are
@@ -145,13 +161,7 @@ def render_regions_legend(regions: gpd.GeoDataFrame) -> list:
 
     return selected
 
-def get_fixed_size():
-    """
-    Get a fixed size value for the map markers.
-    """
-    return 450  
-
-def render_map_symbology_legend(walker_svg_icon: str, info_svg_icon: str) -> None:
+def render_map_symbology_legend(walker_svg_icon: str, info_svg_icon: str, parking_svg_icon: str) -> None:
     """
     Renders a clean visual legend explaining the map layers (polygons vs markers).
 
@@ -159,8 +169,14 @@ def render_map_symbology_legend(walker_svg_icon: str, info_svg_icon: str) -> Non
         walker_svg_icon (str): The SVG content of the walker icon.
     """
 
-    walker_icon_size_px = 30
-    info_icon_size_px = 30
+    walker_icon_size_px = 20
+    info_icon_size_px = 20
+    parking_icon_size_px = 20
+
+    # Continuous occupancy color scale shown in the legend
+    occupancy_scale_gradient = get_coolwarm_css_gradient()
+    scale_label_low = TRANSLATIONS[st.session_state.selected_language]["parking_scale_low"]
+    scale_label_high = TRANSLATIONS[st.session_state.selected_language]["parking_scale_high"]
 
     st.markdown(f"""
     <div style="background-color: #f8f9fa; border: 1px solid #e9ecef; padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
@@ -172,28 +188,22 @@ def render_map_symbology_legend(walker_svg_icon: str, info_svg_icon: str) -> Non
                 <span><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_area_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["legend_area_explained"]}</span>
             </div>
             <!-- Parking Markers -->
-            <div style="display: flex; align-items: center; gap: 12px; border-left: 1px solid #ccc; padding-left: 16px;">
-                <span style="margin-right: -4px;"><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_circles_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["legend_circles_explained"]} </span>
-                <div style="display: flex; align-items: center; gap: 4px;">
-                    <div style="width: 12px; height: 12px; background-color: rgb(56, 142, 60); border-radius: 50%; border: 1px solid #fff;"></div>
-                    <span style="color: #555;">{TRANSLATIONS[st.session_state.selected_language]["parking_status_low"]}</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 4px;">
-                    <div style="width: 12px; height: 12px; background-color: rgb(255, 160, 0); border-radius: 50%; border: 1px solid #fff;"></div>
-                    <span style="color: #555;">{TRANSLATIONS[st.session_state.selected_language]["parking_status_moderate"]}</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 4px;">
-                    <div style="width: 12px; height: 12px; background-color: rgb(211, 47, 47); border-radius: 50%; border: 1px solid #fff;"></div>
-                    <span style="color: #555;">{TRANSLATIONS[st.session_state.selected_language]["parking_status_high"]}</span>
+            <div style="display: flex; align-items: center; gap: 7px; border-left: 1px solid #ccc; padding-left: 12px;">
+                <div style="width:{parking_icon_size_px}px; height:{parking_icon_size_px}px; filter: drop-shadow(0 0 1px #000);">{parking_svg_icon}</div>
+                <span><strong>{TRANSLATIONS[st.session_state.selected_language]["parking_occupancy"]}</strong></span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="color: #555;">{scale_label_low}</span>
+                    <div style="width: 140px; height: 12px; background: {occupancy_scale_gradient}; border: 1px solid #555; border-radius: 2px;"></div>
+                    <span style="color: #555;">{scale_label_high}</span>
                 </div>
             </div>
             <!-- Visitor Sensor Markers -->
-            <div style="display: flex; align-items: center; gap: 7px; border-left: 1px solid #ccc; padding-left: 3px;">
+            <div style="display: flex; align-items: center; gap: 7px; border-left: 1px solid #ccc; padding-left: 12px;">
                 <div style="width:{walker_icon_size_px}px; height:{walker_icon_size_px}px; filter: drop-shadow(0 0 1px #000);">{walker_svg_icon}</div>
                 <span><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_visitor_sensors_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["current_visitors"]}</span>
             </div>
             <!-- Visitor Sensor Markers -->
-            <div style="display: flex; align-items: center; gap: 7px; border-left: 1px solid #ccc; padding-left: 3px;">
+            <div style="display: flex; align-items: center; gap: 7px; border-left: 1px solid #ccc; padding-left: 12px;">
                 <div style="width:{info_icon_size_px}px; height:{info_icon_size_px}px; filter: drop-shadow(0 0 1px #000);">{info_svg_icon}</div>
                 <span><strong>{TRANSLATIONS[st.session_state.selected_language]["legend_house_sensors_mention"]}</strong> {TRANSLATIONS[st.session_state.selected_language]["current_visitor_no_house"]}</span>
             </div>
@@ -201,30 +211,47 @@ def render_map_symbology_legend(walker_svg_icon: str, info_svg_icon: str) -> Non
     </div>
     """, unsafe_allow_html=True)
 
+# Continuous color scale: matplotlib's "coolwarm" colormap
+OCCUPANCY_COLORMAP = colormaps["coolwarm"]
+
+# Occupancy rates (in %) that are mapped to the two ends of the color scale
+OCCUPANCY_NORM = Normalize(vmin=0, vmax=100, clip=True)
+
+# Neutral color for parking places without a valid occupancy rate
+COLOR_NO_DATA = (150, 150, 150)
+
+def get_coolwarm_css_gradient(steps: int = 11) -> str:
+    """
+    Build a CSS `linear-gradient(...)` string (left = low, right = high
+    occupancy) by sampling the colormap, for use in the legend.
+    """
+    stops = [
+        f"{to_hex(OCCUPANCY_COLORMAP(i / (steps - 1)))} {i / (steps - 1) * 100:.0f}%"
+        for i in range(steps)
+    ]
+    return f"linear-gradient(to right, {', '.join(stops)})"
+
 def calculate_color_based_on_occupancy_rate(occupancy_rate) -> dict:
     """
-    Calculate the color of the marker based on the occupancy rate.
-    Returns a named tuple with the RGB values and a CSS gradient color value.
-
-
+    Calculate the color of the marker based on the occupancy rate using the
+    continuous matplotlib "coolwarm" colormap.
 
     Args:
-        occupancy_rate (float): The occupancy rate of the parking section.
+        occupancy_rate (float): The occupancy rate of the parking section in %.
 
     Returns:
-        list: A list of RGB values representing the color of the marker.
+        dict: "color_markers_map_visualization" -> [R, G, B] (0-255) for the marker,
+              "color_bar_occupancy_rate"        -> CSS color string for the occupancy bar.
     """
-    occupancy_rate = float(occupancy_rate)
+    occupancy_rate = pd.to_numeric(occupancy_rate, errors="coerce")
 
-    if occupancy_rate >= 80:
-        return {"color_markers_map_visualization": [211, 47, 47],
-                "color_bar_occupancy_rate": "red"} # red
-    elif occupancy_rate >= 60:
-        return {"color_markers_map_visualization": [255, 160, 0],
-                "color_bar_occupancy_rate": "yellow"} # yellow
+    if pd.isna(occupancy_rate):
+        r, g, b = COLOR_NO_DATA
     else:
-        return {"color_markers_map_visualization": [56, 142, 60],
-                "color_bar_occupancy_rate": "green"} # green
+        r, g, b = (round(c * 255) for c in OCCUPANCY_COLORMAP(OCCUPANCY_NORM(occupancy_rate))[:3])
+
+    return {"color_markers_map_visualization": [r, g, b],
+            "color_bar_occupancy_rate": f"rgb({r},{g},{b})"}
 
 
 def get_occupancy_status(occupancy_rate):
@@ -269,12 +296,12 @@ def render_occupancy_bar(occupancy_rate):
     """, unsafe_allow_html=True)
 
 
-def build_folium_map(processed_parking_data: pd.DataFrame, styled_regions: gpd.GeoDataFrame) -> folium.Map:
+def build_folium_map(processed_parking_data: pd.DataFrame, styled_regions: gpd.GeoDataFrame, parking_svg_icon: str) -> folium.Map:
     """
     Build the interactive Leaflet map (via folium) with:
       - the BKG TopPlusOpen Light Grau basemap, loaded as a custom XYZ TileLayer
       - visitor forecast regions as a styled GeoJson layer
-      - real-time parking occupancy markers as CircleMarkers
+      - real-time parking occupancy markers as parking icons colored on the continuous color scale
 
     Unlike pydeck's TileLayer, folium/Leaflet's TileLayer natively supports
     arbitrary custom tile URL templates, so this actually renders the BKG
@@ -322,18 +349,18 @@ def build_folium_map(processed_parking_data: pd.DataFrame, styled_regions: gpd.G
     ).add_to(m)
 
     # --- Parking markers ------------------------------------------------------
+    icon_half_px = PARKING_ICON_SIZE_PX // 2
+
     for _, row in processed_parking_data.iterrows():
-        r, g, b = row["color"]
-        tooltip_html = f"<b>{row['tooltip_line1_name']}</b><br/>{row['tooltip_line2_availability']}<br/>{row['tooltip_line3_occupancy_rate']}<br/>{row['tooltip_line4_data_collection_timestamp']}"        
-        folium.CircleMarker(
+        tooltip_html = f"<b>{row['tooltip_line1_name']}</b><br/>{row['tooltip_line2_availability']}<br/>{row['tooltip_line3_occupancy_rate']}<br/>{row['tooltip_line4_data_collection_timestamp']}"
+        folium.Marker(
             location=[row["latitude"], row["longitude"]],
-            radius=8,
-            color="black",
-            weight=1,
-            fill=True,
-            fill_color=f"rgb({r},{g},{b})",
-            fill_opacity=0.9,
-            tooltip=tooltip_html,
+            tooltip=folium.Tooltip(tooltip_html),
+            icon=folium.DivIcon(
+                html=build_parking_icon_html(parking_svg_icon, row["color"]),
+                icon_size=(PARKING_ICON_SIZE_PX, PARKING_ICON_SIZE_PX),
+                icon_anchor=(icon_half_px, icon_half_px),
+            ),
         ).add_to(m)
 
     return m
@@ -353,13 +380,15 @@ def add_visitor_occupancy_markers(folium_map, processed_visitor_occupancy, walke
     ).add_to(visitor_layer)
 
     # Load and define icons
-    icon_size_walker_px = 50
+    icon_size_walker_px = 25
 
     for _, row in processed_visitor_occupancy.iterrows():
         tooltip_text = (
             f"<b>{row['location']}</b><br>"
             f"{TRANSLATIONS[st.session_state.selected_language]['current_visitors']}: "
             f"{row['current_occupancy']}</b><br>"
+            f"{TRANSLATIONS[st.session_state.selected_language]['occupancy_of_the_entire_day']}: "
+            f"{row['occupancy_of_the_entire_day']}<br>"
             f"{TRANSLATIONS[st.session_state.selected_language]['current_occupancy_timestamp']}: "
             f"{row['timestamp_data_collected']}"
         )
@@ -390,7 +419,7 @@ def add_house_visitor_count_markers(folium_map, house_counts_df: pd.DataFrame, h
     """
     info_layer = folium.FeatureGroup(name="Visitor Houses", show=True)
 
-    icon_size_info_px = 50
+    icon_size_info_px = 25
 
     # Convert SVG once into a data URI
     svg_base64 = base64.b64encode(
@@ -414,6 +443,8 @@ def add_house_visitor_count_markers(folium_map, house_counts_df: pd.DataFrame, h
             f"{TRANSLATIONS[st.session_state.selected_language]['house_count_in']}: {row['count_in']}<br>"
             f"{TRANSLATIONS[st.session_state.selected_language]['house_count_out']}: {row['count_out']}<br>"
             f"{TRANSLATIONS[st.session_state.selected_language]['house_count_inside']}: {row['inside_computed']}"
+            f"<br>{TRANSLATIONS[st.session_state.selected_language]['total_visitors_per_day']}: "
+            f"{row['total_visitors_per_day']}"
         )
 
         info_icon = folium.CustomIcon(
@@ -482,16 +513,16 @@ def get_parking_section():
     # Load icons to be used in the map
     walker_svg = load_svg_icon(path="assets/202609 Zählgerät.svg")
     info_svg = load_svg_icon(path="assets/202609 Info.svg")
+    parking_svg = load_svg_icon(path="assets/parking.svg")
 
     # Display the clear map symbology legend above the map
-    render_map_symbology_legend(walker_svg, info_svg)
-    
-    # Set a fixed size for all markers
-    processed_parking_data['size'] = get_fixed_size()
-    processed_parking_data['color'] = processed_parking_data['current_occupancy_rate'].apply(lambda occupancy_rate: calculate_color_based_on_occupancy_rate(occupancy_rate)["color_markers_map_visualization"])
+    render_map_symbology_legend(walker_svg, info_svg, parking_svg)
 
     # Convert the occupancy rate to numeric and handle errors
     processed_parking_data['current_occupancy_rate'] = pd.to_numeric(processed_parking_data['current_occupancy_rate'], errors='coerce')
+
+    # Continuous coolwarm color per parking place (blue = low, red = high occupancy)
+    processed_parking_data['color'] = processed_parking_data['current_occupancy_rate'].apply(lambda occupancy_rate: calculate_color_based_on_occupancy_rate(occupancy_rate)["color_markers_map_visualization"])
 
     # Map occupancy rate to status (High, Medium, Low)
     processed_parking_data['occupancy_status'] = processed_parking_data['current_occupancy_rate'].apply(get_occupancy_status)
@@ -499,21 +530,8 @@ def get_parking_section():
     # Format occupancy rate to percentage string
     processed_parking_data['current_occupancy_rate'] = processed_parking_data['current_occupancy_rate'].apply(lambda x: f"{x:.2f}%" if pd.notna(x) else "N/A")
 
-    # Rename parking locations to be more user-friendly
-    processed_parking_data['location'] = processed_parking_data['location'].replace({
-        "parkplatz-graupsaege-1": "P+R Graupsäge",
-        "p-r-spiegelau-1": "P+R Spiegelau",
-        "parkplatz-zwieslerwaldhaus-1": "Parkplatz Zwieslerwaldhaus",
-        "parkplatz-nationalparkzentrum-falkenstein-2": "Parkplatz Nationalparkzentrum Falkenstein",
-        "scheidt-bachmann-parkplatz-1": "Scheidt-Bachmann-Parkplatz",
-        "parkplatz-nationalparkzentrum-lusen-p2": "Parkplatz Nationalparkzentrum Lusen",
-        "parkplatz-waldhaeuser-kirche-1": "Parkplatz Waldhäuser Kirche",
-        "parkplatz-waldhaeuser-ausblick-1": "Parkplatz Waldhäuser Ausblick",
-        "parkplatz-skisportzentrum-finsterau-1": "Parkplatz Finsterau Ski- und Sportstadion",
-    })
-
     # Compute parking place tooltip message
-    processed_parking_data['tooltip_line1_name'] = processed_parking_data['location']
+    processed_parking_data['tooltip_line1_name'] = processed_parking_data['location_name']
     processed_parking_data['tooltip_line2_availability'] = f"{TRANSLATIONS[st.session_state.selected_language]['available_spaces']}: " + processed_parking_data['current_availability'].astype(str) + " 🚗\n"
     processed_parking_data['tooltip_line3_occupancy_rate'] = f"{TRANSLATIONS[st.session_state.selected_language]['occupancy_rate']}: " + processed_parking_data['current_occupancy_rate'].astype(str)
     processed_parking_data['tooltip_line4_data_collection_timestamp'] = f"{TRANSLATIONS[st.session_state.selected_language]['current_occupancy_timestamp']}: " + processed_parking_data['realtime_occupancy_timestamp'].astype(str)
@@ -524,7 +542,7 @@ def get_parking_section():
     styled_regions = style_regions_for_display(regions, highlighted_regions)
 
     # --- Build and render the folium/Leaflet map ---------------------------
-    folium_map = build_folium_map(processed_parking_data, styled_regions)
+    folium_map = build_folium_map(processed_parking_data, styled_regions, parking_svg)
     folium_map = add_visitor_occupancy_markers(folium_map, processed_visitor_occupancy, walker_svg)
     folium_map = add_house_visitor_count_markers(folium_map, processed_visitor_house_occupancy, visitor_house_coordinates, info_svg)
     st_folium(folium_map, width=None, height=600, returned_objects=[])
@@ -532,18 +550,17 @@ def get_parking_section():
     # Interactive Metrics
     selected_location = st.selectbox(
         TRANSLATIONS[st.session_state.selected_language]['select_parking_section'], 
-        processed_parking_data['location'].unique(),
+        processed_parking_data['location_name'].unique(),
         key="selectbox_parking_section",
         width=400
     )
 
     # Display selected location details
     if selected_location:
-        selected_data = processed_parking_data[processed_parking_data['location'] == selected_location].iloc[0]
+        selected_data = processed_parking_data[processed_parking_data['location_name'] == selected_location].iloc[0]
 
         col1, col2, col3 = st.columns(3)
 
         col1.metric(label=TRANSLATIONS[st.session_state.selected_language]['available_spaces'], value=f"{selected_data['current_availability']} 🚗")
         col2.metric(label=TRANSLATIONS[st.session_state.selected_language]['capacity'], value=f"{selected_data['current_capacity']} 🚗")
         col3.metric(label=TRANSLATIONS[st.session_state.selected_language]['occupancy_rate'], value=f"{selected_data['current_occupancy_rate']}")
-

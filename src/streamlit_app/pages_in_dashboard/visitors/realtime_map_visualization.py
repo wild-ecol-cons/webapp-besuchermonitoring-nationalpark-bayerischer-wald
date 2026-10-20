@@ -12,8 +12,7 @@ from src.streamlit_app.source_data import source_and_preprocess_realtime_parking
 from src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu import TRANSLATIONS
 from src.config import CONTAINER_NAME, CONNECTION_STRING, visitor_house_coordinates
 from folium.plugins import MarkerCluster
-from matplotlib import colormaps
-from matplotlib.colors import Normalize, to_hex
+from matplotlib.colors import LinearSegmentedColormap, Normalize, to_hex
 from azure.storage.blob import BlobClient
 from datetime import datetime
 from src.streamlit_app.pages_in_dashboard.visitors.vemcount_house_counts import fetch_realtime_house_visitor_counts
@@ -174,7 +173,7 @@ def render_map_symbology_legend(walker_svg_icon: str, info_svg_icon: str, parkin
     parking_icon_size_px = 20
 
     # Continuous occupancy color scale shown in the legend
-    occupancy_scale_gradient = get_coolwarm_css_gradient()
+    occupancy_scale_gradient = get_occupancy_css_gradient()
     scale_label_low = TRANSLATIONS[st.session_state.selected_language]["parking_scale_low"]
     scale_label_high = TRANSLATIONS[st.session_state.selected_language]["parking_scale_high"]
 
@@ -211,8 +210,8 @@ def render_map_symbology_legend(walker_svg_icon: str, info_svg_icon: str, parkin
     </div>
     """, unsafe_allow_html=True)
 
-# Continuous color scale: matplotlib's "coolwarm" colormap
-OCCUPANCY_COLORMAP = colormaps["coolwarm"]
+# Continuous color scale: blue -> violet -> red, without a light midpoint
+OCCUPANCY_COLORMAP = LinearSegmentedColormap.from_list("occupancy", ["#3b4cc0", "#7b2d8e", "#b40426"])
 
 # Occupancy rates (in %) that are mapped to the two ends of the color scale
 OCCUPANCY_NORM = Normalize(vmin=0, vmax=100, clip=True)
@@ -220,7 +219,7 @@ OCCUPANCY_NORM = Normalize(vmin=0, vmax=100, clip=True)
 # Neutral color for parking places without a valid occupancy rate
 COLOR_NO_DATA = (150, 150, 150)
 
-def get_coolwarm_css_gradient(steps: int = 11) -> str:
+def get_occupancy_css_gradient(steps: int = 11) -> str:
     """
     Build a CSS `linear-gradient(...)` string (left = low, right = high
     occupancy) by sampling the colormap, for use in the legend.
@@ -234,7 +233,7 @@ def get_coolwarm_css_gradient(steps: int = 11) -> str:
 def calculate_color_based_on_occupancy_rate(occupancy_rate) -> dict:
     """
     Calculate the color of the marker based on the occupancy rate using the
-    continuous matplotlib "coolwarm" colormap.
+    continuous blue-violet-red colormap.
 
     Args:
         occupancy_rate (float): The occupancy rate of the parking section in %.
@@ -521,7 +520,7 @@ def get_parking_section():
     # Convert the occupancy rate to numeric and handle errors
     processed_parking_data['current_occupancy_rate'] = pd.to_numeric(processed_parking_data['current_occupancy_rate'], errors='coerce')
 
-    # Continuous coolwarm color per parking place (blue = low, red = high occupancy)
+    # Continuous blue-violet-red color per parking place (blue = low, red = high occupancy)
     processed_parking_data['color'] = processed_parking_data['current_occupancy_rate'].apply(lambda occupancy_rate: calculate_color_based_on_occupancy_rate(occupancy_rate)["color_markers_map_visualization"])
 
     # Map occupancy rate to status (High, Medium, Low)

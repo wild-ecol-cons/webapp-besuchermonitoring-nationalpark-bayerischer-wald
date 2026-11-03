@@ -1,0 +1,2 @@
+# Never bake local credentials into the image; Azure provides them as environment variables
+.streamlit/secrets.toml

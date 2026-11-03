@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import hmac
 
@@ -16,7 +17,9 @@ def check_password(
 
     def password_entered():
         """Checks whether a password entered by the user is correct."""
-        if hmac.compare_digest(st.session_state[type_of_password], st.secrets[f"{type_of_password}_password"]):
+        # Azure provides the password as an environment variable; locally it comes from .streamlit/secrets.toml
+        expected_password = os.environ.get(f"{type_of_password}_password") or st.secrets[f"{type_of_password}_password"]
+        if hmac.compare_digest(st.session_state[type_of_password], expected_password):
             st.session_state[f"{type_of_password}_correct"] = True
             del st.session_state[type_of_password]  # Don't store the password.
         else:

@@ -4,10 +4,13 @@
 
 :::src.utils
 
+:::src.config
+    options:
+      show_if_no_docstring: true
+
 <!-- Streamlit Dashboard -->
 
 :::Dashboard
-:::pages.Admin_🔓
 :::pages.Data_Hub_☁️
 
 <!-- Streamlit: Sourcing & Preprocessing & General -->
@@ -16,11 +19,6 @@
 :::src.streamlit_app.pre_processing.process_forecast_weather_data
 :::src.streamlit_app.pre_processing.process_real_time_parking_data
 :::src.streamlit_app.pages_in_dashboard.password
-
-<!-- Streamlit: Admin Page -->
-
-:::src.streamlit_app.pages_in_dashboard.admin.parking
-:::src.streamlit_app.pages_in_dashboard.admin.visitor_count
 
 <!-- Streamlit: Data Hub Page -->
 
@@ -32,10 +30,11 @@
 :::src.streamlit_app.pages_in_dashboard.visitors.language_selection_menu
 :::src.streamlit_app.pages_in_dashboard.visitors.other_information
 :::src.streamlit_app.pages_in_dashboard.visitors.page_layout_config
-:::src.streamlit_app.pages_in_dashboard.visitors.parking
 :::src.streamlit_app.pages_in_dashboard.visitors.recreational_activities
 :::src.streamlit_app.pages_in_dashboard.visitors.visitor_count
-:::src.streamlit_app.pages_in_dashboard.visitors.weather
+
+:::src.streamlit_app.pages_in_dashboard.visitors.realtime_map_visualization
+:::src.streamlit_app.pages_in_dashboard.visitors.vemcount_house_counts
 
 <!-- Prediction Pipeline -->
 
@@ -43,7 +42,6 @@
 
 :::src.prediction_pipeline.sourcing_data.source_historic_parking_data
 :::src.prediction_pipeline.sourcing_data.source_historic_visitor_count
-:::src.prediction_pipeline.sourcing_data.source_real_time_parking_data
 :::src.prediction_pipeline.sourcing_data.source_temporal_features
 :::src.prediction_pipeline.sourcing_data.source_weather
 

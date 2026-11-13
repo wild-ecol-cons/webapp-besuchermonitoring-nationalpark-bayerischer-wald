@@ -9,5 +9,5 @@ We developed an **end-to-end solution** from data sourcing via data pre-processi
 
 - In section **Step 2: Building the Prediction Pipeline** we will describe our data preprocessing and data cleaning steps, the data integration, feature selection and feature engineering, as well as our modeling approach and the selected models.
 
-- In section **Step 3: Building the User Frontends** we will describe how we built the different user frontends, that is two dashboards and a data access point, in the application Streamlit.
+- In section **Step 3: Building the User Frontends** we will describe the two pages of the Streamlit application: the visitor dashboard and the password-protected Data Hub.
 

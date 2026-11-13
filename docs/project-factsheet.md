@@ -15,7 +15,7 @@ The project's mission is to **transform these data into actionable insights** by
 ### Solution
 - DSSGx Fellows have automated the processing and integration of various data sources and developed a visitor traffic prediction model. <br>
 - Predictions are shown in a dashboard that provides the expected visitor flow for the next seven days. These data are provided for different regions of the park and enhanced by information on available parking and other visit-related information. <br>
-- The dashboard is updated based on real-time parking and weather data. <br>
+- The forecast is recalculated every 3 hours with the latest weather forecast. A real-time map shows parking occupancy and current visitor counts at sensors and visitor centres, updated every 15 minutes. <br>
 - It can be used by both the park rangers for their work, and visitors to plan their stays. <br>
 - A data access point enables the Bavarian Forest National Park Administration to upload and download data and to run different queries.
 

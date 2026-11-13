@@ -1,6 +1,6 @@
 site_name: Docs for the Bavarian Forest National Park Project
 
-site_url: https://dssgxmunich.github.io/bavarian-forest-visitor-monitoring-dssgx-24/
+site_url: https://wild-ecol-cons.github.io/webapp-besuchermonitoring-nationalpark-bayerischer-wald/
 
 theme:
   name: "material"
@@ -8,7 +8,20 @@ theme:
     - navigation.indexes
 
 plugins:
-  - mkdocstrings
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_root_heading: true
+            show_root_full_path: true
+
+markdown_extensions:
+  - attr_list
+  - md_in_html
+
+# Review markers for the Nov 2026 docs update (see docs/stylesheets/doc-updates.css)
+extra_css:
+  - stylesheets/doc-updates.css
 
 nav:
   - Home: index.md

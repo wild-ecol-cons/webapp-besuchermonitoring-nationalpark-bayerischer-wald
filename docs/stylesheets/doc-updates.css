@@ -1,0 +1,30 @@
+/*
+ * Review marker for the November 2026 documentation update.
+ *
+ *   <div class="doc-outdated" markdown> ... </div>  -> section is known to be outdated and still needs input
+ *
+ * To remove the marker before publishing: delete the wrapping <div> lines
+ * (search the docs/ folder for "doc-outdated"), then remove this file and
+ * the `extra_css` entry in mkdocs.yml.
+ */
+
+.doc-outdated {
+  position: relative;
+  margin: 1.5em 0;
+  padding: 2.2em 1em 0.6em 1em;
+  border-left: 5px solid #d64545;
+  border-radius: 4px;
+  background-color: rgba(214, 69, 69, 0.09);
+}
+
+.doc-outdated::before {
+  content: "Outdated: needs new input";
+  position: absolute;
+  top: 0.5em;
+  left: 1em;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #d64545;
+}

@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://dssgxmunich.github.io/bavarian-forest-visitor-monitoring-dssgx-24/approach/prediction-pipeline/">
+        <link rel="canonical" href="https://wild-ecol-cons.github.io/webapp-besuchermonitoring-nationalpark-bayerischer-wald/approach/prediction-pipeline/">
       
       
         <link rel="prev" href="../data/">
@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
       
 
@@ -49,6 +49,8 @@
     
     
       <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/doc-updates.css">
     
     <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
@@ -428,10 +430,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#visitor-center-data-preprocessing" class="md-nav__link">
+  <a href="#temporal-features-holidays-and-calendar" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Visitor Center Data Preprocessing
+        Temporal Features (Holidays and Calendar)
       
     </span>
   </a>
@@ -500,6 +502,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#model-inputs-and-targets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model Inputs and Targets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#additional-steps" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -525,6 +538,40 @@
   </a>
   
     <nav class="md-nav" aria-label="Modeling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-model-lightgbm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Model: LightGBM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#real-time-inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real-Time Inference
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#earlier-experiments-2024" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Earlier Experiments (2024)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Earlier Experiments (2024)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -613,6 +660,11 @@
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -856,10 +908,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#visitor-center-data-preprocessing" class="md-nav__link">
+  <a href="#temporal-features-holidays-and-calendar" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Visitor Center Data Preprocessing
+        Temporal Features (Holidays and Calendar)
       
     </span>
   </a>
@@ -928,6 +980,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#model-inputs-and-targets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model Inputs and Targets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#additional-steps" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -953,6 +1016,40 @@
   </a>
   
     <nav class="md-nav" aria-label="Modeling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-model-lightgbm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Model: LightGBM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#real-time-inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real-Time Inference
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#earlier-experiments-2024" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Earlier Experiments (2024)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Earlier Experiments (2024)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1048,6 +1145,11 @@
     </nav>
   
 </li>
+        
+      </ul>
+    </nav>
+  
+</li>
       
     </ul>
   
@@ -1071,8 +1173,9 @@
 <p>In this section, we will describe our data preprocessing and data cleaning steps, the data integration, feature selection and feature engineering, as well as our modeling approach and the selected models.</p>
 <h2 id="_1"><img alt="E2E Pipeline Step 2 Prediction Pipeline" src="../../asset/E2E_Pipeline_Prediction.png" /></h2>
 <h2 id="description-of-the-data-preprocessing-and-cleaning-steps">Description of the Data Preprocessing and Cleaning Steps</h2>
-<p>In our project, we utilized various data sources, including sensor data for visitor counts, weather data, visitor center data, and parking data. These datasets were initially in different formats, necessitating a thorough cleaning and preprocessing process to unify them.</p>
+<p>The prediction pipeline uses three data sources: sensor data for visitor counts, weather data, and temporal features (public and school holidays). These datasets come in different formats, so each is cleaned and preprocessed before they are joined. Parking data is shown in the dashboard but is not used as a model input.</p>
 <h3 id="visitor-count-data-preprocessing">Visitor Count Data Preprocessing</h3>
+<p>The historic visitor counts are read from the Data Hub (category <em>Permanente Besucherzählung (Eco-Counter)</em>, stored in Azure Blob Storage under <code>data-hub/preprocessed-data/visitor-counts-eco-counter</code>). New counts that park staff upload through the Data Hub are therefore picked up automatically the next time the model is trained.</p>
 <p>For the visitor count data, several crucial steps were taken:</p>
 <ul>
 <li>
@@ -1111,7 +1214,7 @@
 <li>
 <p><strong>Data Sourcing</strong>: </p>
 <ul>
-<li>We retrieved hourly weather data from the Meteostat API for the Bavarian Forest region from January 1, 2016, to September 3, 2024. This involved setting geographical coordinates to target the specific area.</li>
+<li>Hourly weather data is retrieved from the Meteostat API each time the pipeline runs. For training, the data covers the full training and test period; for inference, it covers the last 10 days plus the 7-day forecast. The location is a point in the park (latitude 48.96119, longitude 13.36234), and Meteostat combines data from the 10 nearest weather stations.</li>
 </ul>
 </li>
 <li>
@@ -1129,46 +1232,41 @@
 <li>This approach helped maintain the integrity of the dataset while providing a more accurate representation of weather conditions.</li>
 </ul>
 </li>
-<li>
-<p><strong>Data Storage</strong>: </p>
-<ul>
-<li>The processed weather data was saved to the cloud, facilitating easy access and retrieval for subsequent analyses.</li>
-</ul>
-</li>
 </ul>
 <p>By carefully processing the weather data, we ensured it was well-prepared for integration with visitor count data and other datasets in our predictive modeling pipeline.</p>
-<h3 id="visitor-center-data-preprocessing">Visitor Center Data Preprocessing</h3>
-<p>The uncleaned administrative file, “national-park-vacation-times-houses-opening-
-times.xlsx,” was loaded for cleaning. First, the data types of each column were 
-adjusted to their appropriate types for modeling at a later stage. For instance, 
-columns with true/false values were converted to 0s and 1s, then transformed to 
-‘category’ type.</p>
-<p>Next, additional columns for temporal features were created. This included 
-generating columns for the month, day, and year using the date index, updating the
-day of the week (Wochentag) column to fill in missing values, and creating columns
-to indicate whether the day falls on a weekend (Wochenende) and the season 
-(Jahreszeit).</p>
-<p>After additional variables were created, each column was scanned for clerical 
-errors from manual data entry. During this process, a duplicate date  was identified
-and corrected (two instances of 9/29/2021 in the Datum column, with one changed 
-to 9/29/2023). The school holiday binary variable (Schulferien_Bayern) had a value 
-of ‘10,’ which was changed to ‘0’ after verifying the date of this holiday. </p>
-<p>Similarly, the WGM_geoffnet binary variable (indicating whether the visitor center was open 
-or closed) had a value of ‘11,’ which was adjusted to 1. Some visitor counts in the 
-Besuchszahlen_HEH column contained decimals after a certain date, and these 
-counts were rounded up to the nearest whole number. Extreme outliers were 
-addressed by identifying visitor counts at the centers that were +/- 7 standard 
-deviations from the column mean, which were replaced with NaN values. Finally, 
-the very last row was removed from the data frame, as the row only contained 
-missing values.</p>
-<p>Two cleaned versions of the visitor center data were then saved—one at the daily 
-level and another at the hourly level. The hourly-level visitor center data was 
-eventually joined with other datasets that had temporal granularity at the hourly 
-level for modeling.</p>
+<h3 id="temporal-features-holidays-and-calendar">Temporal Features (Holidays and Calendar)</h3>
+<p>The temporal features are now fetched automatically from the <a href="https://www.openholidaysapi.org/">OpenHolidays API</a> for any requested date range, both for training and for inference:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Feiertag_Bayern</code></td>
+<td>Public holidays in Bavaria (<code>DE-BY</code>)</td>
+</tr>
+<tr>
+<td><code>Feiertag_CZ</code></td>
+<td>Public holidays in the Pilsen (<code>CZ-PL</code>) or South Bohemian (<code>CZ-JC</code>) region</td>
+</tr>
+<tr>
+<td><code>Schulferien_Bayern</code></td>
+<td>School holidays in Bavaria (<code>DE-BY</code>)</td>
+</tr>
+<tr>
+<td><code>Schulferien_CZ</code></td>
+<td>School holidays in the Pilsen (<code>CZ-PL</code>) or South Bohemian (<code>CZ-JC</code>) region</td>
+</tr>
+</tbody>
+</table>
+<p>Only the two Czech regions bordering the park are used, not the whole of the Czech Republic.</p>
+<p>From the date itself, the pipeline derives the day of the month (<code>Tag</code>), month (<code>Monat</code>), year (<code>Jahr</code>), day of the year (<code>DayOfTheYear</code>), weekday (<code>Wochentag</code>), a weekend flag (<code>Wochenende</code>), and the season (<code>Jahreszeit</code>: spring = March–May, summer = June–August, autumn = September–November, winter = December–February). The daily table is then expanded to hourly rows and an <code>Hour</code> column is added, so it can be joined with the hourly visitor and weather data.</p>
 <hr />
 <h2 id="data-integration">Data Integration</h2>
-<p>We joined the preprocessed datasets—visitor counts, weather, and visitor center data—based on their timestamps to create a unified dataset for efficient modeling. This integration ensures that all data points align in hourly format, facilitating a comprehensive analysis of visitor traffic patterns.</p>
-<p>The resulting joined dataset encompasses all relevant features from each source, providing a robust foundation for our predictive modeling efforts. This approach allows us to leverage the combined insights from different datasets, enhancing the accuracy and effectiveness of our forecasts.</p>
+<p>The preprocessed visitor counts, weather data, and temporal features are joined on their hourly timestamps. All datasets are already in Berlin local time at this point; before the join, the timezone information is removed from the timestamps so they can be matched. The join is an <strong>inner join</strong>, so only hours that exist in all three datasets are kept. A small number of remaining duplicated timestamps (at most 0.05 % of the rows) are dropped before training; if there are more, the pipeline stops with an error.</p>
 <hr />
 <h2 id="feature-selection-and-feature-engineering">Feature Selection and Feature Engineering</h2>
 <p>After joining the data, we conducted various tasks, including feature selection and feature engineering. Below are the relevant aspects of this process:</p>
@@ -1190,24 +1288,39 @@ Sensors: Lusen 1, Lusen 2, Lusen 3  </p>
 </blockquote>
 <p>The readings from these sensors were combined to provide the total IN and OUT values for the region.</p>
 <h3 id="feature-engineering">Feature Engineering</h3>
-<p>We integrated additional features, including:</p>
+<p>The same feature engineering code is used for training and for inference, so the model sees the same kind of features in both cases:</p>
 <ul>
-<li>Z-scores for daily maximum temperature, relative humidity, and wind speed.</li>
-<li>Distance to the nearest holidays for both Bayern and Czech Republic.</li>
+<li><strong>Distance to the nearest public holiday</strong> (in days), separately for Bavaria and the Czech border regions.</li>
+<li><strong>Weather anomalies:</strong> for temperature, relative humidity, wind speed, and precipitation, the daily maximum is calculated, as well as the daily precipitation sum. Each daily value is then expressed as a z-score relative to the mean and standard deviation of a rolling <strong>5-day window</strong>. This shows whether a day is unusually warm, wet, or windy compared with the days before it.</li>
+<li><strong>Weather condition:</strong> the Meteostat condition code is grouped into six categories (sunny, cloudy, rainy, snowy, extreme, stormy; see the table on the <a href="../data/">data sourcing</a> page).</li>
 </ul>
 <h3 id="data-transformation">Data Transformation</h3>
-<p>Handling Numerical, Cyclic, and Categorical Features</p>
 <ol>
-<li>
-<p><strong>Cyclic Features</strong>: We transformed cyclical features (e.g., hour, day) using sine and cosine transformations to maintain the cyclic nature.</p>
-</li>
-<li>
-<p><strong>Numerical Features</strong>: Z-score normalization was applied to standardize numerical features, ensuring they have a mean of 0 and a standard deviation of 1.</p>
-</li>
-<li>
-<p><strong>Categorical Features</strong>: Categorical columns were converted to string types for proper processing and analysis.</p>
-</li>
+<li><strong>Cyclic features:</strong> day of the month, hour, month, weekday, and day of the year are each converted into a sine and a cosine component, so that, for example, hour 23 and hour 0 are close to each other.</li>
+<li><strong>Numerical features:</strong> temperature, relative humidity, wind speed, precipitation, and the two holiday distances are standardized (z-score: mean 0, standard deviation 1).</li>
+<li><strong>Categorical features:</strong> the weather category and the season are one-hot encoded (one 0/1 column per category). All true/false columns are converted to 0/1 and treated as categories.</li>
 </ol>
+<h3 id="model-inputs-and-targets">Model Inputs and Targets</h3>
+<p>The model training script (<code>train_regressor.py</code>) uses the following inputs:</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Features</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Numerical (21)</td>
+<td>Temperature, relative humidity, wind speed, precipitation; z-scores of the daily maximum of each of these and of the daily precipitation sum; distance to nearest holiday (Bavaria, CZ); sine/cosine of day of month, month, hour, weekday, and day of year</td>
+</tr>
+<tr>
+<td>Categorical (15)</td>
+<td>Weekend; school holidays (Bavaria, CZ); public holidays (Bavaria, CZ); weather category (sunny, cloudy, rainy, snowy, extreme, stormy); season (spring, summer, autumn, winter)</td>
+</tr>
+</tbody>
+</table>
+<p>A separate model is trained for each of <strong>15 target variables</strong>: total traffic (<code>traffic_abs</code>), total IN (<code>sum_IN_abs</code>) and total OUT (<code>sum_OUT_abs</code>) for the whole park, and IN and OUT for each of the six regions listed above.</p>
 <h3 id="additional-steps">Additional Steps</h3>
 <ul>
 <li><strong>Datetime Conversion</strong>: The 'Time' column was converted to a datetime format for easier time-based indexing and analysis.</li>
@@ -1217,10 +1330,34 @@ Sensors: Lusen 1, Lusen 2, Lusen 3  </p>
 <p>This systematic approach to preprocessing and feature engineering sets a solid foundation for subsequent modeling and analysis.</p>
 <hr />
 <h2 id="modeling">Modeling</h2>
-<p>We have sliced the data from January 1, 2023, to July 22, 2024, for training purposes. During our experimentation phase, we explored various forecasting models to identify the most effective approach for predicting visitor traffic in the Bavarian Forest National Park. Ultimately, the ExtraTree Regressor and LSTM (Long Short-Term Memory) models demonstrated superior performance compared to other models.</p>
-<h3 id="extratree-regressor">ExtraTree Regressor</h3>
+<h3 id="current-model-lightgbm">Current Model: LightGBM</h3>
+<p>The production pipeline trains a <strong>LightGBM</strong> regressor (gradient-boosted decision trees) through PyCaret, one model per target variable. LightGBM replaced the Extra Trees Regressor that was selected in 2024 (see <a href="#earlier-experiments-2024">Earlier Experiments</a>). Because the file and variable names were kept, the saved models are still called <code>extra_trees_&lt;target&gt;.pkl</code>, even though they contain LightGBM models.</p>
+<p><strong>Training setup</strong></p>
+<ul>
+<li><strong>Training period:</strong> January 1, 2023, to December 31, 2024.</li>
+<li><strong>Test period:</strong> January 1, 2025, to December 31, 2025. The end date is a parameter (<code>test_end_date</code>) of the pipeline in <code>Dashboard.py</code>.</li>
+<li><strong>PyCaret setup:</strong> the data is not shuffled (to keep the time order), 5-fold cross-validation is used on the training period, and the test period serves as hold-out data.</li>
+<li>After evaluation, the model is finalized (refitted) and saved.</li>
+</ul>
+<p><strong>Running the training</strong></p>
+<p>Training is not run on a schedule. It is started by calling <code>run_pipeline_and_create_dashboard(should_run_training=True)</code> in <code>Dashboard.py</code>. Each training run gets a unique ID (UUID). The models are saved to Azure Blob Storage under <code>models/models_trained/&lt;UUID&gt;/</code>, and the predictions on the test period under <code>models/test_data_predictions/&lt;UUID&gt;/</code>.</p>
+<p><strong>Selecting the model used in the dashboard</strong></p>
+<p>The dashboard does not automatically use the newest training run. The run it uses is set in <code>folder_prefix</code> in <code>src/prediction_pipeline/modeling/create_inference_dfs.py</code>. After a new training run, this value has to be updated to the new UUID.</p>
+<h3 id="real-time-inference">Real-Time Inference</h3>
+<p>The inference pipeline (<code>run_inference.py</code>) runs when the dashboard is opened and is refreshed every <strong>3 hours</strong>:</p>
+<ol>
+<li>Fetch the temporal features (OpenHolidays API) and the weather data from 10 days ago until 7 days ahead. The past days are needed to calculate the rolling 5-day weather z-scores.</li>
+<li>Apply the same feature engineering and transformations as in training.</li>
+<li>Load the 15 models of the selected training run from Azure and predict hourly visitor numbers for the <strong>next 7 days</strong>.</li>
+<li>Aggregate the predictions per region on an <strong>hourly</strong> level and as <strong>daily</strong> sums (IN + OUT). The dashboard charts show these predicted counts.</li>
+<li>In addition, a relative traffic level per region is calculated with min-max scaling (range 0.03 to 1). These values are not shown in the dashboard at the moment.</li>
+</ol>
+<p>The raw predictions of each model are also saved to Azure under <code>models/inference_data_outputs/</code>.</p>
+<h3 id="earlier-experiments-2024">Earlier Experiments (2024)</h3>
+<p>The following sections describe the models compared during the DSSGx fellowship in 2024. At that time, the data from January 1, 2023, to July 22, 2024, was used, and the Extra Trees Regressor was chosen for real-time inference. The LSTM code (<code>train_lstm.py</code>) is still in the repository but is not used in the current pipeline.</p>
+<h4 id="extratree-regressor">ExtraTree Regressor</h4>
 <p>The ExtraTree Regressor (Extremely Randomized Trees) is a powerful ensemble learning algorithm that constructs multiple decision trees during training. Unlike traditional decision trees, where splits are chosen based on the best criteria, Extra Trees randomly select cut points in the features. This approach often reduces variance without significantly increasing bias, making Extra Trees particularly well-suited for datasets with complex patterns and large feature spaces.</p>
-<h4 id="why-extratree-regressor-is-ideal-for-our-use-case">Why ExtraTree Regressor is Ideal for Our Use Case</h4>
+<h5 id="why-extratree-regressor-is-ideal-for-our-use-case">Why ExtraTree Regressor is Ideal for Our Use Case</h5>
 <ul>
 <li>
 <p><strong>Robustness to Overfitting</strong>: Due to the random nature of tree splits, ExtraTree Regressor is less likely to overfit the training data, especially in cases where the data has high dimensionality or contains noise.</p>
@@ -1235,15 +1372,15 @@ Sensors: Lusen 1, Lusen 2, Lusen 3  </p>
 <p><strong>Handling of Various Feature Types</strong>: The model can handle both numerical and categorical features, which is crucial for our dataset, containing a mix of these feature types.</p>
 </li>
 </ul>
-<h4 id="model-implementation">Model Implementation</h4>
+<h5 id="model-implementation">Model Implementation</h5>
 <p><strong>Data Preparation</strong>: The data is split into training (January 1, 2023, to April 30, 2024) and testing (May 1, 2024, to July 22, 2024) sets based on specific date ranges, ensuring the temporal structure of the data is preserved.</p>
 <p><strong>Model Setup</strong>: PyCaret is used for setting up the model, where we define numeric and categorical features, ensure no data shuffling, and use 90% of the data for training with a 5-fold cross-validation.</p>
 <p><strong>Model Training</strong>: The Extra Trees Regressor is trained on the defined training set, and predictions are made on the test set to evaluate performance.</p>
 <p><strong>Model Saving</strong>: The trained models are saved for each target variable, ensuring reproducibility and facilitating later use in inference tasks.</p>
 <p>This approach allowed us to capture the complexities in the data and produce reliable forecasts for visitor traffic in the Bavarian Forest National Park.</p>
-<h3 id="lstm-long-short-term-memory">LSTM (Long Short-Term Memory)</h3>
+<h4 id="lstm-long-short-term-memory">LSTM (Long Short-Term Memory)</h4>
 <p>Long Short-Term Memory (LSTM) networks are a type of recurrent neural network (RNN) specifically designed to model sequential data and capture long-term dependencies. LSTMs are highly effective for time series forecasting due to their ability to retain information over extended periods, which is crucial for predicting visitor traffic based on past patterns.</p>
-<h4 id="why-lstm-is-ideal-for-our-use-case">Why LSTM is Ideal for Our Use Case</h4>
+<h5 id="why-lstm-is-ideal-for-our-use-case">Why LSTM is Ideal for Our Use Case</h5>
 <ul>
 <li>
 <p><strong>Handling Sequential Data</strong>: LSTMs are designed to process sequences of data, which is critical for our task of predicting future visitor counts based on historical patterns.</p>
@@ -1258,7 +1395,7 @@ Sensors: Lusen 1, Lusen 2, Lusen 3  </p>
 <p><strong>Robustness to Temporal Patterns</strong>: LSTMs are capable of learning and adapting to the temporal structure of the data, making them ideal for forecasting tasks where the order and timing of data points are important.</p>
 </li>
 </ul>
-<h4 id="model-implementation_1">Model Implementation</h4>
+<h5 id="model-implementation_1">Model Implementation</h5>
 <p><strong>Sequence Creation</strong>: To train the LSTM, the data is prepared by creating sequences. Each sequence represents a window of 168 hours (7 days). This approach ensures that the model is trained on weekly patterns, which are crucial for accurate forecasting.</p>
 <ul>
 <li><strong>Training Sequences</strong>: The training data is split into sequences of 168 hours, with each sequence used to predict the following hour. This ensures that the model learns from both short-term fluctuations and longer-term trends.</li>
@@ -1289,7 +1426,7 @@ Sensors: Lusen 1, Lusen 2, Lusen 3  </p>
 </ul>
 <p><strong>Model Saving</strong>: After training, the model is saved for each target variable. This ensures that the trained models can be reused for inference and further fine-tuning, making the forecasting process more efficient and scalable.</p>
 <p>The LSTM model, with its ability to model complex sequential data, has proven to be a powerful tool in our visitor traffic forecasting pipeline, particularly for capturing the temporal dynamics of visitor flows across different regions of the Bavarian Forest National Park.</p>
-<h3 id="model-selection-for-real-time-inference">Model Selection for Real-Time Inference</h3>
+<h4 id="model-selection-for-real-time-inference">Model Selection for Real-Time Inference</h4>
 <p>After experimenting with both the LSTM and Extra Tree Regressor models, we found that both performed admirably in terms of forecasting visitor traffic. However, our final choice of model for real-time inference was influenced by several key factors:</p>
 <ul>
 <li>
@@ -1361,10 +1498,10 @@ Sensors: Lusen 1, Lusen 2, Lusen 3  </p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.indexes"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.indexes"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
       
     
   </body>

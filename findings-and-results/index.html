@@ -8,7 +8,7 @@
       
       
       
-        <link rel="canonical" href="https://dssgxmunich.github.io/bavarian-forest-visitor-monitoring-dssgx-24/findings-and-results/">
+        <link rel="canonical" href="https://wild-ecol-cons.github.io/webapp-besuchermonitoring-nationalpark-bayerischer-wald/findings-and-results/">
       
       
         <link rel="prev" href="../approach/user-frontends/">
@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
       
       
 
@@ -49,6 +49,8 @@
     
     
       <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../stylesheets/doc-updates.css">
     
     <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
@@ -589,21 +591,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#admin-dashboard" class="md-nav__link">
+  <a href="#data-hub" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Admin Dashboard
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#data-accessibility-point" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Data Accessibility Point
+        Data Hub
       
     </span>
   </a>
@@ -898,21 +889,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#admin-dashboard" class="md-nav__link">
+  <a href="#data-hub" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Admin Dashboard
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#data-accessibility-point" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Data Accessibility Point
+        Data Hub
       
     </span>
   </a>
@@ -956,6 +936,9 @@
 <h2 id="overview">Overview</h2>
 <p>In this section, we summarized the findings of the model training as well as the visitor traffic forecasting. Moreover, we give an overview over the final product built.</p>
 <p>The analysis of visitor traffic in the Bavarian Forest National Park utilized the Extra Trees Regressor, focusing on predictions across six distinct regions. We examined 15 target variables, including total visitor counts and IN/OUT values for each region, as well as overall metrics for the park.</p>
+<div class="doc-outdated">
+<p><strong>The model results on this page are from the 2024 fellowship.</strong> They describe the Extra Trees Regressor, trained on data from January 2023 to April 2024 and tested on May to July 2024. The current pipeline trains a <strong>LightGBM</strong> model on 2023–2024 data, tests it on 2025, and uses a different set of features (see <a href="../approach/prediction-pipeline/#modeling">Modeling</a>). The metrics table, the comparison plots, and the feature importance plots below therefore do not describe the model currently used in the dashboard. They should be replaced with the results of the current training run, which are stored in Azure under <code>models/test_data_predictions/&lt;UUID&gt;/</code>.</p>
+</div>
 <hr />
 <h2 id="model-training">Model Training</h2>
 <h3 id="model-fit-indices">Model Fit Indices</h3>
@@ -1261,39 +1244,35 @@
 </ul>
 <hr />
 <h2 id="final-product">Final Product</h2>
+<div class="doc-outdated">
+<p>The screen recordings (GIFs) on this page show the dashboard as of 2024 (including the weather section and the former Admin Dashboard). They should be replaced with recordings of the current version.</p>
+</div>
 <p><img alt="A GIF showing the overall dashboard" src="../asset/overall-dashboard.gif" /></p>
 <p style="text-align:center;">Dashboard Bavarian Forest</p>
 
 <h3 id="visitor-dashboard">Visitor Dashboard</h3>
-<p>The visitor dashboard provides an intuitive interface that enables users to access essential information in real-time. Visitors can effortlessly view current weather conditions, allowing them to prepare for their day effectively. Additionally, the dashboard showcases hourly predictions for the upcoming week, helping users plan their visits with confidence. For those interested in maximizing their experience, links to various recreational activities are readily available, guiding visitors toward enjoyable options within the park. Moreover, real-time parking occupancy data is displayed, ensuring that users are informed about available parking spaces before arriving. This comprehensive flow of information empowers visitors to make informed decisions, enhancing their overall experience.</p>
+<p>The visitor dashboard shows the predicted visitor traffic for the next seven days, per day and per hour, for the whole park and for each of the six regions. A real-time map shows the occupancy of the parking lots, the current visitor numbers at the animal enclosures Lusen and Falkenstein, and the visitor counts of three visitor centres. It also links to recreational activities and further visitor information. The dashboard is available in German and English. For details, see <a href="../approach/user-frontends/#visitor-dashboard">User Frontends</a>.</p>
 <p><img alt="A GIF showing the visitor dashboard" src="../asset/bf-dashboard-visitor-predictions.gif" /></p>
 <p style="text-align:center;">Visitor Dashboard</p>
 
 <hr />
-<h3 id="admin-dashboard">Admin Dashboard</h3>
-<p>The admin dashboard serves as a powerful management tool, enabling administrators to monitor and analyze key metrics related to park operations effectively. Through this interface, admins can access forecasted data on visitor occupancy, providing insights into current crowd levels across the park. Additionally, the dashboard offers detailed visitor predictions for the upcoming week, presented in absolute numbers. This forecasting allows admins to anticipate visitor flow and make informed decisions, ensuring adequate staffing, resource allocation, and visitor experience management. For parking, the dashboard provides real-time occupancy data, displayed as absolute values instead of general categories like low, medium, or high. This level of detail helps administrators optimize parking management and plan ahead for potential surges, ultimately improving the park's operational efficiency and enhancing the visitor experience.</p>
-<p><img alt="A GIF showing the admin dashboard" src="../asset/admin-dashboard.gif" /></p>
-<p style="text-align:center;">Admin Dashboard</p>
-
-<hr />
-<h3 id="data-accessibility-point">Data Accessibility Point</h3>
-<p>Data Accessibilty point has two main sections that are as follow:</p>
+<h3 id="data-hub">Data Hub</h3>
+<p>The Data Hub is the password-protected data access point for the park administration. It has two tabs:</p>
 <ul>
-<li><strong>Upload/Download Functionality</strong>: The admin dashboard provides seamless access to data upload and download capabilities. Administrators can easily upload new datasets or update existing ones directly through the interface, ensuring that the system is always using the most up-to-date information. The download functionality allows users to export data related to visitors, parking occupancy, and weather for further analysis or record-keeping. This feature ensures smooth data integration and easy access for offline analysis or reporting.</li>
+<li><strong>Upload</strong>: staff upload new visitor counts (Eco-Counter, special counts, or the legacy daily file) as CSV or Excel files. The files are validated, previewed, and saved to Azure. New Eco-Counter data is used the next time the model is trained.</li>
+<li><strong>Query &amp; Download</strong>: staff select one or more data categories (visitor counts, parking, weather, visitor centre counts) and, optionally, a time range. The data is combined into one table and can be downloaded as a ZIP file with a CSV and a data dictionary.</li>
 </ul>
+<p>For details, see <a href="../approach/user-frontends/#data-hub">User Frontends</a>.</p>
 <p><img alt="A GIF showing the data access point in the dashboard" src="../asset/upload-download.gif" /></p>
 <p style="text-align:center;">Dashboard: Data Access Point for Admins</p>
 
-<ul>
-<li><strong>Querying the Data</strong>: Admins can efficiently query the data using advanced filtering options within the dashboard. They can apply filters such as date ranges, specific months, seasons, or years to tailor their data retrieval. Additionally, specific categories like weather, visitor occupancy, and parking can be queried to get detailed insights based on the selected criteria. This flexible querying system allows administrators to gather precise, actionable data for analysis and operational planning.</li>
-</ul>
 <p><img alt="A GIF showing the data querying section in the data access point in the dashboard" src="../asset/data-query.gif" /></p>
 <p style="text-align:center;">Dashboard: Data Querying Section in the Data Access Point</p>
 
 <hr />
 <h2 id="conclusion_1">Conclusion</h2>
 <p>The results of our predictive models demonstrated strong performance on unseen data, with MAPE(mean absolute percentage error) indicating reliable accuracy across the various target variables. The feature importance analysis provided valuable insights, highlighting the key factors driving visitor flows and parking occupancy, which are crucial for making data-driven decisions. </p>
-<p>The culmination of these efforts is the deployment of an interactive dashboard that not only leverages predictive analytics but also integrates real-time data to offer actionable insights. The combination of accurate visitor predictions, real-time parking availability, and weather forecasting enhances both the visitor experience and the administrative decision-making process. Overall, the solution provides a powerful tool for optimizing park management and ensuring smooth operations, making the park more accessible and enjoyable for visitors.</p>
+<p>The culmination of these efforts is an interactive dashboard that combines predictive analytics with real-time data. It brings together the visitor forecast, real-time parking availability, and current visitor counts at sensors and visitor centres, supporting both visitors and park administration. The Data Hub makes it possible to keep the underlying data up to date without changing the code.</p>
 
 
 
@@ -1343,10 +1322,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.indexes"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.indexes"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.a5f9d56c.min.js"></script>
       
     
   </body>

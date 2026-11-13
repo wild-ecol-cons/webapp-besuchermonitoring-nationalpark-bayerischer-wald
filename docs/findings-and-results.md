@@ -6,6 +6,10 @@ In this section, we summarized the findings of the model training as well as the
 
 The analysis of visitor traffic in the Bavarian Forest National Park utilized the Extra Trees Regressor, focusing on predictions across six distinct regions. We examined 15 target variables, including total visitor counts and IN/OUT values for each region, as well as overall metrics for the park.
 
+<div class="doc-outdated" markdown>
+**The model results on this page are from the 2024 fellowship.** They describe the Extra Trees Regressor, trained on data from January 2023 to April 2024 and tested on May to July 2024. The current pipeline trains a **LightGBM** model on 2023–2024 data, tests it on 2025, and uses a different set of features (see [Modeling](approach/prediction-pipeline.md#modeling)). The metrics table, the comparison plots, and the feature importance plots below therefore do not describe the model currently used in the dashboard. They should be replaced with the results of the current training run, which are stored in Azure under `models/test_data_predictions/<UUID>/`.
+</div>
+
 ---
 
 ## Model Training
@@ -78,10 +82,8 @@ The graphs presented above show how the model performs on **unseen data** from M
 ![Plots comparing the predicted vs the actual values of unseen data to the model](asset/Comparison of Predicted and Actual Visitor Counts to Bavarian Forest National Park (BFNP) on Unseen Data - 1.png)
 <p style="text-align:center;">Comparison of predicted and actual values on unseen data (1)</p>
 
-
 ![Plots comparing the predicted vs the actual values of unseen data to the model](asset/Comparison of Predicted and Actual Visitor Counts to Bavarian Forest National Park (BFNP) on Unseen Data - 2.png)
 <p style="text-align:center;">Comparison of predicted and actual values on unseen data (2)</p>
-
 
 ---
 
@@ -89,11 +91,9 @@ The graphs presented above show how the model performs on **unseen data** from M
 
 The total park traffic (`traffic_abs`) is consistently overestimated in both low and high-traffic periods. The predicted values follow the general trend of the actual counts but are consistently higher, particularly during low-traffic periods.
 
-
 **Sum IN and Sum OUT**
 
 For `sum_IN_abs` and `sum_OUT_abs`, the ExtraTree Regressor successfully captures the cyclic nature of visitor inflow and outflow. However, the magnitude of the predicted values often falls short of actual observations during peak traffic days, indicating that the model could struggle to forecast sharp increases in visitor numbers.
-
 
 **Region-Specific Analysis**
 
@@ -108,7 +108,6 @@ For `sum_IN_abs` and `sum_OUT_abs`, the ExtraTree Regressor successfully capture
 
 - **Nationalparkzentrum Lusen IN/OUT**:
   - The model performs similarly in this region, capturing trends but struggling to forecast peak visitor numbers. There is some overestimation during low-traffic days, but the overall cyclic pattern is well-represented.
-
 
 ### Model Performance Insights
 
@@ -125,7 +124,6 @@ Evaluating the model on unseen data has revealed the following key insights:
 - **Underestimation of Peaks**: Across almost all regions, the model consistently underestimates peak visitor counts, especially during high-traffic periods.
 
 - **Overestimation of Low-Traffic Days**: During low-traffic days, the model tends to overestimate the visitor count slightly, leading to higher errors in some regions.
-
 
 ### Key Takeaways and Future Work
 
@@ -165,7 +163,6 @@ Future iterations of the model could benefit from advanced feature engineering. 
 
 **Interpretation:**
 
-
 * **Peak Times:** The importance of the "Hour" feature suggests that there are specific peak times during the day when visitor traffic is significantly higher.
 * **Seasonal Variations:** The cyclical patterns captured by "Hour_cos" and "Hour_sin" might indicate seasonal variations in traffic, with higher numbers of visitors during certain months or periods of the year.
 * **Weather Influence:** Favorable weather conditions (e.g., warm and sunny days) might attract more visitors, as evidenced by the importance of temperature and relative humidity.
@@ -175,37 +172,33 @@ Future iterations of the model could benefit from advanced feature engineering. 
 
 ## Final Product
 
+<div class="doc-outdated" markdown>
+The screen recordings (GIFs) on this page show the dashboard as of 2024 (including the weather section and the former Admin Dashboard). They should be replaced with recordings of the current version.
+</div>
+
 ![A GIF showing the overall dashboard](asset/overall-dashboard.gif)
 <p style="text-align:center;">Dashboard Bavarian Forest</p>
 
 ### Visitor Dashboard
 
-The visitor dashboard provides an intuitive interface that enables users to access essential information in real-time. Visitors can effortlessly view current weather conditions, allowing them to prepare for their day effectively. Additionally, the dashboard showcases hourly predictions for the upcoming week, helping users plan their visits with confidence. For those interested in maximizing their experience, links to various recreational activities are readily available, guiding visitors toward enjoyable options within the park. Moreover, real-time parking occupancy data is displayed, ensuring that users are informed about available parking spaces before arriving. This comprehensive flow of information empowers visitors to make informed decisions, enhancing their overall experience.
+The visitor dashboard shows the predicted visitor traffic for the next seven days, per day and per hour, for the whole park and for each of the six regions. A real-time map shows the occupancy of the parking lots, the current visitor numbers at the animal enclosures Lusen and Falkenstein, and the visitor counts of three visitor centres. It also links to recreational activities and further visitor information. The dashboard is available in German and English. For details, see [User Frontends](approach/user-frontends.md#visitor-dashboard).
 
 ![A GIF showing the visitor dashboard](asset/bf-dashboard-visitor-predictions.gif)
 <p style="text-align:center;">Visitor Dashboard</p>
 
 ---
 
-### Admin Dashboard 
+### Data Hub
 
-The admin dashboard serves as a powerful management tool, enabling administrators to monitor and analyze key metrics related to park operations effectively. Through this interface, admins can access forecasted data on visitor occupancy, providing insights into current crowd levels across the park. Additionally, the dashboard offers detailed visitor predictions for the upcoming week, presented in absolute numbers. This forecasting allows admins to anticipate visitor flow and make informed decisions, ensuring adequate staffing, resource allocation, and visitor experience management. For parking, the dashboard provides real-time occupancy data, displayed as absolute values instead of general categories like low, medium, or high. This level of detail helps administrators optimize parking management and plan ahead for potential surges, ultimately improving the park's operational efficiency and enhancing the visitor experience.
+The Data Hub is the password-protected data access point for the park administration. It has two tabs:
 
-![A GIF showing the admin dashboard](asset/admin-dashboard.gif)
-<p style="text-align:center;">Admin Dashboard</p>
+- **Upload**: staff upload new visitor counts (Eco-Counter, special counts, or the legacy daily file) as CSV or Excel files. The files are validated, previewed, and saved to Azure. New Eco-Counter data is used the next time the model is trained.
+- **Query & Download**: staff select one or more data categories (visitor counts, parking, weather, visitor centre counts) and, optionally, a time range. The data is combined into one table and can be downloaded as a ZIP file with a CSV and a data dictionary.
 
----
-
-### Data Accessibility Point
-
- Data Accessibilty point has two main sections that are as follow:
-
-- **Upload/Download Functionality**: The admin dashboard provides seamless access to data upload and download capabilities. Administrators can easily upload new datasets or update existing ones directly through the interface, ensuring that the system is always using the most up-to-date information. The download functionality allows users to export data related to visitors, parking occupancy, and weather for further analysis or record-keeping. This feature ensures smooth data integration and easy access for offline analysis or reporting.
+For details, see [User Frontends](approach/user-frontends.md#data-hub).
 
 ![A GIF showing the data access point in the dashboard](asset/upload-download.gif)
 <p style="text-align:center;">Dashboard: Data Access Point for Admins</p>
-
-- **Querying the Data**: Admins can efficiently query the data using advanced filtering options within the dashboard. They can apply filters such as date ranges, specific months, seasons, or years to tailor their data retrieval. Additionally, specific categories like weather, visitor occupancy, and parking can be queried to get detailed insights based on the selected criteria. This flexible querying system allows administrators to gather precise, actionable data for analysis and operational planning.
 
 ![A GIF showing the data querying section in the data access point in the dashboard](asset/data-query.gif)
 <p style="text-align:center;">Dashboard: Data Querying Section in the Data Access Point</p>
@@ -216,6 +209,5 @@ The admin dashboard serves as a powerful management tool, enabling administrator
 
 The results of our predictive models demonstrated strong performance on unseen data, with MAPE(mean absolute percentage error) indicating reliable accuracy across the various target variables. The feature importance analysis provided valuable insights, highlighting the key factors driving visitor flows and parking occupancy, which are crucial for making data-driven decisions. 
 
-The culmination of these efforts is the deployment of an interactive dashboard that not only leverages predictive analytics but also integrates real-time data to offer actionable insights. The combination of accurate visitor predictions, real-time parking availability, and weather forecasting enhances both the visitor experience and the administrative decision-making process. Overall, the solution provides a powerful tool for optimizing park management and ensuring smooth operations, making the park more accessible and enjoyable for visitors.
-
+The culmination of these efforts is an interactive dashboard that combines predictive analytics with real-time data. It brings together the visitor forecast, real-time parking availability, and current visitor counts at sensors and visitor centres, supporting both visitors and park administration. The Data Hub makes it possible to keep the underlying data up to date without changing the code.
 

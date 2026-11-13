@@ -8,9 +8,12 @@ In this section, we will describe our data preprocessing and data cleaning steps
 
 ## Description of the Data Preprocessing and Cleaning Steps
 
-In our project, we utilized various data sources, including sensor data for visitor counts, weather data, visitor center data, and parking data. These datasets were initially in different formats, necessitating a thorough cleaning and preprocessing process to unify them.
+The prediction pipeline uses three data sources: sensor data for visitor counts, weather data, and temporal features (public and school holidays). These datasets come in different formats, so each is cleaned and preprocessed before they are joined. Parking data is shown in the dashboard but is not used as a model input.
 
 ### Visitor Count Data Preprocessing
+
+The historic visitor counts are read from the Data Hub (category *Permanente Besucherzählung (Eco-Counter)*, stored in Azure Blob Storage under `data-hub/preprocessed-data/visitor-counts-eco-counter`). New counts that park staff upload through the Data Hub are therefore picked up automatically the next time the model is trained.
+
 For the visitor count data, several crucial steps were taken:
 
 - **Removing Unwanted Data**: We excluded any data prior to "2016-05-10 03:00:00" since no sensors were installed before this date, ensuring our analysis focused on relevant data.
@@ -34,11 +37,10 @@ For the visitor count data, several crucial steps were taken:
 
 ### Weather Data Preprocessing
 
-
 The weather data was sourced and preprocessed to ensure consistency and reliability for our analysis. The following key steps were taken:
 
 - **Data Sourcing**: 
-     - We retrieved hourly weather data from the Meteostat API for the Bavarian Forest region from January 1, 2016, to September 3, 2024. This involved setting geographical coordinates to target the specific area.
+     - Hourly weather data is retrieved from the Meteostat API each time the pipeline runs. For training, the data covers the full training and test period; for inference, it covers the last 10 days plus the 7-day forecast. The location is a point in the park (latitude 48.96119, longitude 13.36234), and Meteostat combines data from the 10 nearest weather stations.
 
 - **Cleaning and Formatting**: 
 
@@ -50,53 +52,28 @@ The weather data was sourced and preprocessed to ensure consistency and reliabil
     - We implemented a function to fill missing values using linear interpolation, ensuring that gaps in the data were appropriately addressed. If a significant percentage of zero values (over 60%) was detected in any parameter, we opted to fill missing entries with zero.
     - This approach helped maintain the integrity of the dataset while providing a more accurate representation of weather conditions.
 
-- **Data Storage**: 
-     - The processed weather data was saved to the cloud, facilitating easy access and retrieval for subsequent analyses.
-
 By carefully processing the weather data, we ensured it was well-prepared for integration with visitor count data and other datasets in our predictive modeling pipeline.
 
+### Temporal Features (Holidays and Calendar)
 
-### Visitor Center Data Preprocessing
+The temporal features are now fetched automatically from the [OpenHolidays API](https://www.openholidaysapi.org/) for any requested date range, both for training and for inference:
 
-The uncleaned administrative file, “national-park-vacation-times-houses-opening-
-times.xlsx,” was loaded for cleaning. First, the data types of each column were 
-adjusted to their appropriate types for modeling at a later stage. For instance, 
-columns with true/false values were converted to 0s and 1s, then transformed to 
-‘category’ type.
+| Feature | Source |
+|---|---|
+| `Feiertag_Bayern` | Public holidays in Bavaria (`DE-BY`) |
+| `Feiertag_CZ` | Public holidays in the Pilsen (`CZ-PL`) or South Bohemian (`CZ-JC`) region |
+| `Schulferien_Bayern` | School holidays in Bavaria (`DE-BY`) |
+| `Schulferien_CZ` | School holidays in the Pilsen (`CZ-PL`) or South Bohemian (`CZ-JC`) region |
 
-Next, additional columns for temporal features were created. This included 
-generating columns for the month, day, and year using the date index, updating the
-day of the week (Wochentag) column to fill in missing values, and creating columns
-to indicate whether the day falls on a weekend (Wochenende) and the season 
-(Jahreszeit).
+Only the two Czech regions bordering the park are used, not the whole of the Czech Republic.
 
-After additional variables were created, each column was scanned for clerical 
-errors from manual data entry. During this process, a duplicate date  was identified
-and corrected (two instances of 9/29/2021 in the Datum column, with one changed 
-to 9/29/2023). The school holiday binary variable (Schulferien_Bayern) had a value 
-of ‘10,’ which was changed to ‘0’ after verifying the date of this holiday. 
-
-Similarly, the WGM_geoffnet binary variable (indicating whether the visitor center was open 
-or closed) had a value of ‘11,’ which was adjusted to 1. Some visitor counts in the 
-Besuchszahlen_HEH column contained decimals after a certain date, and these 
-counts were rounded up to the nearest whole number. Extreme outliers were 
-addressed by identifying visitor counts at the centers that were +/- 7 standard 
-deviations from the column mean, which were replaced with NaN values. Finally, 
-the very last row was removed from the data frame, as the row only contained 
-missing values.
-
-Two cleaned versions of the visitor center data were then saved—one at the daily 
-level and another at the hourly level. The hourly-level visitor center data was 
-eventually joined with other datasets that had temporal granularity at the hourly 
-level for modeling.
+From the date itself, the pipeline derives the day of the month (`Tag`), month (`Monat`), year (`Jahr`), day of the year (`DayOfTheYear`), weekday (`Wochentag`), a weekend flag (`Wochenende`), and the season (`Jahreszeit`: spring = March–May, summer = June–August, autumn = September–November, winter = December–February). The daily table is then expanded to hourly rows and an `Hour` column is added, so it can be joined with the hourly visitor and weather data.
 
 ---
 
 ## Data Integration
 
-We joined the preprocessed datasets—visitor counts, weather, and visitor center data—based on their timestamps to create a unified dataset for efficient modeling. This integration ensures that all data points align in hourly format, facilitating a comprehensive analysis of visitor traffic patterns.
-
-The resulting joined dataset encompasses all relevant features from each source, providing a robust foundation for our predictive modeling efforts. This approach allows us to leverage the combined insights from different datasets, enhancing the accuracy and effectiveness of our forecasts.
+The preprocessed visitor counts, weather data, and temporal features are joined on their hourly timestamps. All datasets are already in Berlin local time at this point; before the join, the timezone information is removed from the timestamps so they can be matched. The join is an **inner join**, so only hours that exist in all three datasets are kept. A small number of remaining duplicated timestamps (at most 0.05 % of the rows) are dropped before training; if there are more, the pipeline stops with an error.
 
 ---
 
@@ -126,26 +103,32 @@ The Bavarian Forest National Park is divided into six regions, and we grouped th
 > **Nationalparkzentrum Lusen**  
 > Sensors: Lusen 1, Lusen 2, Lusen 3  
 
-
 The readings from these sensors were combined to provide the total IN and OUT values for the region.
-
 
 ### Feature Engineering
 
-We integrated additional features, including:
+The same feature engineering code is used for training and for inference, so the model sees the same kind of features in both cases:
 
-- Z-scores for daily maximum temperature, relative humidity, and wind speed.
-- Distance to the nearest holidays for both Bayern and Czech Republic.
+- **Distance to the nearest public holiday** (in days), separately for Bavaria and the Czech border regions.
+- **Weather anomalies:** for temperature, relative humidity, wind speed, and precipitation, the daily maximum is calculated, as well as the daily precipitation sum. Each daily value is then expressed as a z-score relative to the mean and standard deviation of a rolling **5-day window**. This shows whether a day is unusually warm, wet, or windy compared with the days before it.
+- **Weather condition:** the Meteostat condition code is grouped into six categories (sunny, cloudy, rainy, snowy, extreme, stormy; see the table on the [data sourcing](data.md) page).
 
 ### Data Transformation
 
-Handling Numerical, Cyclic, and Categorical Features
+1. **Cyclic features:** day of the month, hour, month, weekday, and day of the year are each converted into a sine and a cosine component, so that, for example, hour 23 and hour 0 are close to each other.
+2. **Numerical features:** temperature, relative humidity, wind speed, precipitation, and the two holiday distances are standardized (z-score: mean 0, standard deviation 1).
+3. **Categorical features:** the weather category and the season are one-hot encoded (one 0/1 column per category). All true/false columns are converted to 0/1 and treated as categories.
 
-1. **Cyclic Features**: We transformed cyclical features (e.g., hour, day) using sine and cosine transformations to maintain the cyclic nature.
+### Model Inputs and Targets
 
-2. **Numerical Features**: Z-score normalization was applied to standardize numerical features, ensuring they have a mean of 0 and a standard deviation of 1.
+The model training script (`train_regressor.py`) uses the following inputs:
 
-3. **Categorical Features**: Categorical columns were converted to string types for proper processing and analysis.
+| Type | Features |
+|---|---|
+| Numerical (21) | Temperature, relative humidity, wind speed, precipitation; z-scores of the daily maximum of each of these and of the daily precipitation sum; distance to nearest holiday (Bavaria, CZ); sine/cosine of day of month, month, hour, weekday, and day of year |
+| Categorical (15) | Weekend; school holidays (Bavaria, CZ); public holidays (Bavaria, CZ); weather category (sunny, cloudy, rainy, snowy, extreme, stormy); season (spring, summer, autumn, winter) |
+
+A separate model is trained for each of **15 target variables**: total traffic (`traffic_abs`), total IN (`sum_IN_abs`) and total OUT (`sum_OUT_abs`) for the whole park, and IN and OUT for each of the six regions listed above.
 
 ### Additional Steps
 
@@ -158,13 +141,47 @@ This systematic approach to preprocessing and feature engineering sets a solid f
 ---
 
 ## Modeling
-We have sliced the data from January 1, 2023, to July 22, 2024, for training purposes. During our experimentation phase, we explored various forecasting models to identify the most effective approach for predicting visitor traffic in the Bavarian Forest National Park. Ultimately, the ExtraTree Regressor and LSTM (Long Short-Term Memory) models demonstrated superior performance compared to other models.
 
-### ExtraTree Regressor
+### Current Model: LightGBM
+
+The production pipeline trains a **LightGBM** regressor (gradient-boosted decision trees) through PyCaret, one model per target variable. LightGBM replaced the Extra Trees Regressor that was selected in 2024 (see [Earlier Experiments](#earlier-experiments-2024)). Because the file and variable names were kept, the saved models are still called `extra_trees_<target>.pkl`, even though they contain LightGBM models.
+
+**Training setup**
+
+- **Training period:** January 1, 2023, to December 31, 2024.
+- **Test period:** January 1, 2025, to December 31, 2025. The end date is a parameter (`test_end_date`) of the pipeline in `Dashboard.py`.
+- **PyCaret setup:** the data is not shuffled (to keep the time order), 5-fold cross-validation is used on the training period, and the test period serves as hold-out data.
+- After evaluation, the model is finalized (refitted) and saved.
+
+**Running the training**
+
+Training is not run on a schedule. It is started by calling `run_pipeline_and_create_dashboard(should_run_training=True)` in `Dashboard.py`. Each training run gets a unique ID (UUID). The models are saved to Azure Blob Storage under `models/models_trained/<UUID>/`, and the predictions on the test period under `models/test_data_predictions/<UUID>/`.
+
+**Selecting the model used in the dashboard**
+
+The dashboard does not automatically use the newest training run. The run it uses is set in `folder_prefix` in `src/prediction_pipeline/modeling/create_inference_dfs.py`. After a new training run, this value has to be updated to the new UUID.
+
+### Real-Time Inference
+
+The inference pipeline (`run_inference.py`) runs when the dashboard is opened and is refreshed every **3 hours**:
+
+1. Fetch the temporal features (OpenHolidays API) and the weather data from 10 days ago until 7 days ahead. The past days are needed to calculate the rolling 5-day weather z-scores.
+2. Apply the same feature engineering and transformations as in training.
+3. Load the 15 models of the selected training run from Azure and predict hourly visitor numbers for the **next 7 days**.
+4. Aggregate the predictions per region on an **hourly** level and as **daily** sums (IN + OUT). The dashboard charts show these predicted counts.
+5. In addition, a relative traffic level per region is calculated with min-max scaling (range 0.03 to 1). These values are not shown in the dashboard at the moment.
+
+The raw predictions of each model are also saved to Azure under `models/inference_data_outputs/`.
+
+### Earlier Experiments (2024)
+
+The following sections describe the models compared during the DSSGx fellowship in 2024. At that time, the data from January 1, 2023, to July 22, 2024, was used, and the Extra Trees Regressor was chosen for real-time inference. The LSTM code (`train_lstm.py`) is still in the repository but is not used in the current pipeline.
+
+#### ExtraTree Regressor
 
 The ExtraTree Regressor (Extremely Randomized Trees) is a powerful ensemble learning algorithm that constructs multiple decision trees during training. Unlike traditional decision trees, where splits are chosen based on the best criteria, Extra Trees randomly select cut points in the features. This approach often reduces variance without significantly increasing bias, making Extra Trees particularly well-suited for datasets with complex patterns and large feature spaces.
 
-#### Why ExtraTree Regressor is Ideal for Our Use Case
+##### Why ExtraTree Regressor is Ideal for Our Use Case
 
 - **Robustness to Overfitting**: Due to the random nature of tree splits, ExtraTree Regressor is less likely to overfit the training data, especially in cases where the data has high dimensionality or contains noise.
 
@@ -174,7 +191,7 @@ The ExtraTree Regressor (Extremely Randomized Trees) is a powerful ensemble lear
 
 - **Handling of Various Feature Types**: The model can handle both numerical and categorical features, which is crucial for our dataset, containing a mix of these feature types.
 
-#### Model Implementation
+##### Model Implementation
 
 **Data Preparation**: The data is split into training (January 1, 2023, to April 30, 2024) and testing (May 1, 2024, to July 22, 2024) sets based on specific date ranges, ensuring the temporal structure of the data is preserved.
 
@@ -186,12 +203,11 @@ The ExtraTree Regressor (Extremely Randomized Trees) is a powerful ensemble lear
 
 This approach allowed us to capture the complexities in the data and produce reliable forecasts for visitor traffic in the Bavarian Forest National Park.
 
-
-### LSTM (Long Short-Term Memory)
+#### LSTM (Long Short-Term Memory)
 
 Long Short-Term Memory (LSTM) networks are a type of recurrent neural network (RNN) specifically designed to model sequential data and capture long-term dependencies. LSTMs are highly effective for time series forecasting due to their ability to retain information over extended periods, which is crucial for predicting visitor traffic based on past patterns.
 
-#### Why LSTM is Ideal for Our Use Case
+##### Why LSTM is Ideal for Our Use Case
 
 - **Handling Sequential Data**: LSTMs are designed to process sequences of data, which is critical for our task of predicting future visitor counts based on historical patterns.
 
@@ -201,7 +217,7 @@ Long Short-Term Memory (LSTM) networks are a type of recurrent neural network (R
 
 - **Robustness to Temporal Patterns**: LSTMs are capable of learning and adapting to the temporal structure of the data, making them ideal for forecasting tasks where the order and timing of data points are important.
 
-#### Model Implementation
+##### Model Implementation
 
 **Sequence Creation**: To train the LSTM, the data is prepared by creating sequences. Each sequence represents a window of 168 hours (7 days). This approach ensures that the model is trained on weekly patterns, which are crucial for accurate forecasting.
 
@@ -227,7 +243,7 @@ Long Short-Term Memory (LSTM) networks are a type of recurrent neural network (R
 
 The LSTM model, with its ability to model complex sequential data, has proven to be a powerful tool in our visitor traffic forecasting pipeline, particularly for capturing the temporal dynamics of visitor flows across different regions of the Bavarian Forest National Park.
 
-### Model Selection for Real-Time Inference
+#### Model Selection for Real-Time Inference
 
 After experimenting with both the LSTM and Extra Tree Regressor models, we found that both performed admirably in terms of forecasting visitor traffic. However, our final choice of model for real-time inference was influenced by several key factors:
 

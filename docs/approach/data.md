@@ -26,17 +26,23 @@ can automatically upload their data to the Bayern Cloud, others
 require manual uploads through on-site data collection using a USB 
 drive.
 
-## Visitor Center Data
+For model training, the historic visitor counts are read from the **Data Hub** (see [User Frontends](user-frontends.md#data-hub)), where park staff upload the Eco-Counter exports.
 
-The visitor center data file is an internal 
-administrative data file maintained by the Bavarian Forest National 
-Park. This data file includes daily counts of visitors to the various 
-visitor centers (add the types of visitor centers) as well as columns 
-that indicate whether or not the visitor center was open or closed on a
-given day. Additionally, temporal-related information is kept in this 
-administrative file, including whether or not a given day was a federal
-or national holiday (Bavarian or Czech; School or Federal or School 
-holiday), the season, the day of the week, and date.
+In addition, five sensors at the animal enclosures (*Tierfreigelände*) Lusen (3 sensors) and Falkenstein (2 sensors) send their counts to the Bayern Cloud in real time. Their current values are shown on the map in the dashboard.
+
+## Holiday and Calendar Data
+
+Public and school holidays are fetched from the [OpenHolidays API](https://www.openholidaysapi.org/) for Bavaria and for the two Czech regions bordering the park (Pilsen and South Bohemia). Calendar features such as weekday, weekend, and season are derived from the date itself. See [Temporal Features](prediction-pipeline.md#temporal-features-holidays-and-calendar) for details.
+
+## Visitor Centre Counts (Vemcount)
+
+The visitor numbers of three visitor centres are fetched hourly from the **Vemcount API**:
+
+- Hans-Eisenmann-Haus
+- Haus zur Wildnis
+- Waldgeschichtliches Museum St. Oswald
+
+For each centre, the API returns the number of people entering and leaving and the number currently inside. These counts are shown in the dashboard map and can be downloaded through the Data Hub. They are not used as model inputs.
 
 ## Weather Data
 
@@ -66,18 +72,18 @@ we recoded them for easier interpretation:
 | 6, 10, 11, 12, 13, 20| Freezing Fog, Freezing Rain, Heavy Freezing Rain, Sleet, Heavy Sleet, Heavy Sleet Shower | 5 (Extreme Weather)                          |
 | 23, 24, 25, 26, 27   | Lightning, Hail, Thunderstorm, Heavy Thunderstorm, Storm       | 6 (Storms)                                  |
 
-
 ## Parking Data
 
 Historical and real-time parking data for the Bavarian 
 Forest National Park is sourced from the Bayern Cloud, a cloud 
 computing service provided by the Bavarian government to support 
 public administration, municipalities, and other organizations in the 
-region. The park has 12 sensors installed in its parking lots, which 
-monitor the occupancy of parking spaces. These sensors provide data 
-on each lot's capacity, current occupancy, and occupancy rate. 
-However, two of the parking lot sensors are currently offline, so data 
-from those locations is unavailable. The frequency at which the 
+region.
+
+The dashboard currently queries **14 parking sensors**. They are defined in one place, the `parking_sensors` dictionary in `src/config.py`, together with their Bayern Cloud IDs, coordinates, and display names. To add or remove a parking lot, only this dictionary has to be changed.
+
+These sensors provide data 
+on each lot's capacity, current occupancy, and occupancy rate. The frequency at which the 
 sensors transmit data to the Bayern Cloud varies, both across 
-different sensors and within individual sensors over time.
+different sensors and within individual sensors over time. Parking data is shown in the dashboard and the Data Hub but is not used as a model input.
     
